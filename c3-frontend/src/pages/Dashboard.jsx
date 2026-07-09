@@ -11,6 +11,14 @@ const Dashboard = () => {
       <Link to="/sessions" className="text-blue-400 underline mb-4 inline-block">
         View Sessions
       </Link>
+      <Link to="/attendance" className="text-blue-400 underline mb-2 block">
+        My Attendance
+      </Link>
+      {user.role === 'admin' && (
+        <Link to="/attendance/all" className="text-blue-400 underline mb-4 block">
+          All Members Attendance
+        </Link>
+      )}
       <button onClick={logout} className="bg-red-600 px-4 py-2 rounded hover:bg-red-700">
         Logout
       </button>
