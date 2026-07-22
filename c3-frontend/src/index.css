@@ -1,1 +1,64 @@
 @import "tailwindcss";
+
+@theme {
+  --font-heading: 'Satoshi', sans-serif;
+  --font-sans: 'Manrope', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  --color-c3-bg: #071A2B;
+  --color-c3-surface: #10273D;
+  --color-c3-surface-hover: #16324F;
+  --color-c3-primary: #38BDF8;
+  --color-c3-accent: #2DD4BF;
+  --color-c3-text: #F8FAFC;
+  --color-c3-muted: #94A3B8;
+  --color-c3-success: #22C55E;
+  --color-c3-warning: #F59E0B;
+  --color-c3-danger: #EF4444;
+  --color-c3-border: rgba(255, 255, 255, 0.08);
+}
+
+:root {
+  --bg-main: #071A2B;
+  --surface-main: #10273D;
+  --surface-hover: #16324F;
+  --primary: #38BDF8;
+  --accent: #2DD4BF;
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --border-light: rgba(255, 255, 255, 0.08);
+}
+
+body {
+  background-color: #071A2B;
+  color: #F8FAFC;
+  font-family: 'Manrope', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Satoshi', sans-serif;
+}
+
+code, kbd, samp, pre {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #071A2B;
+}
+::-webkit-scrollbar-thumb {
+  background: #10273D;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #16324F;
+}
