@@ -1,0 +1,1 @@
+// npx shadcn@latest add @react-bits/TextType-JS-CSS
