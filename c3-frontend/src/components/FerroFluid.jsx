@@ -4,7 +4,7 @@
 
 // <div style={{ width: '100%', height: '600px', position: 'relative' }}>
 //   <Ferrofluid
-//     colors={["#ffffff","#ffffff","#ffffff"]}
+//     colors={["#122df9,#122df9,#122df9"]}
 //     speed={0.5}
 //     scale={1.6}
 //     turbulence={1}

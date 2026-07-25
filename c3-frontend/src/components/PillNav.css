@@ -15,7 +15,7 @@
   --nav-h: 42px;
   --logo: 36px;
   --pill-pad-x: 18px;
-  --pill-gap: 3px;
+  --pill-gap: 2px;
   width: max-content;
   display: flex;
   align-items: center;
@@ -67,6 +67,8 @@
   margin: 0;
   padding: 3px;
   height: 100%;
+  background-color: rgba(255, 253, 253, 0.452);
+  border-radius: 20px;
 }
 
 .pill-list > li {
@@ -86,7 +88,7 @@
   border-radius: 9999px;
   box-sizing: border-box;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 12px;
   line-height: 0;
   text-transform: uppercase;
   letter-spacing: 0.2px;
@@ -234,4 +236,10 @@
   cursor: pointer;
   background-color: var(--base);
   color: var(--hover-text, #fff);
+}
+
+/* C3: center the pill nav in the header instead of default left-anchored */
+.pill-nav-container {
+  left: 50%;
+  transform: translateX(-50%);
 }
