@@ -20,10 +20,10 @@ import {
 export const PUBLIC_NAV_LINKS = [
   { label: 'Home', href: '/', icon: Home },
   { label: 'About Us', href: '/about', icon: Info },
-  { label: 'Sessions Archive', href: '/sessions-archive', icon: BookOpen },
+  { label: 'Join Us', href: '/apply', icon: Sparkles },
+  // TODO: point to a real /team route once that page exists
+  { label: 'Team', href: '/about', icon: Users },
   { label: 'Events', href: '/events', icon: Calendar },
-  { label: 'Gallery', href: '/gallery', icon: Images },
-  { label: 'Apply for Junior Batch', href: '/apply', icon: Sparkles, isHighlight: true },
 ];
 
 export const MEMBER_NAV_LINKS = [

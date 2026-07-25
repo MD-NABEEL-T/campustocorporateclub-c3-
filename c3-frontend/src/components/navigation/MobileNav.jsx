@@ -7,7 +7,7 @@ export const MobileNav = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const navItems = PUBLIC_NAV_LINKS.filter((link) => !link.isHighlight).map((link) => ({
+  const navItems = PUBLIC_NAV_LINKS.map((link) => ({
     label: link.label,
     ariaLabel: link.label,
     link: link.href,
@@ -15,13 +15,9 @@ export const MobileNav = () => {
 
   const ctaItem = user
     ? { label: 'Portal Dashboard', ariaLabel: 'Go to portal dashboard', link: '/dashboard' }
-    : { label: 'Member Login', ariaLabel: 'Go to member login', link: '/login' };
+    : { label: 'C3 Member Login', ariaLabel: 'Go to member login', link: '/login' };
 
-  const items = [
-    ...navItems,
-    { label: 'Apply for Junior Batch', ariaLabel: 'Apply for junior batch', link: '/apply' },
-    ctaItem,
-  ];
+  const items = [...navItems, ctaItem];
 
   const handleItemClick = (item) => {
     navigate(item.link);

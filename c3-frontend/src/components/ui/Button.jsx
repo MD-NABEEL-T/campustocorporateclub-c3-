@@ -33,6 +33,12 @@ export const Button = React.forwardRef(
         'text-[#A1A1AA] hover:text-white hover:bg-white/5 focus:ring-white/20',
       danger:
         'bg-[#EF4444] hover:bg-[#DC2626] text-white font-semibold focus:ring-[#EF4444]',
+      // Home-page sketch: button 1 - white bg, dark text
+      white:
+        'bg-white hover:bg-white/90 text-black font-semibold focus:ring-white/40',
+      // Home-page sketch: button 2 - glass/gradient dark bg, white text
+      glass:
+        'bg-gradient-to-r from-white/10 to-white/5 hover:from-white/15 hover:to-white/10 text-white border border-white/15 backdrop-blur-md focus:ring-white/20',
     };
 
     const sizes = {

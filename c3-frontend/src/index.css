@@ -50,6 +50,22 @@ code, kbd, samp, pre {
   font-family: 'IBM Plex Mono', monospace;
 }
 
+/* Home-page sketch fonts - font1-5 from the wireframe's font legend */
+.font-display {
+  font-family: 'Space Grotesk', sans-serif; /* font1 - main Hero heading */
+}
+
+.font-brand {
+  font-family: 'Playfair Display', serif;
+  font-style: italic; /* font2 - logo wordmark */
+}
+
+.font-editorial {
+  font-family: 'EB Garamond', serif; /* font3 - body/thesis copy */
+}
+.font-nav {
+  font-family: 'Rajdhani', sans-serif; /* font4 - nav links, buttons, stats */
+}
 /* Custom scrollbar for dark theme */
 ::-webkit-scrollbar {
   width: 8px;

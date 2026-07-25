@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ClickSpark from './components/ClickSpark';
 
 // Layouts
 import { PublicLayout } from './components/layouts/PublicLayout';
@@ -32,55 +33,53 @@ function App() {
     <AuthProvider>
       <ToastProvider>
         <BrowserRouter>
-          <Routes>
-{/* Home - deliberately outside PublicLayout for now (no Navbar/
-                Footer) while we design Home from scratch. Move back inside
-                PublicLayout once Home's own layout is finalized. */}
-            <Route path="/" element={<Home />} />
-
-            {/* Public Layout Routes */}
+          <ClickSpark sparkColor="#ffffff" sparkSize={10} sparkRadius={15} sparkCount={8} duration={400}>
+            <Routes>
+{/* Public Layout Routes */}
             <Route element={<PublicLayout />}>
+              <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
-              <Route path="/sessions-archive" element={<PublicSessions />} />
-              <Route path="/events" element={<PublicEvents />} />
-              <Route path="/gallery" element={<Gallery />} />
-              <Route path="/apply" element={<Apply />} />
-              <Route path="/login" element={<Login />} />
-            </Route>
+                <Route path="/sessions-archive" element={<PublicSessions />} />
+                <Route path="/events" element={<PublicEvents />} />
+                <Route path="/gallery" element={<Gallery />} />
+                <Route path="/apply" element={<Apply />} />
+                <Route path="/login" element={<Login />} />
+              </Route>
 
-            {/* Member Portal Protected Routes */}
-            <Route
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/attendance" element={<MyAttendance />} />
-              <Route path="/sessions" element={<Sessions />} />
-              <Route path="/sessions/:id" element={<SessionDetail />} />
-            </Route>
+              {/* Member Portal Protected Routes */}
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/attendance" element={<MyAttendance />} />
+                <Route path="/sessions" element={<Sessions />} />
+                <Route path="/sessions/:id" element={<SessionDetail />} />
+              </Route>
 
-            {/* Admin Portal Protected Routes */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Dashboard />} />
-              <Route path="members" element={<AllAttendance />} />
-              <Route path="sessions" element={<Sessions />} />
-              <Route path="sessions/new" element={<SessionForm />} />
-              <Route path="attendance" element={<AllAttendance />} />
-            </Route>
+              {/* Admin Portal Protected Routes */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="members" element={<AllAttendance />} />
+                <Route path="sessions" element={<Sessions />} />
+                <Route path="sessions/new" element={<SessionForm />} />
+                <Route path="attendance" element={<AllAttendance />} />
+              </Route>
 
-            {/* Catch-all Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              {/* Catch-all Fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </ClickSpark>
         </BrowserRouter>
       </ToastProvider>
     </AuthProvider>

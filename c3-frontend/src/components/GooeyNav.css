@@ -231,10 +231,10 @@
 
 /* --- C3 dark-theme overrides --- */
 :root {
-  --color-1: var(--primary);
-  --color-2: var(--accent);
-  --color-3: var(--success);
-  --color-4: var(--warning);
+  --color-1: #FFFFFF;
+  --color-2: #E5E5E5;
+  --color-3: #FFFFFF;
+  --color-4: #E5E5E5;
 }
 
 .gooey-nav-container nav ul {
@@ -251,7 +251,7 @@
 }
 
 .gooey-nav-container nav ul li.active::after {
-  background: var(--primary);
+  background: #FFFFFF;
 }
 
 .gooey-nav-container .effect.text {
@@ -267,5 +267,22 @@
 }
 
 .gooey-nav-container .effect.filter::after {
-  background: var(--primary);
+  background: #FFFFFF;
+}
+
+
+/* Home-page sketch: nav labels use font4 (Rajdhani) */
+.gooey-nav-container nav ul li {
+  font-family: 'Rajdhani', sans-serif;
+}
+
+/* The particle/goo overlay layer (.effect.text + .effect.filter) uses
+   mix-blend-mode:lighten against a black backdrop, which only disappears
+   correctly on a WHITE page background. On our black theme it renders as
+   a visible black rectangle, and duplicates the active label's text on
+   top of the real <li>. Disabling it removes the actual mechanism causing
+   both issues - the native li::after pill below still gives a clean,
+   pure-CSS active-state transition with no JS/blend-mode involved. */
+.gooey-nav-container .effect {
+  display: none !important;
 }
