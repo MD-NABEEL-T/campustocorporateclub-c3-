@@ -33,9 +33,13 @@ function App() {
       <ToastProvider>
         <BrowserRouter>
           <Routes>
+{/* Home - deliberately outside PublicLayout for now (no Navbar/
+                Footer) while we design Home from scratch. Move back inside
+                PublicLayout once Home's own layout is finalized. */}
+            <Route path="/" element={<Home />} />
+
             {/* Public Layout Routes */}
             <Route element={<PublicLayout />}>
-              <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/sessions-archive" element={<PublicSessions />} />
               <Route path="/events" element={<PublicEvents />} />

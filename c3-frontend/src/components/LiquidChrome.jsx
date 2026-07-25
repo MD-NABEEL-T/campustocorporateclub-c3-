@@ -1,25 +1,4 @@
-// npx shadcn@latest add @react-bits/LiquidChrome-JS-CSS
 
-// <div style={{ width: '1080px', height: '1080px', position: 'relative' }}>
-//   <LiquidChrome
-//     speed={0.5}
-//     amplitude={0.3}
-//     frequencyX={3}
-//     frequencyY={3}
-//     interactive
-//   />
-// </div>
-
-// import LiquidChrome from './LiquidChrome';
-
-// <div style={{ width: '100%', height: '600px', position: 'relative' }}>
-//   <LiquidChrome
-//     baseColor={[0.1,0.1,0.1]}
-//     speed={0.3}
-//     amplitude={0.3}
-//     interactive={false}
-//   />
-// </div>
 
 import { useRef, useEffect } from 'react';
 import { Renderer, Program, Mesh, Triangle } from 'ogl';
