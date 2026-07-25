@@ -12,13 +12,6 @@
 // />
 // </div>
 
-// .orb-container {
-//   position: relative;
-//   z-index: 0;
-//   width: 100%;
-//   height: 100%;
-// }
-
 
 import { Mesh, Program, Renderer, Triangle, Vec3 } from 'ogl';
 import { useEffect, useRef } from 'react';

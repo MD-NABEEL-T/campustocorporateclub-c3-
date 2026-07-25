@@ -1,8 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, Terminal, ArrowRight, ShieldCheck } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
+import RotatingText from '../RotatingText';
+import CountUp from '../CountUp';
+
+const STATS = [
+  { to: 120, suffix: '+', label: 'Sessions Held' },
+  { to: 8, suffix: '+', label: 'Events Conducted' },
+  { to: 60, suffix: '+', label: 'Active Members' },
+  { to: 5, suffix: '', label: 'Domains Covered' },
+];
 
 const HeroContent = ({ refs }) => {
   const { headingRef, subRef, descRef, ctaRef } = refs;
@@ -10,77 +18,80 @@ const HeroContent = ({ refs }) => {
   return (
     <section
       id="home"
-      className="relative z-10 flex flex-col items-center justify-center text-center px-4 sm:px-6 lg:px-8 pt-20 pb-28 max-w-5xl mx-auto"
+      className="relative z-10 flex flex-col items-center justify-center text-center px-4 sm:px-6 lg:px-8 pt-20 pb-24 max-w-4xl mx-auto"
     >
-      {/* Top Status Pill */}
-      <div className="mb-6">
-        <Badge variant="accent" icon={<Sparkles className="w-3.5 h-3.5" />}>
-          Official CSE Technical Club • Junior Recruitment Open
-        </Badge>
-      </div>
+      {/* Brand heading - centered, dominant, the primary identity statement */}
+      <h1
+        ref={headingRef}
+        className="font-heading text-white font-extrabold tracking-tight leading-[1.08] text-4xl sm:text-6xl md:text-7xl mb-5"
+      >
+        Campus to Corporate Club <span className="text-[#3B82F6]">(C3)</span>
+      </h1>
 
-      {/* Main Title */}
-      <div className="relative inline-block mb-4">
-        <h1
-          ref={headingRef}
-          className="text-4xl sm:text-6xl md:text-7xl font-extrabold font-heading text-[#F8FAFC] tracking-tight leading-[1.1]"
-        >
-          Campus to <span className="bg-gradient-to-r from-[#38BDF8] to-[#2DD4BF] bg-clip-text text-transparent">Corporate</span>
-        </h1>
-      </div>
-
-      {/* Subheading */}
+      {/* Rotating text - supporting element only, small and secondary */}
       <h2
         ref={subRef}
-        className="text-xl sm:text-2xl md:text-3xl font-bold font-heading text-[#F8FAFC] max-w-3xl mb-6 leading-snug"
+        className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm sm:text-base font-sans text-[#A1A1AA] mb-6"
       >
-        Building Placement-Ready Engineers, One Session at a Time.
+        <span>Where students keep</span>
+        <RotatingText
+          texts={['Learning', 'Collaborating', 'Developing', 'Debugging', 'Hacking', 'Growing']}
+          mainClassName="px-2 py-0.5 bg-white/[0.06] text-white border border-white/10 rounded-md overflow-hidden justify-center font-semibold"
+          staggerFrom="last"
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '-120%' }}
+          staggerDuration={0.02}
+          splitLevelClassName="overflow-hidden"
+          transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+          rotationInterval={2200}
+        />
       </h2>
 
-      {/* Description */}
+      {/* C3-specific thesis statement */}
       <p
         ref={descRef}
-        className="text-base sm:text-lg text-[#94A3B8] max-w-2xl mb-10 leading-relaxed font-sans"
+        className="text-base sm:text-lg text-[#A1A1AA] max-w-2xl mb-10 leading-relaxed font-sans"
       >
-        C3 is the student-led technical club inside college running daily 15-minute presentation sessions, collaborative projects, and peer mentorship to bridge the gap between campus learning and corporate engineering expectations.
+        C3 is our college's own tech community — students running daily sessions, building real
+        projects, and preparing each other for the corporate world, one day at a time.
       </p>
 
-      {/* CTAs */}
-      <div ref={ctaRef} className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+      {/* CTA hierarchy: primary (solid), secondary (outline, scrolls to About),
+          tertiary (ghost, scrolls to Domains) */}
+      <div ref={ctaRef} className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
         <Link to="/apply" className="w-full sm:w-auto">
-          <Button
-            variant="accent"
-            size="lg"
-            className="w-full sm:w-auto shadow-xl shadow-[#2DD4BF]/10"
-            leftIcon={<Sparkles className="w-5 h-5" />}
-          >
-            Apply for Junior Batch
+          <Button variant="primary" size="lg" className="w-full sm:w-auto">
+            Join C3
           </Button>
         </Link>
 
-        <Link to="/sessions-archive" className="w-full sm:w-auto">
-          <Button
-            variant="secondary"
-            size="lg"
-            className="w-full sm:w-auto"
-            rightIcon={<ArrowRight className="w-4 h-4" />}
-          >
-            Explore Session Archive
+        <a href="#why-c3" className="w-full sm:w-auto">
+          <Button variant="outline" size="lg" className="w-full sm:w-auto">
+            Why Join Us
           </Button>
-        </Link>
+        </a>
+
+        <a href="#domains" className="w-full sm:w-auto">
+          <Button variant="ghost" size="lg" className="w-full sm:w-auto" rightIcon={<ArrowRight className="w-4 h-4" />}>
+            Explore Domains
+          </Button>
+        </a>
       </div>
 
-      {/* Trust Badges */}
-      <div className="mt-16 pt-8 border-t border-white/10 w-full flex flex-wrap items-center justify-center gap-8 text-xs font-mono text-[#94A3B8]">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-[#38BDF8]" /> Peer-Led Training
-        </div>
-        <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-[#2DD4BF]" /> Daily 15-Min Presentations
-        </div>
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#22C55E]" /> Hands-on Project Execution
-        </div>
+      {/* Stats - kept small and secondary, CountUp-driven */}
+      <div className="mt-12 pt-5 border-t border-white/10 w-full flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+        {STATS.map((stat) => (
+          <div key={stat.label} className="flex items-center gap-1.5">
+            <span className="font-mono text-base sm:text-lg font-semibold text-white tabular-nums">
+              <CountUp to={stat.to} duration={2} />
+              {stat.suffix}
+            </span>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-[#A1A1AA]">
+              {stat.label}
+            </span>
+          </div>
+        ))}
       </div>
     </section>
   );

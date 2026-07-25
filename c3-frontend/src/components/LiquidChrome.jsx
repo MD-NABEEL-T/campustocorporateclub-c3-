@@ -21,11 +21,6 @@
 //   />
 // </div>
 
-// .liquidChrome-container {
-//   width: 100%;
-//   height: 100%;
-// }
-
 import { useRef, useEffect } from 'react';
 import { Renderer, Program, Mesh, Triangle } from 'ogl';
 

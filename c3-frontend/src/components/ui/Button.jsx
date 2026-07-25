@@ -18,19 +18,19 @@ export const Button = React.forwardRef(
     ref
   ) => {
     const baseStyles =
-      'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#071A2B] disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
+      'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
 
     const variants = {
       primary:
-        'bg-[#38BDF8] hover:bg-[#0284C7] text-[#071A2B] font-semibold focus:ring-[#38BDF8] shadow-lg shadow-[#38BDF8]/10 hover:shadow-[#38BDF8]/20',
+        'bg-[#3B82F6] hover:bg-[#2563EB] text-white font-semibold focus:ring-[#3B82F6] shadow-lg shadow-[#3B82F6]/10 hover:shadow-[#3B82F6]/20',
       accent:
-        'bg-[#2DD4BF] hover:bg-[#14B8A6] text-[#071A2B] font-semibold focus:ring-[#2DD4BF] shadow-lg shadow-[#2DD4BF]/10',
+        'bg-[#2DD4BF] hover:bg-[#14B8A6] text-black font-semibold focus:ring-[#2DD4BF] shadow-lg shadow-[#2DD4BF]/10',
       secondary:
-        'bg-[#10273D] hover:bg-[#16324F] text-[#F8FAFC] border border-white/10 focus:ring-[#38BDF8]',
+        'bg-[#111111] hover:bg-[#1A1A1A] text-white border border-white/10 focus:ring-white/20',
       outline:
-        'border border-[#38BDF8]/40 hover:border-[#38BDF8] text-[#38BDF8] hover:bg-[#38BDF8]/10 focus:ring-[#38BDF8]',
+        'border border-white/15 hover:border-white/30 text-white hover:bg-white/5 focus:ring-white/20',
       ghost:
-        'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-white/5 focus:ring-white/20',
+        'text-[#A1A1AA] hover:text-white hover:bg-white/5 focus:ring-white/20',
       danger:
         'bg-[#EF4444] hover:bg-[#DC2626] text-white font-semibold focus:ring-[#EF4444]',
     };

@@ -18,14 +18,6 @@
 // />
 // </div>
 
-
-// .dot-field-container {
-//   position: relative;
-//   width: 100%;
-//   height: 100%;
-// }
-
-
 import { useEffect, useRef, memo } from 'react';
 
 import './DotField.css';

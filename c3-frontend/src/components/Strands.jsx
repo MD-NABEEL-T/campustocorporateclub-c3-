@@ -26,20 +26,6 @@
 // </div>
 
 
-// css
-// .strands-container {
-//   position: relative;
-//   width: 100%;
-//   height: 100%;
-//   background: transparent;
-// }
-
-// .strands-container canvas {
-//   display: block;
-//   width: 100%;
-//   height: 100%;
-// }
-
 
 import { Renderer, Program, Mesh, Color, Triangle, RenderTarget } from 'ogl';
 import { useEffect, useRef } from 'react';

@@ -28,11 +28,6 @@
 //   />
 // </div>
 
-// .magic-rings-container {
-//   width: 100%;
-//   height: 100%;
-// }
-
 
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
