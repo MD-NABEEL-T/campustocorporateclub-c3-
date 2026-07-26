@@ -1,27 +1,5 @@
 // npx shadcn@latest add @react-bits/ShapeGrid-JS-CSS
 
-// import ShapeGrid from './ShapeGrid';
-  
-// <ShapeGrid 
-// speed={0.5}
-// squareSize={40}
-// direction='diagonal' // up, down, left, right, diagonal
-// borderColor="#2F293A"
-// hoverFillColor='#222'
-// shape='square' // square, hexagon, circle, triangle
-// hoverTrailAmount={0} // number of trailing hovered shapes (0 = no trail)
-//   direction="diagonal"
-//   hoverColor="#222222"
-//   size={40}
-//   shape="square"
-// />
-
-// .shapegrid-canvas {
-//   width: 100%;
-//   height: 100%;
-//   border: none;
-//   display: block;
-// }
 
 
 import { useRef, useEffect } from 'react';

@@ -83,7 +83,7 @@ export const HeroSection = () => {
           {/* TODO: point to /team once a real Team page/route exists */}
           <HoverBorderGradient
             as={Link}
-            to="/about"
+            to="/team"
             containerClassName="rounded-full p-[2px]"
             className="font-medium bg-black text-white flex items-center gap-2 px-6 py-3.5 text-base"
           >

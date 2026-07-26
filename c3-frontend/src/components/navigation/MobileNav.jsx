@@ -30,13 +30,14 @@ export const MobileNav = () => {
         items={items}
         displaySocials={false}
         displayItemNumbering
-        menuButtonColor="var(--text-main)"
-        openMenuButtonColor="var(--text-main)"
+menuButtonColor="#FFFFFF"
+        openMenuButtonColor="#FFFFFF"
         changeMenuColorOnOpen={false}
-        accentColor="var(--primary)"
-        colors={['var(--surface-main)', 'var(--bg-main)']}
+        accentColor="#3B82F6"
+        colors={['#1E3A8A', '#3B82F6']}
         isFixed
         onItemClick={handleItemClick}
+        logoUrl={null}
       />
     </div>
   );

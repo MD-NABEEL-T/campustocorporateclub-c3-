@@ -22,7 +22,7 @@ export const PUBLIC_NAV_LINKS = [
   { label: 'About Us', href: '/about', icon: Info },
   { label: 'Join Us', href: '/apply', icon: Sparkles },
   // TODO: point to a real /team route once that page exists
-  { label: 'Team', href: '/about', icon: Users },
+  { label: 'Team', href: '/team', icon: Users },
   { label: 'Events', href: '/events', icon: Calendar },
 ];
 

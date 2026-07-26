@@ -44,14 +44,14 @@ export const Navbar = () => {
       {/* Mobile brand mark - floats top-left, pairs with the StaggeredMenu
           toggle button (top-right) rendered inside MobileNav. Unchanged -
           PillNav never renders on mobile (hidden md:block in DesktopNav). */}
-      <Link to="/" className="md:hidden fixed top-6 left-6 z-50 flex items-center gap-2">
+      {/* <Link to="/" className="md:hidden fixed top-6 left-6 z-50 flex items-center gap-2">
         <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-white to-[#A1A1AA] p-0.5 flex items-center justify-center shadow-lg shadow-white/10">
           <div className="w-full h-full bg-black rounded-[8px] flex items-center justify-center">
             <Terminal className="w-4 h-4 text-white" />
           </div>
         </div>
         <span className="font-brand text-sm text-white tracking-tight">C3</span>
-      </Link>
+      </Link> */}
 
       <MobileNav />
     </>
