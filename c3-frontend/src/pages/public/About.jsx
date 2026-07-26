@@ -1,5 +1,4 @@
 import React from 'react';
-import ShapeGrid from '..//../components/ShapeGrid';
 
 export const About = () => {
   return (

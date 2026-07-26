@@ -18,10 +18,10 @@ import {
 } from 'lucide-react';
 
 export const PUBLIC_NAV_LINKS = [
-  { label: 'Home', href: '/', icon: Home },
-  { label: 'About Us', href: '/about', icon: Info },
+  { label: 'Home', href: '#home', icon: Home },
+  { label: 'About Us', href: '#about', icon: Info },
+  // TODO: swap these to in-page anchors once their sections are built
   { label: 'Join Us', href: '/apply', icon: Sparkles },
-  // TODO: point to a real /team route once that page exists
   { label: 'Team', href: '/team', icon: Users },
   { label: 'Events', href: '/events', icon: Calendar },
 ];

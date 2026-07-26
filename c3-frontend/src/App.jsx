@@ -11,7 +11,6 @@ import { DashboardLayout } from './components/layouts/DashboardLayout';
 
 // Public Pages
 import Home from './pages/public/Home';
-import About from './pages/public/About';
 import PublicSessions from './pages/public/PublicSessions';
 import PublicEvents from './pages/public/PublicEvents';
 import Gallery from './pages/public/Gallery';
@@ -38,7 +37,6 @@ function App() {
 {/* Public Layout Routes */}
             <Route element={<PublicLayout />}>
               <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
                 <Route path="/sessions-archive" element={<PublicSessions />} />
                 <Route path="/events" element={<PublicEvents />} />
                 <Route path="/gallery" element={<Gallery />} />
