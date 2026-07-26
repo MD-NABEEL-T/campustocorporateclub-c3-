@@ -39,6 +39,9 @@ export const Button = React.forwardRef(
       // Home-page sketch: button 2 - glass/gradient dark bg, white text
       glass:
         'bg-gradient-to-r from-white/10 to-white/5 hover:from-white/15 hover:to-white/10 text-white border border-white/15 backdrop-blur-md focus:ring-white/20',
+      // Navbar: premium blue - gradient fill in the theme's primary blue, for the Member Login CTA
+      premiumBlue:
+        'bg-gradient-to-r from-[#3B82F6] to-[#2563EB] hover:from-[#4B8FF7] hover:to-[#2E6EEF] text-white font-semibold border border-white/10 shadow-lg shadow-[#3B82F6]/25 hover:shadow-[#3B82F6]/40 focus:ring-[#3B82F6]/50',
     };
 
     const sizes = {

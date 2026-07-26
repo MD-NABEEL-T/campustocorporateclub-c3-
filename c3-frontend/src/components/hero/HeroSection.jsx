@@ -53,7 +53,7 @@ export const HeroSection = () => {
           className="font-editorial font-medium text-base sm:text-lg text-[#A1A1AA] leading-relaxed mb-6 block"
         /> */}
 
-        <div className="font-editorial text-base sm:text-lg text-[#A1A1AA] flex flex-wrap items-center justify-center gap-1 mb-10">
+        <div className="font-display text-base sm:text-lg text-[#A1A1AA] flex flex-wrap items-center justify-center gap-1 mb-10">
           <span>The club where students</span>
           <TextType
             as="span"
@@ -66,7 +66,7 @@ export const HeroSection = () => {
             className="text-white font-semibold font-nav"
           />
         </div>
-      <span className="font-nav block text-2xl sm:text-1xl md:text-xl font-normal text-white tracking-wide mt-0 mb-8">
+      <span className=" block text-2xl sm:text-1xl md:text-xl font-normal text-white tracking-wide mt-0 mb-8">
         LEARN, COLLABORATE, GROW, LEAD
       </span>
         {/* Buttons - centered, gradient border made thicker/more visible */}
@@ -75,7 +75,7 @@ export const HeroSection = () => {
             as={Link}
             to="/apply"
             containerClassName="rounded-full p-[2px] bg-white/10 hover:bg-white/5"
-            className="font-display font-medium bg-white text-black flex items-center gap-2 px-6 py-3.5 text-base"
+            className="font-medium bg-white text-black flex items-center gap-2 px-6 py-3.5 text-base"
           >
             Join C3
           </HoverBorderGradient>
@@ -85,7 +85,7 @@ export const HeroSection = () => {
             as={Link}
             to="/about"
             containerClassName="rounded-full p-[2px]"
-            className="font-display font-medium bg-black text-white flex items-center gap-2 px-6 py-3.5 text-base"
+            className="font-medium bg-black text-white flex items-center gap-2 px-6 py-3.5 text-base"
           >
             Meet the Team <ArrowRight className="w-4 h-4" />
           </HoverBorderGradient>

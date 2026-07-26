@@ -11,14 +11,14 @@ export const Navbar = () => {
 
   return (
     <>
-      {/* Desktop header - relative container so PillNav (absolutely
-          positioned internally, brings its own logo) and the login button
-          can both anchor to it at the same vertical offset. */}
+      {/* Desktop header - flex row keeps the logo/pill-nav pinned to the far
+          left and the login button pinned to the far right, both centered
+          on the same vertical axis. */}
       <header className="hidden md:block sticky top-0 z-40 w-full h-20">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        <div className="flex items-center justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <DesktopNav />
 
-          <div className="absolute top-[1em] right-4 sm:right-6 lg:right-8 z-[99]">
+          <div className="z-[99]">
             {user ? (
               <Link to="/dashboard">
                 <Button variant="white" size="sm" className="font-nav">
@@ -27,7 +27,12 @@ export const Navbar = () => {
               </Link>
             ) : (
               <Link to="/login">
-                <Button variant="white" size="sm" className="font-nav" leftIcon={<LogIn className="w-3.5 h-3.5" />}>
+                <Button
+                  variant="premiumBlue"
+                  size="md"
+                  className="font-nav tracking-wide"
+                  leftIcon={<LogIn className="w-4 h-4" />}
+                >
                   C3 Member Login
                 </Button>
               </Link>

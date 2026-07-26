@@ -7,7 +7,7 @@ export const Home = () => {
       <div className="absolute inset-0 opacity-20">
         <FloatingLines
           enabledWaves={['top', 'middle', 'bottom']}
-          lineCount={4}
+          lineCount={8}
           lineDistance={10}
           bendRadius={5}
           bendStrength={-1}
