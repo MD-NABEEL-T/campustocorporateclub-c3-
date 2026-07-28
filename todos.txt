@@ -1,1 +1,38 @@
-about us page as ash said the about us video edit he will give sonehow display it properly 
+it should feel like i can scroll and all the pages should be there no need to hide any pages like about us pages leads to another list of pages that is not good and 
+about us page should be simple for now keep right side an image carousel by using the component named carousel which has photos of our c3 members session or any photos that should be added to it i will addd do the carousel and left side add some details that is text ok 
+
+in domains section try to mention like our c3 club members are familiar with and you will get to know about it or else like they will get to explore 
+so now there are 5 domains now that is 1 full stack or design and development, 2 aiml ,3 cloud and devops , 4 cybersecurity and networks add another domains that our club that is 5 data analyst 
+
+25 minute daily knowledge sharing sessions ,events should be highlighted and before we start doing this lets first add the real images of the sessions and events ok now i really am concerned about the intro pages ok 
+
+
+use these components as i have suggested alright:
+use LiquidChrome for hero page
+use ClickSpark everywhere in intro page
+use TitledCard for every team member component in teams page
+use Masonry for gallery 
+use AnimatedList wherever needed 
+use BlurText in about us and other page
+use StaggeredMenu for the responsive menu bar for mobiles ok
+use Gooeynav for navbar in laptops 
+use rotatingtext in any page ,
+eg :keep learning changes to collaborating ,developing ,debugging ,hacking ,growing,etc
+use countup for sessions taken and events taken in any page we are going to mention for that ok
+use FerroFluid for contact page
+use Galaxy for the registration filling page of the juniors like it could be the background right 
+
+* In the domain / skills page where we show that we give exposure to each domain can you put different components for each domains like 
+for development section use Strands
+for communication section use Orb
+for cybersecurity & networks section use LetterGlitch 
+for aiml section use ShapeGrid
+for cloud and devops section use MagicRings
+for data analyst section use DotField 
+
+
+and also some other components from motion-primitives like 
+use TextShimmer for the first landing page and use this like the landing page should feel like the setup of iron man just for fun like what i am saying is kind of like you know worth the wait for 3 seconds when they open the intro page
+and another issue i have noticed in the existing website is that when i click the home page it shows the loading page again like it would be better if it was for only once when the user opens it then the navigation should be to home only right 
+
+all of these components i have mentioned are with their css code and installation code and the component once you tell we can sort that out 

@@ -1,1 +1,84 @@
 @import "tailwindcss";
+
+@theme {
+  --font-heading: 'Satoshi', sans-serif;
+  --font-sans: 'Manrope', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  --color-c3-bg: #000000;
+  --color-c3-surface: #111111;
+  --color-c3-surface-hover: #1A1A1A;
+  --color-c3-primary: #3B82F6;
+  --color-c3-accent: #2DD4BF;
+  --color-c3-text: #FFFFFF;
+  --color-c3-muted: #A1A1AA;
+  --color-c3-success: #22C55E;
+  --color-c3-warning: #F59E0B;
+  --color-c3-danger: #EF4444;
+  --color-c3-border: rgba(255, 255, 255, 0.08);
+}
+
+:root {
+  --bg-main: #000000;
+  --surface-main: #111111;
+  --surface-hover: #1A1A1A;
+  --primary: #3B82F6;
+  --accent: #2DD4BF;
+  --text-main: #FFFFFF;
+  --text-muted: #A1A1AA;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --border-light: rgba(255, 255, 255, 0.08);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #000000;
+  color: #FFFFFF;
+  font-family: 'Manrope', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Satoshi', sans-serif;
+}
+
+code, kbd, samp, pre {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* Home-page sketch fonts - font1-5 from the wireframe's font legend */
+.font-display {
+  font-family: 'Space Grotesk', sans-serif; /* font1 - main Hero heading */
+}
+
+.font-brand {
+  font-family: 'Playfair Display', serif;
+  font-style: italic; /* font2 - logo wordmark */
+}
+
+.font-editorial {
+  font-family: 'EB Garamond', serif; /* font3 - body/thesis copy */
+}
+.font-nav {
+  font-family: 'Rajdhani', sans-serif; /* font4 - nav links, buttons, stats */
+}
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-main);
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-hover);
+}
