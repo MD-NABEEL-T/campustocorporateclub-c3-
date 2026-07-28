@@ -22,8 +22,11 @@ const STATS = [
   { to: 10, suffix: '+', label: 'Events' }
 ];
 
-// Ready for more images later - just push new entries here.
-const CAROUSEL_IMAGES = [{ src: '/assets/c3fullmembers.jpg.jpeg', alt: 'C3 full members' }];
+// Swap `src` here once the edited promo video is ready. `poster` is the
+// placeholder shown until then (and as the video's poster frame).
+const MEDIA_ITEMS = [
+  { type: 'video', src: '', poster: '/assets/c3fullmembers.jpg.jpeg', alt: 'C3 full members' }
+];
 
 const slideVariants = {
   enter: direction => ({ x: direction > 0 ? 48 : -48, opacity: 0 }),
@@ -31,9 +34,48 @@ const slideVariants = {
   exit: direction => ({ x: direction > 0 ? -48 : 48, opacity: 0 })
 };
 
+const MediaSlide = ({ item }) => {
+  if (item.type === 'video' && item.src) {
+    return (
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        controls={false}
+        disablePictureInPicture
+        poster={item.poster}
+        src={item.src}
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+    );
+  }
+
+  // Placeholder until the promo video is supplied.
+  return (
+    <>
+      <img
+        src={item.poster}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40"
+      />
+      <img
+        src={item.poster}
+        alt={item.alt}
+        className="absolute inset-0 w-full h-full object-contain object-center"
+      />
+      <span className="absolute top-4 right-4 px-3 py-1 rounded-full text-[11px] font-medium text-white/80 bg-black/40 backdrop-blur-sm border border-white/10">
+        Video coming soon
+      </span>
+    </>
+  );
+};
+
 const GlassCarousel = () => {
   const [[index, direction], setSlide] = useState([0, 0]);
-  const total = CAROUSEL_IMAGES.length;
+  const total = MEDIA_ITEMS.length;
+  const hasMultiple = total > 1;
 
   const go = useCallback(
     dir => {
@@ -45,59 +87,55 @@ const GlassCarousel = () => {
   return (
     <div className="relative w-full max-w-md aspect-[4/5] mx-auto">
       <div className="absolute inset-0 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.5)] overflow-hidden">
-        {/* Blurred backdrop fills the frame without cropping the foreground photo */}
-        <img
-          src={CAROUSEL_IMAGES[index].src}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40"
-        />
-
         <AnimatePresence initial={false} custom={direction} mode="wait">
-          <motion.img
+          <motion.div
             key={index}
-            src={CAROUSEL_IMAGES[index].src}
-            alt={CAROUSEL_IMAGES[index].alt}
             custom={direction}
             variants={slideVariants}
             initial="enter"
             animate="center"
             exit="exit"
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-0 w-full h-full object-contain object-center"
-          />
+            className="absolute inset-0"
+          >
+            <MediaSlide item={MEDIA_ITEMS[index]} />
+          </motion.div>
         </AnimatePresence>
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-black/10 pointer-events-none" />
       </div>
 
-      <button
-        type="button"
-        onClick={() => go(-1)}
-        aria-label="Previous image"
-        className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-      >
-        <ChevronLeft className="w-5 h-5" />
-      </button>
-      <button
-        type="button"
-        onClick={() => go(1)}
-        aria-label="Next image"
-        className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-      >
-        <ChevronRight className="w-5 h-5" />
-      </button>
+      {hasMultiple && (
+        <>
+          <button
+            type="button"
+            onClick={() => go(-1)}
+            aria-label="Previous"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => go(1)}
+            aria-label="Next"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
 
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
-        {CAROUSEL_IMAGES.map((_, i) => (
-          <span
-            key={i}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              i === index ? 'w-5 bg-white' : 'w-1.5 bg-white/40'
-            }`}
-          />
-        ))}
-      </div>
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {MEDIA_ITEMS.map((_, i) => (
+              <span
+                key={i}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === index ? 'w-5 bg-white' : 'w-1.5 bg-white/40'
+                }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -112,12 +150,7 @@ export const AboutSection = () => {
     const node = sectionRef.current;
     if (!node) return;
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          observer.unobserve(node);
-        }
-      },
+      ([entry]) => setInView(entry.isIntersecting),
       { threshold: 0.15 }
     );
     observer.observe(node);
@@ -125,7 +158,11 @@ export const AboutSection = () => {
   }, []);
 
   useEffect(() => {
-    if (!inView) return;
+    if (!inView) {
+      setShowParagraph(false);
+      setPillsVisible(0);
+      return;
+    }
     const paragraphTimer = setTimeout(() => setShowParagraph(true), 350);
     return () => clearTimeout(paragraphTimer);
   }, [inView]);
