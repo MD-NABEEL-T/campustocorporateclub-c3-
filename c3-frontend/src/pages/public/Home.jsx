@@ -1,5 +1,6 @@
 import HeroSection from '../../components/hero/HeroSection';
 import AboutSection from '../../components/sections/AboutSection';
+import DomainsSection from '../../components/sections/DomainsSection';
 
 export const Home = () => {
   return (
@@ -15,6 +16,7 @@ export const Home = () => {
       </section>
 
       <AboutSection />
+      <DomainsSection />
     </div>
   );
 };

@@ -14,16 +14,18 @@ import {
   Info,
   Images,
   Sparkles,
-  LogIn
+  LogIn,
+  Layers
 } from 'lucide-react';
 
 export const PUBLIC_NAV_LINKS = [
   { label: 'Home', href: '#home', icon: Home },
   { label: 'About Us', href: '#about', icon: Info },
+  { label: 'Domains', href: '#domains', icon: Layers },
   // TODO: swap these to in-page anchors once their sections are built
-  { label: 'Join Us', href: '/apply', icon: Sparkles },
   { label: 'Team', href: '/team', icon: Users },
   { label: 'Events', href: '/events', icon: Calendar },
+  { label: 'Join Us', href: '/apply', icon: Sparkles },
 ];
 
 export const MEMBER_NAV_LINKS = [
