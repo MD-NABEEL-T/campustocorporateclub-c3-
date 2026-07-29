@@ -1,0 +1,11 @@
+/* Adapts the shared AnimatedList (built as a fixed-size scrollable list) to
+   instead lay out our domain content blocks as a plain staggered column. */
+.domains-animated-list.scroll-list-container {
+  width: 100%;
+}
+
+.domains-animated-list .scroll-list {
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+}
