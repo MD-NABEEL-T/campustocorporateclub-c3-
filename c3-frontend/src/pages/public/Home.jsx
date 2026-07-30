@@ -1,6 +1,7 @@
 import HeroSection from '../../components/hero/HeroSection';
 import AboutSection from '../../components/sections/AboutSection';
 import DomainsSection from '../../components/sections/DomainsSection';
+import TeamSection from '../../components/sections/TeamSection';
 
 export const Home = () => {
   return (
@@ -17,6 +18,7 @@ export const Home = () => {
 
       <AboutSection />
       <DomainsSection />
+      <TeamSection />
     </div>
   );
 };

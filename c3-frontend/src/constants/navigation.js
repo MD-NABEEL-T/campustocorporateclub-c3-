@@ -22,8 +22,8 @@ export const PUBLIC_NAV_LINKS = [
   { label: 'Home', href: '#home', icon: Home },
   { label: 'About Us', href: '#about', icon: Info },
   { label: 'Domains', href: '#domains', icon: Layers },
+  { label: 'Team', href: '#team', icon: Users },
   // TODO: swap these to in-page anchors once their sections are built
-  { label: 'Team', href: '/team', icon: Users },
   { label: 'Events', href: '/events', icon: Calendar },
   { label: 'Join Us', href: '/apply', icon: Sparkles },
 ];
