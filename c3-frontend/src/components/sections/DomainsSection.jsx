@@ -26,6 +26,9 @@ import Galaxy from '../Galaxy';
 import Strands from '../Strands';
 import DotField from '../DotField';
 import MagicRings from '../MagicRings';
+import Waves from '../Waves';
+import LiquidChrome from '../LiquidChrome';
+
 import './DomainsSection.css';
 
 // Mounts its children only once the panel scrolls into view, so five
@@ -190,7 +193,7 @@ const DOMAINS = [
   {
     number: '05',
     title: 'Communication Skills',
-    accent: '#FB7185',
+    accent: '#00FF7F',
     description:
       'Develop confidence in public speaking, technical presentations, leadership, teamwork, and professional communication essential for every successful engineer.',
     skills: ['Public Speaking', 'Presentation', 'Leadership', 'Teamwork'],
@@ -200,17 +203,12 @@ const DOMAINS = [
       { name: 'Priya Suresh', role: 'Core Member' }
     ],
     background: (
-      <MagicRings
-        color="#A1A1AA"
-        colorTwo="#38BDF8"
-        ringCount={6}
-        speed={0.8}
-        baseRadius={0.24}
-        radiusStep={0.12}
-        lineThickness={1.6}
-        fadeIn={0.7}
-        fadeOut={0.5}
-      />
+  <LiquidChrome
+    baseColor={[0.1,0.1,0.1]}
+    speed={0.3}
+    amplitude={0.3}
+    interactive
+  />
     )
   }
 ];
