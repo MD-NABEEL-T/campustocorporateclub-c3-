@@ -22,3 +22,11 @@ Join us :
 particles as bg component,
 finishHeader for heading ,
 terminal 
+pointerhighlight only for me,
+ripple button component for the buttons :https://animate-ui.com/docs/components/buttons/ripple#usage
+flip card component :https://animata.design/docs/card/flip-card
+marqueue for team:https://animata.design/docs/container/marquee
+disclose image :https://animata.design/docs/
+soft blur in for team card details:https://animata.design/docs/text/soft-blur-in
+line by line side :https://animata.design/docs/text/line-by-line-slide
+radial intro :https://animate-ui.com/docs/components/community/radial-intro
