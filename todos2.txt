@@ -21,4 +21,4 @@ PointerHighlight for me only ;
 Join us :
 particles as bg component,
 finishHeader for heading ,
-
+terminal 

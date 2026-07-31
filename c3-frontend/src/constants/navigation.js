@@ -23,8 +23,8 @@ export const PUBLIC_NAV_LINKS = [
   { label: 'About Us', href: '#about', icon: Info },
   { label: 'Domains', href: '#domains', icon: Layers },
   { label: 'Team', href: '#team', icon: Users },
-  // TODO: swap these to in-page anchors once their sections are built
-  { label: 'Events', href: '/events', icon: Calendar },
+  { label: 'Events', href: '#events', icon: Calendar },
+  // TODO: swap to an in-page anchor once the Join Us section is built
   { label: 'Join Us', href: '/apply', icon: Sparkles },
 ];
 

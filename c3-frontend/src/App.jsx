@@ -12,7 +12,6 @@ import { DashboardLayout } from './components/layouts/DashboardLayout';
 // Public Pages
 import Home from './pages/public/Home';
 import PublicSessions from './pages/public/PublicSessions';
-import PublicEvents from './pages/public/PublicEvents';
 import Gallery from './pages/public/Gallery';
 import Apply from './pages/public/Apply';
 import Login from './pages/public/Login';
@@ -38,7 +37,6 @@ function App() {
             <Route element={<PublicLayout />}>
               <Route path="/" element={<Home />} />
                 <Route path="/sessions-archive" element={<PublicSessions />} />
-                <Route path="/events" element={<PublicEvents />} />
                 <Route path="/gallery" element={<Gallery />} />
                 <Route path="/apply" element={<Apply />} />
                 <Route path="/login" element={<Login />} />
