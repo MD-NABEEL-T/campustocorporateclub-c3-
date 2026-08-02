@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -25,12 +25,43 @@ import SessionDetail from './pages/member/SessionDetail';
 // Admin Portal Pages
 import AllAttendance from './pages/admin/AllAttendance';
 import SessionForm from './pages/admin/SessionForm';
+import EventForm from './pages/admin/EventForm';
+
+// Nav clicks route hash links (#about) to "/#about". React Router doesn't
+// auto-scroll on that, so this watches the URL and scrolls to the matching
+// section - retrying briefly in case the page (and its sections) just mounted.
+const ScrollToHash = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!location.hash) return;
+    const id = location.hash.slice(1);
+    let attempts = 0;
+    let frameId;
+
+    const tryScroll = () => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (attempts < 30) {
+        attempts += 1;
+        frameId = requestAnimationFrame(tryScroll);
+      }
+    };
+    tryScroll();
+
+    return () => cancelAnimationFrame(frameId);
+  }, [location.pathname, location.hash]);
+
+  return null;
+};
 
 function App() {
   return (
     <AuthProvider>
       <ToastProvider>
         <BrowserRouter>
+          <ScrollToHash />
           <ClickSpark sparkColor="#ffffff" sparkSize={10} sparkRadius={15} sparkCount={8} duration={400}>
             <Routes>
 {/* Public Layout Routes */}
@@ -69,6 +100,7 @@ function App() {
                 <Route path="members" element={<AllAttendance />} />
                 <Route path="sessions" element={<Sessions />} />
                 <Route path="sessions/new" element={<SessionForm />} />
+                <Route path="events" element={<EventForm />} />
                 <Route path="attendance" element={<AllAttendance />} />
               </Route>
 

@@ -26,9 +26,6 @@ import Galaxy from '../Galaxy';
 import Strands from '../Strands';
 import DotField from '../DotField';
 import MagicRings from '../MagicRings';
-import Waves from '../Waves';
-import LiquidChrome from '../LiquidChrome';
-
 import './DomainsSection.css';
 
 // Mounts its children only once the panel scrolls into view, so five
@@ -59,6 +56,24 @@ const LazyMount = ({ children, rootMargin = '200px' }) => {
       {mounted && children}
     </div>
   );
+};
+
+// Tracks the lg breakpoint so DomainRow renders exactly one background
+// instance (boxed panel on desktop, full-bleed backdrop on mobile) instead
+// of mounting both and hiding one with CSS.
+const useIsDesktop = (breakpoint = 1024) => {
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth >= breakpoint
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${breakpoint}px)`);
+    const handler = e => setIsDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [breakpoint]);
+
+  return isDesktop;
 };
 
 // Mock data only - these will later link into the Team section.
@@ -131,27 +146,16 @@ const DOMAINS = [
       { name: 'Vivaan Joshi', role: 'Core Member' }
     ],
     background: (
-  <Strands
-    colors={["#3B82F6","#7C3AED","#06B6D4"]}
-    count={5}
-    speed={0.5}
-    amplitude={1}
-    waviness={2.2}
-    thickness={0.7}
-    glow={2.9}
-    taper={3}
-    spread={3}
-    intensity={0.25}
-    saturation={2}
-    opacity={1}
-    scale={1.5}
-    glass
-    refraction={0.35}
-    dispersion={4}
-    glassSize={0.85}
-    hueShift={0}
-/>
-
+      <Strands
+        colors={['#38BDF8', '#0f172a', '#1e293b']}
+        count={4}
+        speed={0.5}
+        amplitude={1}
+        waviness={1.2}
+        thickness={0.6}
+        glow={2.2}
+        spread={1.1}
+      />
     )
   },
   {
@@ -174,26 +178,21 @@ const DOMAINS = [
       { name: 'Aditya Menon', role: 'Core Member' }
     ],
     background: (
- <DotField
-    dotRadius={4.5}
-    dotSpacing={14}
-    bulgeStrength={67}
-    glowRadius={200}
-    sparkle={false}
-    waveAmplitude={14}
-    cursorRadius={1000}
-    cursorForce={0.79}
-    bulgeOnly
-    gradientFrom="#F97316"
-    gradientTo="#3B82F6"
-    glowColor="#120F17"
-/>
+      <DotField
+        dotRadius={1.4}
+        dotSpacing={16}
+        bulgeStrength={50}
+        glowRadius={140}
+        gradientFrom="rgba(56, 189, 248, 0.35)"
+        gradientTo="rgba(45, 212, 191, 0.25)"
+        glowColor="#0B1220"
+      />
     )
   },
   {
     number: '05',
     title: 'Communication Skills',
-    accent: '#00FF7F',
+    accent: '#FB7185',
     description:
       'Develop confidence in public speaking, technical presentations, leadership, teamwork, and professional communication essential for every successful engineer.',
     skills: ['Public Speaking', 'Presentation', 'Leadership', 'Teamwork'],
@@ -203,12 +202,17 @@ const DOMAINS = [
       { name: 'Priya Suresh', role: 'Core Member' }
     ],
     background: (
-  <LiquidChrome
-    baseColor={[0.1,0.1,0.1]}
-    speed={0.3}
-    amplitude={0.3}
-    interactive
-  />
+      <MagicRings
+        color="#A1A1AA"
+        colorTwo="#38BDF8"
+        ringCount={6}
+        speed={0.8}
+        baseRadius={0.24}
+        radiusStep={0.12}
+        lineThickness={1.6}
+        fadeIn={0.7}
+        fadeOut={0.5}
+      />
     )
   }
 ];
@@ -250,6 +254,7 @@ const TechChip = ({ tech }) => (
 
 const DomainRow = ({ domain, index }) => {
   const reversed = index % 2 === 1;
+  const isDesktop = useIsDesktop();
 
   // Sequenced via AnimatedList: number -> title -> description -> skills/tech -> members.
   const items = [
@@ -299,16 +304,27 @@ const DomainRow = ({ domain, index }) => {
 
   return (
     <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+      {/* Mobile: the animated background becomes a subtle full-bleed backdrop
+          behind the text, instead of a separate boxed panel eating vertical space. */}
+      {!isDesktop && (
+        <div className="absolute inset-0 overflow-hidden opacity-20 pointer-events-none">
+          <LazyMount>{domain.background}</LazyMount>
+          <div className="absolute inset-0 bg-gradient-to-b from-black via-black/75 to-black" />
+        </div>
+      )}
+
       <div
-        className={`grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center ${
+        className={`relative grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center ${
           reversed ? 'lg:[&>*:first-child]:order-2' : ''
         }`}
       >
-        {/* Animated background panel */}
-        <div className="relative w-full h-[340px] sm:h-[420px] lg:h-[480px] rounded-3xl overflow-hidden border border-white/10 bg-black">
-          <LazyMount>{domain.background}</LazyMount>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 pointer-events-none" />
-        </div>
+        {/* Desktop: animated background panel, boxed and alternating sides */}
+        {isDesktop && (
+          <div className="relative w-full h-[340px] sm:h-[420px] lg:h-[480px] rounded-3xl overflow-hidden border border-white/10 bg-black">
+            <LazyMount>{domain.background}</LazyMount>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 pointer-events-none" />
+          </div>
+        )}
 
         {/* Content */}
         <AnimatedList
@@ -333,7 +349,12 @@ export const DomainsSection = () => {
     const node = introRef.current;
     if (!node) return;
     const observer = new IntersectionObserver(
-      ([entry]) => setIntroInView(entry.isIntersecting),
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIntroInView(true);
+          observer.unobserve(node);
+        }
+      },
       { threshold: 0.4 }
     );
     observer.observe(node);
@@ -341,10 +362,7 @@ export const DomainsSection = () => {
   }, []);
 
   useEffect(() => {
-    if (!introInView) {
-      setShowIntroParagraph(false);
-      return;
-    }
+    if (!introInView) return;
     const timer = setTimeout(() => setShowIntroParagraph(true), 350);
     return () => clearTimeout(timer);
   }, [introInView]);
@@ -384,7 +402,7 @@ export const DomainsSection = () => {
       <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-8">
         <div className="h-px w-24 mx-auto mb-10 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
         <h3 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-snug">
-          Different Domains. <br/><span className="text-[#71717A]">One Community.</span>
+          Different Domains. <span className="text-[#71717A]">One Community.</span>
         </h3>
         <p className="mt-4 text-lg sm:text-xl text-[#A1A1AA] font-medium">
           Learn Together. Build Together. Lead Together.

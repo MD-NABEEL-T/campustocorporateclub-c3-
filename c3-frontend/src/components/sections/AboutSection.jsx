@@ -9,7 +9,6 @@ const ABOUT_PARAGRAPH =
   'Campus to Corporate Club (C3) is the official Computer Science and Engineering department club at CAHCET. We believe learning becomes more meaningful when students teach, collaborate, organize, and build together. Through technical sessions, workshops, events, and peer learning, members strengthen both their technical and professional skills while developing communication, leadership, teamwork, and confidence.';
 
 const HIGHLIGHTS = [
-  'Corporate Skills',
   'Learn by Teaching',
   'Conduct Technical Sessions',
   'Organize Events',
@@ -151,7 +150,12 @@ export const AboutSection = () => {
     const node = sectionRef.current;
     if (!node) return;
     const observer = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.unobserve(node);
+        }
+      },
       { threshold: 0.15 }
     );
     observer.observe(node);
@@ -159,11 +163,7 @@ export const AboutSection = () => {
   }, []);
 
   useEffect(() => {
-    if (!inView) {
-      setShowParagraph(false);
-      setPillsVisible(0);
-      return;
-    }
+    if (!inView) return;
     const paragraphTimer = setTimeout(() => setShowParagraph(true), 350);
     return () => clearTimeout(paragraphTimer);
   }, [inView]);
@@ -242,8 +242,16 @@ export const AboutSection = () => {
           </div>
         </div>
 
-        {/* Right - glassmorphism carousel */}
-        <GlassCarousel />
+        {/* Right - glassmorphism carousel (animates in after the text content finishes,
+            so on mobile - where this stacks below the text - it doesn't visually "jump
+            in" ahead of it) */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={pillsVisible >= HIGHLIGHTS.length ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <GlassCarousel />
+        </motion.div>
       </div>
     </section>
   );

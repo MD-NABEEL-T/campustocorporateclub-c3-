@@ -236,10 +236,13 @@ const PillNav = ({
     href.startsWith('https://') ||
     href.startsWith('//') ||
     href.startsWith('mailto:') ||
-    href.startsWith('tel:') ||
-    href.startsWith('#');
+    href.startsWith('tel:');
 
   const isRouterLink = href => href && !isExternalLink(href);
+
+  // Hash-only hrefs (#about) must resolve to the root page ("/#about") so
+  // they work no matter which route the user is currently on.
+  const resolveTo = href => (href.startsWith('#') ? `/${href}` : href);
 
   const cssVars = {
     ['--base']: baseColor,
@@ -254,7 +257,7 @@ const PillNav = ({
         {isRouterLink(items?.[0]?.href) ? (
           <Link
             className="pill-logo"
-            to={items[0].href}
+            to={resolveTo(items[0].href)}
             aria-label="Home"
             onMouseEnter={handleLogoEnter}
             role="menuitem"
@@ -285,7 +288,7 @@ const PillNav = ({
                 {isRouterLink(item.href) ? (
                   <Link
                     role="menuitem"
-                    to={item.href}
+                    to={resolveTo(item.href)}
                     className={`pill${activeHref === item.href ? ' is-active' : ''}`}
                     aria-label={item.ariaLabel || item.label}
                     onMouseEnter={() => handleEnter(i)}
@@ -351,7 +354,7 @@ const PillNav = ({
             <li key={item.href || `mobile-item-${i}`}>
               {isRouterLink(item.href) ? (
                 <Link
-                  to={item.href}
+                  to={resolveTo(item.href)}
                   className={`mobile-menu-link${activeHref === item.href ? ' is-active' : ''}`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
