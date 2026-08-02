@@ -12,6 +12,7 @@ const router = express.Router();
 
 const eventUpload = upload.fields([
   { name: 'coverImage', maxCount: 1 },
+  { name: 'gallery', maxCount: 6 },
 ]);
 
 router.post('/', protect, adminOnly, eventUpload, createEvent);

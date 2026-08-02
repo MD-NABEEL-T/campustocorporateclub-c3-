@@ -15,6 +15,7 @@
 
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, useMotionValue, useTransform } from 'motion/react';
 // replace icons with your own if needed
 import { FiCircle, FiCode, FiFileText, FiLayers, FiLayout } from 'react-icons/fi';
@@ -59,23 +60,34 @@ const VELOCITY_THRESHOLD = 500;
 const GAP = 16;
 const SPRING_OPTIONS = { type: 'spring', stiffness: 300, damping: 30 };
 
-function CarouselItem({ item, index, itemWidth, round, trackItemOffset, x, transition }) {
+function CarouselItem({ item, index, itemWidth, itemHeight, round, trackItemOffset, x, transition }) {
   const range = [-(index + 1) * trackItemOffset, -index * trackItemOffset, -(index - 1) * trackItemOffset];
   const outputRange = [90, 0, -90];
   const rotateY = useTransform(x, range, outputRange, { clamp: false });
 
-  return (
-    <motion.div
-      key={`${item?.id ?? index}-${index}`}
-      className={`carousel-item ${round ? 'round' : ''}`}
-      style={{
-        width: itemWidth,
-        height: round ? itemWidth : '100%',
-        rotateY: rotateY,
-        ...(round && { borderRadius: '50%' })
-      }}
-      transition={transition}
-    >
+  // Media slides (cover image + metadata) are an optional extension on top of
+  // the original icon/title/description item - existing callers are unaffected.
+  const isMediaItem = Boolean(item.image);
+
+  const content = isMediaItem ? (
+    <>
+      <div className="carousel-item-media">
+        <img src={item.image} alt={item.title} className="carousel-item-image" />
+        <div className="carousel-item-media-overlay" />
+        {item.category && <span className="carousel-item-tag">{item.category}</span>}
+      </div>
+      <div className="carousel-item-content">
+        <div className="carousel-item-title">{item.title}</div>
+        <p className="carousel-item-description">{item.description}</p>
+        <div className="carousel-item-meta">
+          {item.year && <span>{item.year}</span>}
+          {item.year && item.participants && <span className="carousel-item-meta-dot">&bull;</span>}
+          {item.participants && <span>{item.participants} participants</span>}
+        </div>
+      </div>
+    </>
+  ) : (
+    <>
       <div className={`carousel-item-header ${round ? 'round' : ''}`}>
         <span className="carousel-icon-container">{item.icon}</span>
       </div>
@@ -83,6 +95,28 @@ function CarouselItem({ item, index, itemWidth, round, trackItemOffset, x, trans
         <div className="carousel-item-title">{item.title}</div>
         <p className="carousel-item-description">{item.description}</p>
       </div>
+    </>
+  );
+
+  return (
+    <motion.div
+      key={`${item?.id ?? index}-${index}`}
+      className={`carousel-item ${round ? 'round' : ''} ${isMediaItem ? 'media' : ''}`}
+      style={{
+        width: itemWidth,
+        height: itemHeight || (round ? itemWidth : '100%'),
+        rotateY: rotateY,
+        ...(round && { borderRadius: '50%' })
+      }}
+      transition={transition}
+    >
+      {item.href ? (
+        <Link to={item.href} className="carousel-item-link" draggable={false}>
+          {content}
+        </Link>
+      ) : (
+        content
+      )}
     </motion.div>
   );
 }
@@ -90,6 +124,7 @@ function CarouselItem({ item, index, itemWidth, round, trackItemOffset, x, trans
 export default function Carousel({
   items = DEFAULT_ITEMS,
   baseWidth = 300,
+  itemHeight,
   autoplay = false,
   autoplayDelay = 3000,
   pauseOnHover = false,
@@ -251,6 +286,7 @@ export default function Carousel({
             item={item}
             index={index}
             itemWidth={itemWidth}
+            itemHeight={itemHeight}
             round={round}
             trackItemOffset={trackItemOffset}
             x={x}

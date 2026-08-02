@@ -1,0 +1,45 @@
+import Particles from './Particles';
+
+<div style={{ width: '100%', height: '600px', position: 'relative' }}>
+  <Particles
+    particleColors={["#87b2ff"]}
+    particleCount={500}
+    particleSpread={10}
+    speed={0.1}
+    particleBaseSize={100}
+    moveParticlesOnHover={false}
+    alphaParticles
+    disableRotation
+    pixelRatio={1}
+/>
+</div>
+
+Team:
+PointerHighlight for me only ;
+
+
+Join us :
+particles as bg component,
+finishHeader for heading ,
+terminal 
+pointerhighlight only for me,
+ripple button component for the buttons :https://animate-ui.com/docs/components/buttons/ripple#usage
+flip card component :https://animata.design/docs/card/flip-card
+marqueue for team:https://animata.design/docs/container/marquee
+disclose image :https://animata.design/docs/
+soft blur in for team card details:https://animata.design/docs/text/soft-blur-in
+line by line side :https://animata.design/docs/text/line-by-line-slide
+radial intro :https://animate-ui.com/docs/components/community/radial-intro
+
+alright we know that our target users are gonna be using it in mobile so it is very important that we do it 
+the ui fixes are
+1, the navbar routing is not working , its font size is too big and responsiveness for home page and the buttton is ripple component
+2, about us page for mobile view the card comes first because of animation so make the card also as animation so it comes after the text content
+3, in domain page it looks wierd for responsive so shall we better do like this put the component as bg instead of putting text and the bg component separate 
+4,the team card is too big make it small like its too big so there has to be four founding members constnat and the rest 10 members are in two rows as 5 ,5 moving in a marquee and a lil bit of animation 
+for text too aswell as apply the flipcard for the team card ,
+like the thing is in mobile view atleast two card could occupy the screen but not too big .lil small so that the user can see the other cards as well  
+
+optional will it be better if like put a button when clicked the card flip shows the info like right now it only happens when we hover the card in laptop and click in mobile so better try this way as i said 
+
+then land into dashboard

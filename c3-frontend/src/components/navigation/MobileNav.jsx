@@ -20,7 +20,11 @@ export const MobileNav = () => {
   const items = [...navItems, ctaItem];
 
   const handleItemClick = (item) => {
-    navigate(item.link);
+    if (item.link.startsWith('#')) {
+      navigate('/' + item.link);
+    } else {
+      navigate(item.link);
+    }
   };
 
   return (

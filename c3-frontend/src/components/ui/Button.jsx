@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { cn } from '../../utils/cn';
 
 export const Button = React.forwardRef(
@@ -13,12 +13,37 @@ export const Button = React.forwardRef(
       children,
       disabled,
       type = 'button',
+      onClick,
       ...props
     },
     ref
   ) => {
+    const [ripples, setRipples] = useState([]);
+
+    const handleClick = useCallback(
+      e => {
+        const button = e.currentTarget;
+        const rect = button.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const id = Date.now();
+        const ripple = {
+          id,
+          size,
+          x: e.clientX - rect.left - size / 2,
+          y: e.clientY - rect.top - size / 2,
+        };
+        setRipples(prev => [...prev, ripple]);
+        setTimeout(() => {
+          setRipples(prev => prev.filter(r => r.id !== id));
+        }, 600);
+
+        onClick?.(e);
+      },
+      [onClick]
+    );
+
     const baseStyles =
-      'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
+      'relative overflow-hidden inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
 
     const variants = {
       primary:
@@ -56,9 +81,17 @@ export const Button = React.forwardRef(
         ref={ref}
         type={type}
         disabled={disabled || isLoading}
+        onClick={handleClick}
         className={cn(baseStyles, variants[variant], sizes[size], className)}
         {...props}
       >
+        {ripples.map(r => (
+          <span
+            key={r.id}
+            className="btn-ripple-span"
+            style={{ width: r.size, height: r.size, left: r.x, top: r.y }}
+          />
+        ))}
         {isLoading ? (
           <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
         ) : (
