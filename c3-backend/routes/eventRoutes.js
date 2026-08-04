@@ -16,8 +16,8 @@ const eventUpload = upload.fields([
 ]);
 
 router.post('/', protect, adminOnly, eventUpload, createEvent);
-router.get('/', protect, getEvents);
-router.get('/:id', protect, getEventById);
+router.get('/', getEvents);
+router.get('/:id', getEventById);
 router.put('/:id', protect, adminOnly, eventUpload, updateEvent);
 
 export default router;

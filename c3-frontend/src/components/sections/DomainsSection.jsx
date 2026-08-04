@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion } from 'motion/react';
 import { BarChart3 } from 'lucide-react';
 import {
   SiHtml5,
@@ -20,43 +21,12 @@ import {
   SiNumpy
 } from 'react-icons/si';
 import BlurText from '../BlurText';
-import AnimatedList from '../AnimatedList';
+import ViewportGate from '../ViewportGate';
 import LetterGlitch from '../LetterGlitch';
 import Galaxy from '../Galaxy';
 import Strands from '../Strands';
 import DotField from '../DotField';
 import MagicRings from '../MagicRings';
-import './DomainsSection.css';
-
-// Mounts its children only once the panel scrolls into view, so five
-// simultaneous WebGL/canvas backgrounds don't all initialize on page load.
-const LazyMount = ({ children, rootMargin = '200px' }) => {
-  const ref = useRef(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    if (mounted) return;
-    const node = ref.current;
-    if (!node) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setMounted(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin }
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [mounted, rootMargin]);
-
-  return (
-    <div ref={ref} className="absolute inset-0">
-      {mounted && children}
-    </div>
-  );
-};
 
 // Tracks the lg breakpoint so DomainRow renders exactly one background
 // instance (boxed panel on desktop, full-bleed backdrop on mobile) instead
@@ -169,8 +139,6 @@ const DOMAINS = [
       { icon: SiMysql, label: 'MySQL', color: '#4479A1' },
       { icon: SiPandas, label: 'Pandas', color: '#150458' },
       { icon: SiNumpy, label: 'NumPy', color: '#013243' },
-      // No official Power BI mark ships in the icon library (trademark-restricted),
-      // so a chart glyph stands in for it, in Power BI's brand yellow.
       { icon: BarChart3, label: 'Power BI', color: '#F2C811' }
     ],
     members: [
@@ -256,60 +224,12 @@ const DomainRow = ({ domain, index }) => {
   const reversed = index % 2 === 1;
   const isDesktop = useIsDesktop();
 
-  // Sequenced via AnimatedList: number -> title -> description -> skills/tech -> members.
-  const items = [
-    <span
-      key="number"
-      className="font-display text-6xl sm:text-7xl font-bold leading-none select-none"
-      style={{ color: `${domain.accent}4d` }}
-    >
-      {domain.number}
-    </span>,
-
-    <h3 key="title" className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white">
-      {domain.title}
-    </h3>,
-
-    <p key="description" className="text-base sm:text-lg text-[#A1A1AA] leading-relaxed max-w-lg">
-      {domain.description}
-    </p>,
-
-    <div key="skills">
-      {domain.techStack && (
-        <p className="text-xs uppercase tracking-wide text-[#71717A] mb-2.5">Tech We Use</p>
-      )}
-      <div className="flex flex-wrap gap-2">
-        {domain.techStack
-          ? domain.techStack.map(tech => <TechChip key={tech.label} tech={tech} />)
-          : domain.skills.map(skill => (
-              <span
-                key={skill}
-                className="px-3 py-1.5 rounded-full text-xs font-medium text-[#E4E4E7] bg-white/5 border border-white/10"
-              >
-                {skill}
-              </span>
-            ))}
-      </div>
-    </div>,
-
-    <div key="members">
-      <p className="text-xs uppercase tracking-wide text-[#71717A] mb-2.5">Domain Members</p>
-      <div className="flex flex-wrap gap-2.5">
-        {domain.members.map(member => (
-          <MemberProfile key={member.name} member={member} accent={domain.accent} />
-        ))}
-      </div>
-    </div>
-  ];
-
   return (
     <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-      {/* Mobile: the animated background becomes a subtle full-bleed backdrop
-          behind the text, instead of a separate boxed panel eating vertical space. */}
       {!isDesktop && (
-        <div className="absolute inset-0 overflow-hidden opacity-20 pointer-events-none">
-          <LazyMount>{domain.background}</LazyMount>
-          <div className="absolute inset-0 bg-gradient-to-b from-black via-black/75 to-black" />
+        <div className="absolute inset-0 overflow-hidden opacity-50 pointer-events-none">
+          <ViewportGate>{domain.background}</ViewportGate>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-black/80" />
         </div>
       )}
 
@@ -318,23 +238,61 @@ const DomainRow = ({ domain, index }) => {
           reversed ? 'lg:[&>*:first-child]:order-2' : ''
         }`}
       >
-        {/* Desktop: animated background panel, boxed and alternating sides */}
         {isDesktop && (
           <div className="relative w-full h-[340px] sm:h-[420px] lg:h-[480px] rounded-3xl overflow-hidden border border-white/10 bg-black">
-            <LazyMount>{domain.background}</LazyMount>
+            <ViewportGate>{domain.background}</ViewportGate>
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 pointer-events-none" />
           </div>
         )}
 
-        {/* Content */}
-        <AnimatedList
-          items={items}
-          showGradients={false}
-          enableArrowNavigation={false}
-          displayScrollbar={false}
-          className="domains-animated-list"
-          itemClassName="!bg-transparent !p-0 !rounded-none !mb-0"
-        />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <span
+            className="font-display text-6xl sm:text-7xl font-bold leading-none select-none block"
+            style={{ color: `${domain.accent}4d` }}
+          >
+            {domain.number}
+          </span>
+
+          <h3 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white mt-2 mb-4">
+            {domain.title}
+          </h3>
+
+          <p className="text-base sm:text-lg text-[#A1A1AA] leading-relaxed max-w-lg mb-6">
+            {domain.description}
+          </p>
+
+          <div className="mb-8">
+            {domain.techStack && (
+              <p className="text-xs uppercase tracking-wide text-[#71717A] mb-2.5">Tech We Use</p>
+            )}
+            <div className="flex flex-wrap gap-2">
+              {domain.techStack
+                ? domain.techStack.map(tech => <TechChip key={tech.label} tech={tech} />)
+                : domain.skills.map(skill => (
+                    <span
+                      key={skill}
+                      className="px-3 py-1.5 rounded-full text-xs font-medium text-[#E4E4E7] bg-white/5 border border-white/10"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs uppercase tracking-wide text-[#71717A] mb-2.5">Domain Members</p>
+            <div className="flex flex-wrap gap-2.5">
+              {domain.members.map(member => (
+                <MemberProfile key={member.name} member={member} accent={domain.accent} />
+              ))}
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
@@ -369,7 +327,6 @@ export const DomainsSection = () => {
 
   return (
     <section id="domains" className="relative w-full bg-black overflow-hidden py-24 sm:py-28">
-      {/* Section introduction */}
       <div ref={introRef} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
         {introInView && (
           <BlurText
@@ -398,7 +355,6 @@ export const DomainsSection = () => {
         ))}
       </div>
 
-      {/* Closing statement */}
       <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-8">
         <div className="h-px w-24 mx-auto mb-10 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
         <h3 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-snug">

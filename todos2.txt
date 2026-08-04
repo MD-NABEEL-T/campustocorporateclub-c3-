@@ -26,12 +26,14 @@ pointerhighlight only for me,
 ripple button component for the buttons :https://animate-ui.com/docs/components/buttons/ripple#usage
 flip card component :https://animata.design/docs/card/flip-card
 marqueue for team:https://animata.design/docs/container/marquee
-disclose image :https://animata.design/docs/
+disclose image for the first page :https://animata.design/docs/
 soft blur in for team card details:https://animata.design/docs/text/soft-blur-in
-line by line side :https://animata.design/docs/text/line-by-line-slide
-radial intro :https://animate-ui.com/docs/components/community/radial-intro
+line by line side for campustocorporate text:https://animata.design/docs/text/line-by-line-slide
+radial intro  :https://animate-ui.com/docs/components/community/radial-intro
 
-alright we know that our target users are gonna be using it in mobile so it is very important that we do it 
+issues 1:
+alright 
+we know that our target users are gonna be using it in mobile so it is very important that we do it 
 the ui fixes are
 1, the navbar routing is not working , its font size is too big and responsiveness for home page and the buttton is ripple component
 2, about us page for mobile view the card comes first because of animation so make the card also as animation so it comes after the text content
@@ -42,4 +44,48 @@ like the thing is in mobile view atleast two card could occupy the screen but no
 
 optional will it be better if like put a button when clicked the card flip shows the info like right now it only happens when we hover the card in laptop and click in mobile so better try this way as i said 
 
+
+issues 2:
+1, the home page campus to corporate and the button and texxt are not responsive or properly aligned like this 
+structure should follow 
+Campus 
+      to 
+        Corporate  in lil center and then the text and buttons should be kept on the right place 
+2, the bg image is not covered fully in mobile view ,fix that 
+3, in menu bar the numbers 01,02 are not aligned properly eithrer remove it or align it 
+4,make sure the animation occurs only once when the user scrolls down because it makes it wierd alright if animation occuers everytime 
+5,in the domain page the bg component is not visible so use it wisely and properly like letter glitch ,etc
+6,remove the count up from about us page 
+7,use it after the events page 
+8,use masonry component for the responsive as well but properly because that images are not good when stacked one after another like cards 
+9,use the count ups after this 
+10, in team for each card when flipped there is a quote which is great idea , so at bottom instead of view profile add three icons email,github,linkedin
+11, for that marquee members card is great but little bit bigger so that we could fit the quote and the icons as well 
+
+
+issues 3:
+1,fix footer 
+2,add events 
+3,add team member details 
+
+
+issues 4:
+still the landing page sucks in responsiveness and the animation i told for the home page was to use disclose image after it comes then the text animation like  the title as line by line component from aceternity and the other text learn,.. do some gode animation 
+i told you to make the other team members rows to 3 *3 instead of 5 * 2 ,
+there is too much margin up and below the team section 
+still the count up is not responsive and the text animation above masonry makes it worse so fix that ui issue  
+1,add the join us page use particles as bg component and then add the heading finishHeader and also add the terminal component when finished 
+2,add radial intro using memberslogo
+
+
+issues 5:
+1,add events now maybe it is because of that it loads a lot and also we have to decide a format of text to upload so that i can assign it to a junior who can do this 
+2,bg not at all visible now so add the normal image to laptop and this image i will add it as c3fullmembers-2.jpg which is applied for bg for home page in mobile only 
+
+3,current page you have changed the layout see the member login changed to portal dashboard and all so turn it back like this before as in the deployed version
+3, instead of apply page and backend timepass so lets do add a form 
 then land into dashboard
+
+
+
+https://youtube.com/shorts/Kbl-swjA2dc?si=bRRNcmMYJzDj-fKr

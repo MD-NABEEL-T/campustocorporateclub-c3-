@@ -1,60 +1,125 @@
 import { useRef, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { motion, useInView } from 'motion/react';
-import { User, RotateCw, ArrowUpRight } from 'lucide-react';
+import { User, RotateCw, Mail } from 'lucide-react';
+import { FaGithub, FaLinkedin } from 'react-icons/fa';
 import BlurText from '../BlurText';
 import Marquee from '../Marquee';
 import FlipCard from '../FlipCard';
 
-const slugify = name => name.toLowerCase().trim().replace(/\s+/g, '-');
-
-// Mock data only - photos, names and quotes are placeholders.
+// Mock data only - photos, names, quotes and socials are placeholders.
 const LEADERSHIP = [
   {
     name: 'Member Name',
     role: 'President',
     domain: 'Design & Development',
     accent: '#2DD4BF',
-    quote: 'C3 taught me that leading means teaching, not just doing.'
+    quote: 'C3 taught me that leading means teaching, not just doing.',
+    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
   },
   {
     name: 'Member Name',
     role: 'Vice President',
     domain: 'AI & ML',
     accent: '#818CF8',
-    quote: 'Every session is a chance to learn alongside the people we teach.'
+    quote: 'Every session is a chance to learn alongside the people we teach.',
+    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
   },
   {
     name: 'Member Name',
     role: 'Session Handler',
     domain: 'Networking & Cybersecurity',
     accent: '#38BDF8',
-    quote: 'Good sessions come from good questions, not just good slides.'
+    quote: 'Good sessions come from good questions, not just good slides.',
+    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
   },
   {
     name: 'Member Name',
     role: 'Event Manager',
     domain: 'Data Analytics',
     accent: '#F59E0B',
-    quote: 'An event is just a team working well together, in public.'
+    quote: 'An event is just a team working well together, in public.',
+    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
   }
 ];
 
-// 10 core members, split into two rows of 5 for the marquee.
+// 9 core members, split into three rows of 3 for the marquee.
 const CORE_MEMBERS = [
-  { name: 'Core Member One', tier: 'Senior Core Member', domain: 'Design & Development', accent: '#2DD4BF' },
-  { name: 'Core Member Two', tier: 'Core Member', domain: 'Design & Development', accent: '#2DD4BF' },
-  { name: 'Core Member Three', tier: 'Senior Core Member', domain: 'AI & ML', accent: '#818CF8' },
-  { name: 'Core Member Four', tier: 'Core Member', domain: 'AI & ML', accent: '#818CF8' },
-  { name: 'Core Member Five', tier: 'Senior Core Member', domain: 'Networking & Cybersecurity', accent: '#38BDF8' },
-  { name: 'Core Member Six', tier: 'Core Member', domain: 'Networking & Cybersecurity', accent: '#38BDF8' },
-  { name: 'Core Member Seven', tier: 'Senior Core Member', domain: 'Data Analytics', accent: '#F59E0B' },
-  { name: 'Core Member Eight', tier: 'Core Member', domain: 'Data Analytics', accent: '#F59E0B' },
-  { name: 'Core Member Nine', tier: 'Senior Core Member', domain: 'Communication Skills', accent: '#FB7185' },
-  { name: 'Core Member Ten', tier: 'Core Member', domain: 'Communication Skills', accent: '#FB7185' }
+  {
+    name: 'Core Member One',
+    tier: 'Senior Core Member',
+    domain: 'Design & Development',
+    accent: '#2DD4BF',
+    quote: 'Every pixel matters when you\u2019re building for people you know.',
+    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+  },
+  {
+    name: 'Core Member Two',
+    tier: 'Core Member',
+    domain: 'AI & ML',
+    accent: '#818CF8',
+    quote: 'Curiosity got me here, the club kept me around.',
+    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+  },
+  {
+    name: 'Core Member Three',
+    tier: 'Senior Core Member',
+    domain: 'Networking & Cybersecurity',
+    accent: '#38BDF8',
+    quote: 'Security is a mindset before it\u2019s a skillset.',
+    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+  },
+  {
+    name: 'Core Member Four',
+    tier: 'Core Member',
+    domain: 'Data Analytics',
+    accent: '#F59E0B',
+    quote: 'Excel first, Python next, dashboards forever.',
+    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+  },
+  {
+    name: 'Core Member Five',
+    tier: 'Senior Core Member',
+    domain: 'Communication Skills',
+    accent: '#FB7185',
+    quote: 'Confidence is just practice wearing a good outfit.',
+    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+  },
+  {
+    name: 'Core Member Six',
+    tier: 'Core Member',
+    domain: 'Design & Development',
+    accent: '#2DD4BF',
+    quote: 'I learned React by breaking things here first.',
+    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+  },
+  {
+    name: 'Core Member Seven',
+    tier: 'Core Member',
+    domain: 'AI & ML',
+    accent: '#818CF8',
+    quote: 'Models are easy. Explaining them well is the real skill.',
+    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+  },
+  {
+    name: 'Core Member Eight',
+    tier: 'Core Member',
+    domain: 'Networking & Cybersecurity',
+    accent: '#38BDF8',
+    quote: 'My first Wireshark capture broke my brain, in a good way.',
+    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+  },
+  {
+    name: 'Core Member Nine',
+    tier: 'Core Member',
+    domain: 'Data Analytics',
+    accent: '#F59E0B',
+    quote: 'Data tells a story if you\u2019re patient enough to listen.',
+    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+  }
 ];
-const CORE_ROW_1 = CORE_MEMBERS.slice(0, 5);
-const CORE_ROW_2 = CORE_MEMBERS.slice(5, 10);
+const CORE_ROW_1 = CORE_MEMBERS.slice(0, 3);
+const CORE_ROW_2 = CORE_MEMBERS.slice(3, 6);
+const CORE_ROW_3 = CORE_MEMBERS.slice(6, 9);
 
 const PhotoPlaceholder = ({ accent, className = '' }) => (
   <div
@@ -75,6 +140,35 @@ const FlipHint = ({ accent }) => (
     <RotateCw className="w-3 h-3 text-white/70" />
   </span>
 );
+
+const SocialRow = ({ socials, accent, size = 'sm' }) => {
+  const iconClass = size === 'sm' ? 'w-3 h-3' : 'w-3.5 h-3.5';
+  const btnClass = size === 'sm' ? 'w-6 h-6' : 'w-7 h-7';
+
+  const links = [
+    { key: 'email', href: socials.email, Icon: Mail },
+    { key: 'github', href: socials.github, Icon: FaGithub },
+    { key: 'linkedin', href: socials.linkedin, Icon: FaLinkedin }
+  ];
+
+  return (
+    <div className="flex items-center gap-2">
+      {links.map(({ key, href, Icon }) => (
+        <a
+          key={key}
+          href={href}
+          target={key === 'email' ? undefined : '_blank'}
+          rel={key === 'email' ? undefined : 'noreferrer'}
+          onClick={e => e.stopPropagation()}
+          className={`${btnClass} rounded-full flex items-center justify-center border border-white/10 bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition-colors`}
+          style={{ '--tw-ring-color': accent }}
+        >
+          <Icon className={iconClass} />
+        </a>
+      ))}
+    </div>
+  );
+};
 
 const LeadershipCard = ({ leader, index }) => (
   <motion.div
@@ -113,13 +207,7 @@ const LeadershipCard = ({ leader, index }) => (
               "{leader.quote}"
             </p>
           </div>
-          <Link
-            to={`/team/${slugify(leader.name)}`}
-            onClick={e => e.stopPropagation()}
-            className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-medium text-white/80 hover:text-white"
-          >
-            View Profile <ArrowUpRight className="w-3 h-3" />
-          </Link>
+          <SocialRow socials={leader.socials} accent={leader.accent} size="md" />
         </div>
       }
     />
@@ -128,32 +216,28 @@ const LeadershipCard = ({ leader, index }) => (
 
 const CoreMemberCard = ({ member }) => (
   <FlipCard
-    className="w-[132px] h-[168px] sm:w-[150px] sm:h-[188px] shrink-0"
+    className="w-[172px] h-[230px] sm:w-[190px] sm:h-[250px] shrink-0"
     front={
-      <div className="relative w-full h-full rounded-xl border border-white/10 bg-white/[0.02] p-2.5 flex flex-col">
+      <div className="relative w-full h-full rounded-xl border border-white/10 bg-white/[0.02] p-3 flex flex-col">
         <FlipHint accent={member.accent} />
-        <PhotoPlaceholder accent={member.accent} className="aspect-square mb-2" />
+        <PhotoPlaceholder accent={member.accent} className="aspect-square mb-2.5" />
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: member.accent }} />
           <p className="text-xs font-medium text-white truncate">{member.name}</p>
         </div>
+        <p className="text-[10px] text-[#71717A] pl-3 truncate">{member.tier}</p>
       </div>
     }
     back={
-      <div className="relative w-full h-full rounded-xl border border-white/10 bg-[#0a0a0a] p-2.5 flex flex-col justify-between">
+      <div className="relative w-full h-full rounded-xl border border-white/10 bg-[#0a0a0a] p-3 flex flex-col justify-between">
         <div>
           <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: member.accent }}>
             {member.tier}
           </p>
-          <p className="text-[11px] text-[#A1A1AA] leading-snug">{member.domain}</p>
+          <p className="text-[10px] text-[#71717A] mb-2">{member.domain}</p>
+          <p className="text-[11px] text-[#D4D4D8] italic leading-snug line-clamp-4">"{member.quote}"</p>
         </div>
-        <Link
-          to={`/team/${slugify(member.name)}`}
-          onClick={e => e.stopPropagation()}
-          className="inline-flex items-center gap-1 text-[10px] font-medium text-white/80 hover:text-white"
-        >
-          View <ArrowUpRight className="w-2.5 h-2.5" />
-        </Link>
+        <SocialRow socials={member.socials} accent={member.accent} size="sm" />
       </div>
     }
   />
@@ -171,7 +255,7 @@ const CoreMemberRow = ({ members, direction, delayStart }) => {
       transition={{ duration: 0.6, delay: delayStart }}
       className="mb-4 last:mb-0"
     >
-      <Marquee direction={direction} speed={26}>
+      <Marquee direction={direction} speed={30}>
         <div className="flex gap-4 pr-4">
           {members.map(member => (
             <CoreMemberCard key={member.name} member={member} />
@@ -196,9 +280,9 @@ export const TeamSection = () => {
   }, [introInView]);
 
   return (
-    <section id="team" className="relative w-full bg-black overflow-hidden py-24 sm:py-28">
+    <section id="team" className="relative w-full bg-black overflow-hidden pt-10 pb-14 sm:pt-16 sm:pb-20">
       {/* Section introduction */}
-      <div ref={introRef} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 sm:mb-16">
+      <div ref={introRef} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-14">
         {introInView && (
           <BlurText
             text="Meet the Team"
@@ -221,7 +305,7 @@ export const TeamSection = () => {
       </div>
 
       {/* Leadership - constant, 2-up even on the smallest phones */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 sm:mb-20">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 sm:mb-16">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {LEADERSHIP.map((leader, i) => (
             <LeadershipCard key={leader.role} leader={leader} index={i} />
@@ -229,7 +313,7 @@ export const TeamSection = () => {
         </div>
       </div>
 
-      {/* Core members - two marquee rows of five, scrolling opposite directions */}
+      {/* Core members - three marquee rows of three, alternating directions */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div ref={coreHeadingRef}>
           {coreHeadingInView && (
@@ -244,6 +328,7 @@ export const TeamSection = () => {
         </div>
         <CoreMemberRow members={CORE_ROW_1} direction="left" delayStart={0} />
         <CoreMemberRow members={CORE_ROW_2} direction="right" delayStart={0.15} />
+        <CoreMemberRow members={CORE_ROW_3} direction="left" delayStart={0.3} />
       </div>
     </section>
   );

@@ -33,7 +33,7 @@ export const MobileNav = () => {
         position="right"
         items={items}
         displaySocials={false}
-        displayItemNumbering
+displayItemNumbering={false}
 menuButtonColor="#FFFFFF"
         openMenuButtonColor="#FFFFFF"
         changeMenuColorOnOpen={false}
