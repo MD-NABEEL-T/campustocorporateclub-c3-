@@ -43,7 +43,7 @@ const SessionForm = () => {
       formData.append('coverImage', coverImage);
       images.forEach((img) => formData.append('images', img));
 
-      const res = await api.post('/api/sessions', formData, {
+      const res = await api.post('/sessions', formData, {
         headers: {
           Authorization: `Bearer ${user.token}`,
           'Content-Type': 'multipart/form-data',

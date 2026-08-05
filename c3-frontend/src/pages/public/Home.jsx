@@ -3,16 +3,23 @@ import AboutSection from '../../components/sections/AboutSection';
 import DomainsSection from '../../components/sections/DomainsSection';
 import TeamSection from '../../components/sections/TeamSection';
 import EventsSection from '../../components/sections/EventsSection';
+import JoinUsSection from '../../components/sections/JoinUsSection';
 
 export const Home = () => {
   return (
     <div className="relative w-full overflow-hidden bg-black">
-      <section id="home" className="relative min-h-screen">
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-30"
-          style={{ backgroundImage: "url('/assets/c3fullmembers.jpg.jpeg')" }}
-        />
-        <div className="absolute inset-0 bg-black/60" />
+      <section id="home" className="relative min-h-screen min-h-[100dvh]">
+
+        {/* Background image — mobile gets portrait, desktop gets landscape */}
+        <picture className="absolute inset-0 w-full h-full">
+          <source media="(max-width: 639px)" srcSet="/assets/c3fullmembers2.jpg" />
+          <img
+            src="/assets/c3fullmembers.jpg.jpeg"
+            alt="C3 Club Members"
+            className="absolute inset-0 w-full h-full object-cover object-[center_25%] opacity-[0.78]"
+          />
+        </picture>
+        <div className="absolute inset-0 bg-black/55" />
 
         <HeroSection />
       </section>
@@ -21,6 +28,7 @@ export const Home = () => {
       <DomainsSection />
       <TeamSection />
       <EventsSection />
+      <JoinUsSection />
     </div>
   );
 };

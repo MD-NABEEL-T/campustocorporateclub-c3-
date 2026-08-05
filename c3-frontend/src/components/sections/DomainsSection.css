@@ -2,6 +2,7 @@
    instead lay out our domain content blocks as a plain staggered column. */
 .domains-animated-list.scroll-list-container {
   width: 100%;
+  background: transparent;
 }
 
 .domains-animated-list .scroll-list {

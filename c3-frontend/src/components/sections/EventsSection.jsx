@@ -3,67 +3,40 @@ import BlurText from '../BlurText';
 import CountUp from '../CountUp';
 import Carousel from '../Carousel';
 import Masonry from '../Masonry';
+import api from '../../api/axios';
+import { motion } from 'motion/react'; // add to top imports
 
-// Mock data only - shaped to match a future API response so swapping in
-// real backend/Cloudinary data later won't require restructuring the UI.
-// Expected shape per event: { title, slug, category, date, participantCount,
+// Real events now come from GET /api/events (backend serves Cloudinary URLs
+// for coverImage/gallery - see c3-backend/controllers/eventController.js).
+// Expected shape per event: { title, slug, category, date, attendeeCount,
 // coverImage, description, gallery: string[] }
-const EVENTS = [
-  {
-    title: 'Hackathon & Debate',
-    slug: 'hackathon',
-    category: 'Hackathon',
-    date: '2025',
-    participantCount: 120,
-    description: 'A day of rapid builds, sharp arguments, and bold ideas defended live.',
-    coverImage: 'https://picsum.photos/seed/c3-hackathon-cover/900/600?grayscale',
-    gallery: [
-      'https://picsum.photos/seed/c3-hackathon-1/600/800?grayscale',
-      'https://picsum.photos/seed/c3-hackathon-2/600/600?grayscale',
-      'https://picsum.photos/seed/c3-hackathon-3/600/750?grayscale'
-    ]
-  },
-  {
-    title: 'GitHub & LinkedIn Workshop',
-    slug: 'github-linkedin',
-    category: 'Workshop',
-    date: '2025',
-    participantCount: 85,
-    description: 'Hands-on session on building a developer profile that actually gets noticed.',
-    coverImage: 'https://picsum.photos/seed/c3-github-cover/900/600?grayscale',
-    gallery: [
-      'https://picsum.photos/seed/c3-github-1/600/700?grayscale',
-      'https://picsum.photos/seed/c3-github-2/600/850?grayscale'
-    ]
-  },
-  {
-    title: 'Domains Session',
-    slug: 'domains',
-    category: 'Session',
-    date: '2024',
-    participantCount: 150,
-    description: 'An introduction to every domain at C3, taught by the members who live them.',
-    coverImage: 'https://picsum.photos/seed/c3-domains-cover/900/600?grayscale',
-    gallery: [
-      'https://picsum.photos/seed/c3-domains-1/600/600?grayscale',
-      'https://picsum.photos/seed/c3-domains-2/600/750?grayscale',
-      'https://picsum.photos/seed/c3-domains-3/600/650?grayscale'
-    ]
-  },
-  {
-    title: 'Sprintathon',
-    slug: 'sprintathon',
-    category: 'Sprint',
-    date: '2024',
-    participantCount: 95,
-    description: 'Short sprints, tight deadlines, and a room full of people who shipped anyway.',
-    coverImage: 'https://picsum.photos/seed/c3-sprint-cover/900/600?grayscale',
-    gallery: [
-      'https://picsum.photos/seed/c3-sprint-1/600/800?grayscale',
-      'https://picsum.photos/seed/c3-sprint-2/600/600?grayscale'
-    ]
-  }
-];
+
+const useEvents = () => {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    api.get('/public/events')
+      .then(res => {
+        if (!cancelled) setEvents(res.data);
+      })
+      .catch(err => {
+        if (!cancelled) setError(err);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return { events, loading, error };
+};
 
 const STORY_LINES = [
   'Every event begins with an idea.',
@@ -72,30 +45,11 @@ const STORY_LINES = [
 ];
 
 const STATS = [
-  { to: 10, suffix: '+', label: 'Events' },
-  { to: 200, suffix: '+', label: 'Participants' },
-  { to: 30, suffix: '+', label: 'Sessions' }
-];
-
-const carouselItems = EVENTS.map(event => ({
-  id: event.slug,
-  title: event.title,
-  description: event.description,
-  image: event.coverImage,
-  category: event.category,
-  year: event.date,
-  participants: event.participantCount,
-  href: `/events/${event.slug}`
-}));
-
-const galleryItems = EVENTS.flatMap(event =>
-  event.gallery.map((img, i) => ({
-    id: `${event.slug}-${i}`,
-    img,
-    url: `/events/${event.slug}`,
-    height: 300 + ((i * 73 + event.slug.length * 17) % 220)
-  }))
-);
+           { to: 20, suffix: '+', label: 'Members' },
+           { to: 10, suffix: '+', label: 'Events' },
+           { to: 200, suffix: '+', label: 'Participants' },
+           { to: 30, suffix: '+', label: 'Sessions' }
+         ];
 
 const useMeasuredWidth = () => {
   const ref = useRef(null);
@@ -111,53 +65,36 @@ const useMeasuredWidth = () => {
 
   return [ref, width];
 };
-
-const StoryTransition = () => {
-  const ref = useRef(null);
-  const [inView, setInView] = useState(false);
-  const [visibleLines, setVisibleLines] = useState(0);
-
-  useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
-      { threshold: 0.5 }
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!inView) {
-      setVisibleLines(0);
-      return;
-    }
-    if (visibleLines >= STORY_LINES.length) return;
-    const timer = setTimeout(() => setVisibleLines(v => v + 1), visibleLines === 0 ? 200 : 450);
-    return () => clearTimeout(timer);
-  }, [inView, visibleLines]);
-
-  return (
-    <div ref={ref} className="max-w-2xl mx-auto text-center py-20 px-4">
-      {STORY_LINES.map((line, i) =>
-        i < visibleLines ? (
-          <BlurText
-            key={line}
-            text={line}
-            direction="top"
-            delay={30}
-            stepDuration={0.35}
-            className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold text-white/90 mb-2 justify-center"
-          />
-        ) : (
-          <div key={line} className="h-[1em] sm:h-[1.2em] md:h-[1.4em] mb-2" />
-        )
-      )}
-    </div>
-  );
+const storyContainerVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.25 } }
 };
 
+const storyLineVariants = {
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }
+};
+
+
+const StoryTransition = () => (
+  <motion.div
+    className="max-w-2xl mx-auto text-center py-10 sm:py-14 px-4"
+    initial="hidden"
+    whileInView="visible"
+    viewport={{ once: true, amount: 0.5 }}
+    variants={storyContainerVariants}
+  >
+    {STORY_LINES.map(line => (
+      <motion.p
+        key={line}
+        variants={storyLineVariants}
+        className="font-display text-xl sm:text-3xl md:text-4xl font-semibold text-white/90 mb-2"
+      >
+        {line}
+      </motion.p>
+    ))}
+  </motion.div>
+);
 const ClosingCTA = () => {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
@@ -193,6 +130,27 @@ export const EventsSection = () => {
   const [introInView, setIntroInView] = useState(false);
   const [showIntroParagraph, setShowIntroParagraph] = useState(false);
   const [carouselRef, carouselWidth] = useMeasuredWidth();
+  const { events, loading, error } = useEvents();
+
+  const carouselItems = events.map(event => ({
+    id: event.slug,
+    title: event.title,
+    description: event.description,
+    image: event.coverImage,
+    category: event.category,
+    year: event.date,
+    participants: event.attendeeCount,
+    href: `/events/${event.slug}`
+  }));
+
+  const galleryItems = events.flatMap(event =>
+    (event.gallery || []).map((img, i) => ({
+      id: `${event.slug}-${i}`,
+      img,
+      url: `/events/${event.slug}`,
+      height: 300 + ((i * 73 + event.slug.length * 17) % 220)
+    }))
+  );
 
   useEffect(() => {
     const node = introRef.current;
@@ -231,7 +189,16 @@ export const EventsSection = () => {
       </div>
 
       <div ref={carouselRef} className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {showIntroParagraph && (
+        {loading && (
+          <p className="text-center text-sm text-[#A1A1AA] py-12">Loading events…</p>
+        )}
+        {!loading && error && (
+          <p className="text-center text-sm text-red-400 py-12">Couldn't load events right now.</p>
+        )}
+        {!loading && !error && carouselItems.length === 0 && (
+          <p className="text-center text-sm text-[#A1A1AA] py-12">No events yet — check back soon.</p>
+        )}
+        {!loading && !error && showIntroParagraph && carouselItems.length > 0 && (
           <Carousel
             items={carouselItems}
             baseWidth={Math.max(carouselWidth, 280)}
@@ -267,15 +234,16 @@ export const EventsSection = () => {
 
       {/* Event statistics */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="grid grid-cols-3 gap-8 text-center">
+      <div className="grid grid-cols-4 gap-x-2 sm:gap-8 text-center">
+
+
           {STATS.map(stat => (
             <div key={stat.label}>
-              <div className="font-display text-4xl sm:text-5xl font-bold text-white flex items-baseline justify-center">
+           <div className="font-display text-lg sm:text-5xl font-bold text-white flex items-baseline justify-center flex-wrap">
                 <CountUp to={stat.to} duration={2} />
-                <span>{stat.suffix}</span>
-              </div>
-              <div className="text-sm text-[#A1A1AA] mt-2">{stat.label}</div>
-            </div>
+<span>{stat.suffix}</span>
+           </div>
+<div className="text-[10px] sm:text-sm text-[#A1A1AA] mt-1 sm:mt-2 leading-tight">{stat.label}</div>            </div>
           ))}
         </div>
       </div>

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import BlurText from '../BlurText';
-import CountUp from '../CountUp';
+// import CountUp from '../CountUp';
 import ShapeGrid from '../ShapeGrid';
 
 const ABOUT_PARAGRAPH =
@@ -16,11 +16,11 @@ const HIGHLIGHTS = [
   'Develop Leadership'
 ];
 
-const STATS = [
-  { to: 20, suffix: '+', label: 'Members' },
-  { to: 30, suffix: '+', label: 'Sessions' },
-  { to: 10, suffix: '+', label: 'Events' }
-];
+// const STATS = [
+//   { to: 20, suffix: '+', label: 'Members' },
+//   { to: 30, suffix: '+', label: 'Sessions' },
+//   { to: 10, suffix: '+', label: 'Events' }
+// ];
 
 // Swap `src` here once the edited promo video is ready. `poster` is the
 // placeholder shown until then (and as the video's poster frame).
@@ -229,7 +229,7 @@ export const AboutSection = () => {
             )}
           </div>
 
-          <div className="flex flex-wrap gap-10">
+          {/* <div className="flex flex-wrap gap-10">
             {STATS.map(stat => (
               <div key={stat.label}>
                 <div className="font-display text-3xl sm:text-4xl font-bold text-white flex items-baseline">
@@ -239,7 +239,7 @@ export const AboutSection = () => {
                 <div className="text-sm text-[#A1A1AA] mt-1">{stat.label}</div>
               </div>
             ))}
-          </div>
+          </div> */}
         </div>
 
         {/* Right - glassmorphism carousel (animates in after the text content finishes,

@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Terminal, Mail, Heart, Globe } from 'lucide-react';
 import { PUBLIC_NAV_LINKS } from '../../constants/navigation';
-
+import PointerHighlight from '../ui/PointerHighlight'
 export const Footer = () => {
   return (
     <footer className="border-t border-white/10 bg-[#050E18] text-[#94A3B8] pt-16 pb-12">
@@ -96,9 +96,23 @@ export const Footer = () => {
         {/* Bottom Credits */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#94A3B8] gap-4">
           <p>© {new Date().getFullYear()} Campus to Corporate (C3) Club. All rights reserved.</p>
-          <p className="flex items-center gap-1">
-            Engineered with <Heart className="w-3.5 h-3.5 text-[#EF4444] fill-current inline" /> by C3 Tech Lead Team
-          </p>
+<p className="flex items-center gap-1 flex-wrap justify-center">
+           Engineered with <Heart className="w-3.5 h-3.5 text-[#EF4444] fill-current inline" /> by{' '}
+           <PointerHighlight
+             containerClassName="inline-block"
+             rectangleClassName="border-[#38BDF8]/50"
+             pointerClassName="text-[#38BDF8]"
+           >
+             <a
+               href="https://github.com/MD-NABEEL-T"
+               target="_blank"
+               rel="noreferrer"
+               className="relative z-10 font-semibold text-white px-1"
+             >
+               Nabeel
+             </a>
+           </PointerHighlight>
+         </p>
         </div>
       </div>
     </footer>

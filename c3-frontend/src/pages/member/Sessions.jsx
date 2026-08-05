@@ -18,7 +18,7 @@ const Sessions = () => {
   useEffect(() => {
     const fetchSessions = async () => {
       try {
-        const res = await api.get('/api/sessions', {
+        const res = await api.get('/sessions', {
           headers: { Authorization: `Bearer ${user.token}` },
         });
         setSessions(res.data);
