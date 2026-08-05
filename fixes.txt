@@ -1,0 +1,31 @@
+Full Analysis — HeroSection Issues
+
+Here's everything wrong + your points combined:
+
+🔴 Bugs (Breaking things)
+
+1. Background image not showing — DiscloseImage is placed inside <section> which has relative, but the component wraps the image in its own relative overflow-hidden div. The outer className="absolute inset-0" is being applied to that wrapper div, not the <img> itself — so the image has no defined height to render against. It exists in the DOM but collapses. This is why Vercel (older build) showed it and localhost (newer code) doesn't.
+
+2. Text layout broke — The ml- offset values on "to" and "Corporate" are viewport-relative but after some other changes the section max-w-4xl constraint is now clipping the indented text differently than on Vercel. The stagger cascade looks broken on laptop compared to the screenshot.
+
+🟡 Performance Issues
+
+3. DiscloseImage animation — The clip-path wipe (clipPath: 'inset(0 100% 0 0)') is GPU-heavy, especially on mobile. Not worth keeping for a background photo.
+
+4. LineReveal + 150ms ready timer — Small delay before the heading even starts animating. On slower connections (college WiFi) this compounds with image load time and looks broken/blank for a second.
+
+5. TextType is 130+ lines of GSAP + React state — Just to type 4 words. Overkill.
+
+🟠 UI/UX Problems
+
+6. Two contradictory subtitle lines — "The club where students Build_" (typing animation) AND "LEARN, COLLABORATE, GROW, LEAD" (static) — they say the same thing twice. Redundant.
+
+7. Button style inconsistency — Join C3 is white-filled, Meet the Team is black-filled, both wrapped in HoverBorderGradient which adds gradient border on hover. On dark bg the black button is almost invisible. The arrow icon is also just floating with no visual weight.
+
+8. Mobile — The group photo (c3fullmembers.jpg.jpeg) is landscape, cropped badly on portrait mobile. You added c3fullmembers2.jpg for mobile — good call, just needs to be wired up with <picture> or a conditional.
+
+🗑️ Junk Code to Remove
+DiscloseImage component entirely (replace with plain <img>)
+LineReveal component (replace with static positioned text — the Vercel version layout was just CSS, no animation needed for the cascade effect)
+The ready state + useEffect timer in HeroSection (only existed to gate LineReveal)
+TextType can stay but the duplicate LEARN/COLLABORATE line below it should go

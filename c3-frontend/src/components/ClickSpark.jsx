@@ -36,7 +36,6 @@ const ClickSpark = ({
     const parent = canvas.parentElement;
     if (!parent) return;
 
-    let resizeTimeout;
 
     const resizeCanvas = () => {
       const { width, height } = parent.getBoundingClientRect();
@@ -46,19 +45,13 @@ const ClickSpark = ({
       }
     };
 
-    const handleResize = () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(resizeCanvas, 100);
-    };
-
-    const ro = new ResizeObserver(handleResize);
+    const ro = new ResizeObserver(resizeCanvas);
     ro.observe(parent);
 
     resizeCanvas();
 
     return () => {
       ro.disconnect();
-      clearTimeout(resizeTimeout);
     };
   }, []);
 

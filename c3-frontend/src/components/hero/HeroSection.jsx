@@ -1,50 +1,27 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
-import { HoverBorderGradient } from '../ui/HoverBorderGradient';
 import TextType from '../texttype';
-import LineReveal from '../LineReveal';
 
 export const HeroSection = () => {
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setReady(true), 150);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
-    <section className="relative z-10 px-4 sm:px-6 lg:px-8 py-12 sm:py-16 max-w-4xl mx-auto min-h-[calc(100vh-5rem)] flex flex-col justify-center">
-      {/* Title - line-by-line slide reveal, staggered diagonal at every breakpoint
-          (small "tab space" indent on mobile, bold cascade from md+) */}
-      <h1 className="leading-[1.05] text-left">
-        <LineReveal
-          active={ready}
-          baseDelay={0.1}
-          staggerDelay={0.18}
-          lines={[
-            <span className="font-display block text-4xl sm:text-6xl md:text-7xl font-bold text-white">
-              Campus
-            </span>,
-            <span className="font-brand block text-3xl sm:text-5xl md:text-6xl text-white ml-8 sm:ml-24 md:ml-36 lg:ml-48">
-              to
-            </span>,
-            <span className="font-display block text-4xl sm:text-6xl md:text-7xl font-bold text-white ml-14 sm:ml-40 md:ml-60 lg:ml-72">
-              Corporate
-            </span>
-          ]}
-        />
-      </h1>
+    <section className="relative z-10 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto min-h-screen min-h-[100dvh] flex flex-col justify-center">
 
-      {/* Everything below - centered, fades in after the heading finishes */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={ready ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.6, delay: 0.75, ease: [0.22, 1, 0.36, 1] }}
-        className="flex flex-col items-center text-center mt-10 max-w-2xl mx-auto"
-      >
-        <div className="font-display text-base sm:text-lg text-[#A1A1AA] flex flex-wrap items-center justify-center gap-1 mb-10">
+      {/* Campus to Corporate — diagonal cascade */}
+<h1 className="leading-[1.05] text-left mb-10">
+  <span className="font-display block text-4xl sm:text-6xl md:text-7xl font-bold text-white">
+    Campus
+  </span>
+  <span className="font-brand block text-3xl sm:text-5xl md:text-6xl text-white ml-10 sm:ml-16 md:ml-80">
+    to
+  </span>
+  <span className="font-display block text-4xl sm:text-6xl md:text-7xl font-bold text-white ml-20 sm:ml-32 md:ml-100">
+    Corporate
+  </span>
+</h1>
+
+      {/* Subtitle + buttons */}
+      <div className="flex flex-col items-center text-center max-w-2xl mx-auto">
+        <div className="font-display text-base sm:text-lg text-[#A1A1AA] flex flex-wrap items-center justify-center gap-1 mb-8">
           <span>The club where students</span>
           <TextType
             as="span"
@@ -58,30 +35,23 @@ export const HeroSection = () => {
           />
         </div>
 
-        <span className="block text-2xl sm:text-1xl md:text-xl font-normal text-white tracking-wide mt-0 mb-8">
-          LEARN, COLLABORATE, GROW, LEAD
-        </span>
-
-        <div className="flex flex-wrap justify-center items-center gap-4">
-          <HoverBorderGradient
-            as={Link}
+        <div className="flex flex-wrap justify-center items-center gap-3">
+          <Link
             to="/apply"
-            containerClassName="rounded-full p-[2px] bg-white/10 hover:bg-white/5"
-            className="font-medium bg-white text-black flex items-center gap-2 px-6 py-3.5 text-base"
+            className="font-nav font-semibold bg-white text-black rounded-full px-7 py-3 text-base tracking-wide hover:bg-white/90 transition-colors"
           >
             Join C3
-          </HoverBorderGradient>
+          </Link>
 
-          <HoverBorderGradient
-            as={Link}
+          <Link
             to="/#team"
-            containerClassName="rounded-full p-[2px]"
-            className="font-medium bg-black text-white flex items-center gap-2 px-6 py-3.5 text-base"
+            className="font-nav font-semibold border border-white/40 text-white rounded-full px-7 py-3 text-base tracking-wide flex items-center gap-2 hover:border-white/80 hover:bg-white/5 transition-all"
           >
             Meet the Team <ArrowRight className="w-4 h-4" />
-          </HoverBorderGradient>
+          </Link>
         </div>
-      </motion.div>
+      </div>
+
     </section>
   );
 };

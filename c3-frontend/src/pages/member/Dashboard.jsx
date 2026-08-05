@@ -12,7 +12,7 @@ export const Dashboard = () => {
   useEffect(() => {
     if (user?._id) {
       axios
-        .get(`/api/attendance/member/${user._id}`)
+        .get(`/attendance/member/${user._id}`)
         .then((res) => setAttendance(res.data))
         .catch((err) => console.error(err));
     }

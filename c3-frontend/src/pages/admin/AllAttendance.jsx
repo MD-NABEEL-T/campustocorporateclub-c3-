@@ -15,7 +15,7 @@ const AllAttendance = () => {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const res = await api.get('/api/attendance/all', {
+        const res = await api.get('/attendance/all', {
           headers: { Authorization: `Bearer ${user.token}` },
         });
         setMembers(res.data);

@@ -4,6 +4,7 @@ import CountUp from '../CountUp';
 import Carousel from '../Carousel';
 import Masonry from '../Masonry';
 import api from '../../api/axios';
+import { motion } from 'motion/react'; // add to top imports
 
 // Real events now come from GET /api/events (backend serves Cloudinary URLs
 // for coverImage/gallery - see c3-backend/controllers/eventController.js).
@@ -18,7 +19,7 @@ const useEvents = () => {
   useEffect(() => {
     let cancelled = false;
 
-    api.get('/events')
+    api.get('/public/events')
       .then(res => {
         if (!cancelled) setEvents(res.data);
       })
@@ -44,10 +45,11 @@ const STORY_LINES = [
 ];
 
 const STATS = [
-  { to: 10, suffix: '+', label: 'Events' },
-  { to: 200, suffix: '+', label: 'Participants' },
-  { to: 30, suffix: '+', label: 'Sessions' }
-];
+           { to: 20, suffix: '+', label: 'Members' },
+           { to: 10, suffix: '+', label: 'Events' },
+           { to: 200, suffix: '+', label: 'Participants' },
+           { to: 30, suffix: '+', label: 'Sessions' }
+         ];
 
 const useMeasuredWidth = () => {
   const ref = useRef(null);
@@ -63,53 +65,36 @@ const useMeasuredWidth = () => {
 
   return [ref, width];
 };
-
-const StoryTransition = () => {
-  const ref = useRef(null);
-  const [inView, setInView] = useState(false);
-  const [visibleLines, setVisibleLines] = useState(0);
-
-  useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
-      { threshold: 0.5 }
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!inView) {
-      setVisibleLines(0);
-      return;
-    }
-    if (visibleLines >= STORY_LINES.length) return;
-    const timer = setTimeout(() => setVisibleLines(v => v + 1), visibleLines === 0 ? 200 : 450);
-    return () => clearTimeout(timer);
-  }, [inView, visibleLines]);
-
-  return (
-    <div ref={ref} className="max-w-2xl mx-auto text-center py-20 px-4">
-      {STORY_LINES.map((line, i) =>
-        i < visibleLines ? (
-          <BlurText
-            key={line}
-            text={line}
-            direction="top"
-            delay={30}
-            stepDuration={0.35}
-            className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold text-white/90 mb-2 justify-center"
-          />
-        ) : (
-          <div key={line} className="h-[1em] sm:h-[1.2em] md:h-[1.4em] mb-2" />
-        )
-      )}
-    </div>
-  );
+const storyContainerVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.25 } }
 };
 
+const storyLineVariants = {
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }
+};
+
+
+const StoryTransition = () => (
+  <motion.div
+    className="max-w-2xl mx-auto text-center py-10 sm:py-14 px-4"
+    initial="hidden"
+    whileInView="visible"
+    viewport={{ once: true, amount: 0.5 }}
+    variants={storyContainerVariants}
+  >
+    {STORY_LINES.map(line => (
+      <motion.p
+        key={line}
+        variants={storyLineVariants}
+        className="font-display text-xl sm:text-3xl md:text-4xl font-semibold text-white/90 mb-2"
+      >
+        {line}
+      </motion.p>
+    ))}
+  </motion.div>
+);
 const ClosingCTA = () => {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
@@ -249,15 +234,16 @@ export const EventsSection = () => {
 
       {/* Event statistics */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="grid grid-cols-3 gap-8 text-center">
+      <div className="grid grid-cols-4 gap-x-2 sm:gap-8 text-center">
+
+
           {STATS.map(stat => (
             <div key={stat.label}>
-              <div className="font-display text-4xl sm:text-5xl font-bold text-white flex items-baseline justify-center">
+           <div className="font-display text-lg sm:text-5xl font-bold text-white flex items-baseline justify-center flex-wrap">
                 <CountUp to={stat.to} duration={2} />
-                <span>{stat.suffix}</span>
-              </div>
-              <div className="text-sm text-[#A1A1AA] mt-2">{stat.label}</div>
-            </div>
+<span>{stat.suffix}</span>
+           </div>
+<div className="text-[10px] sm:text-sm text-[#A1A1AA] mt-1 sm:mt-2 leading-tight">{stat.label}</div>            </div>
           ))}
         </div>
       </div>

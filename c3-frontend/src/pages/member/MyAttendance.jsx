@@ -15,7 +15,7 @@ const MyAttendance = () => {
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const res = await api.get(`/api/attendance/member/${user._id}`, {
+        const res = await api.get(`/attendance/member/${user._id}`, {
           headers: { Authorization: `Bearer ${user.token}` },
         });
         setData(res.data);

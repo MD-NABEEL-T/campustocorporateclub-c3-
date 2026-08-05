@@ -59,7 +59,7 @@ const EventForm = () => {
       formData.append('coverImage', coverImage);
       gallery.forEach(img => formData.append('gallery', img));
 
-      const res = await api.post('/api/events', formData, {
+      const res = await api.post('/events', formData, {
         headers: {
           Authorization: `Bearer ${user.token}`,
           'Content-Type': 'multipart/form-data',
