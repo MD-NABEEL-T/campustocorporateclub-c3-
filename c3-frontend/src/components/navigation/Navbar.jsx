@@ -40,11 +40,11 @@ export const Navbar = () => {
         </div>
       </header>
 {/* Mobile logo */}
-      <Link to="/" className="md:hidden fixed top-5 left-5 z-50">
+      <Link to="/" className="md:hidden fixed top-4 left-4 z-50">
         <img
-          src="../../../../public/assets/c3-logo.jpeg"
+          src="/assets/c3-logo.jpeg"
           alt="C3 Logo"
-          className="w-9 h-9 rounded-lg object-cover"
+          className="w-10 h-10 rounded-lg object-cover"
         />
       </Link>
 
