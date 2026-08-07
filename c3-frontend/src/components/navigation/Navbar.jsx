@@ -5,7 +5,6 @@ import { Button } from '../ui/Button';
 import { useAuth } from '../../context/AuthContext';
 import { DesktopNav } from './DesktopNav';
 import { MobileNav } from './MobileNav';
-
 export const Navbar = () => {
   const { user } = useAuth();
 
@@ -40,18 +39,14 @@ export const Navbar = () => {
           </div>
         </div>
       </header>
-
-      {/* Mobile brand mark - floats top-left, pairs with the StaggeredMenu
-          toggle button (top-right) rendered inside MobileNav. Unchanged -
-          PillNav never renders on mobile (hidden md:block in DesktopNav). */}
-      {/* <Link to="/" className="md:hidden fixed top-6 left-6 z-50 flex items-center gap-2">
-        <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-white to-[#A1A1AA] p-0.5 flex items-center justify-center shadow-lg shadow-white/10">
-          <div className="w-full h-full bg-black rounded-[8px] flex items-center justify-center">
-            <Terminal className="w-4 h-4 text-white" />
-          </div>
-        </div>
-        <span className="font-brand text-sm text-white tracking-tight">C3</span>
-      </Link> */}
+{/* Mobile logo */}
+      <Link to="/" className="md:hidden fixed top-5 left-5 z-50">
+        <img
+          src="../../../../public/assets/c3-logo.jpeg"
+          alt="C3 Logo"
+          className="w-9 h-9 rounded-lg object-cover"
+        />
+      </Link>
 
       <MobileNav />
     </>

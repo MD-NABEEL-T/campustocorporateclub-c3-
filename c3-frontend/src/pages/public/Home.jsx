@@ -10,13 +10,12 @@ export const Home = () => {
     <div className="relative w-full overflow-hidden bg-black">
       <section id="home" className="relative min-h-screen min-h-[100dvh]">
 
-        {/* Background image — mobile gets portrait, desktop gets landscape */}
-        <picture className="absolute inset-0 w-full h-full">
+        <picture>
           <source media="(max-width: 639px)" srcSet="/assets/c3fullmembers2.jpg" />
           <img
             src="/assets/c3fullmembers.jpg.jpeg"
             alt="C3 Club Members"
-            className="absolute inset-0 w-full h-full object-cover object-[center_25%] opacity-[0.78]"
+            className="absolute inset-0 w-full h-full object-cover object-[center_60%] opacity-[0.78]"
           />
         </picture>
         <div className="absolute inset-0 bg-black/55" />
