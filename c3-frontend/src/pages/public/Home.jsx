@@ -18,8 +18,7 @@ export const Home = () => {
             className="absolute inset-0 w-full h-full object-cover object-[center_60%] opacity-[0.78]"
           />
         </picture>
-        <div className="absolute inset-0 bg-black/55" />
-
+<div className="absolute inset-0 bg-black/40" />
         <HeroSection />
       </section>
 

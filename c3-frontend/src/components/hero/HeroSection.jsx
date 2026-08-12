@@ -1,29 +1,34 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 import TextType from '../texttype';
 
 export const HeroSection = () => {
   return (
-    <section className="relative z-10 px-6 max-w-4xl mx-auto min-h-screen min-h-[100dvh] flex flex-col justify-between">
+    <section className="relative z-10 px-6 max-w-4xl mx-auto min-h-screen min-h-[100dvh] flex flex-col justify-center gap-6 sm:gap-12">
 
-      {/* Title — top */}
-      <div className="pt-16 sm:pt-32">
+      {/* Eyebrow */}
+      <span className="font-nav text-xs sm:text-sm tracking-[0.25em] uppercase text-white/50">
+        A Student-Led Community
+      </span>
+
+      {/* Title */}
+      <div>
         <h1 className="leading-[1.05] text-left">
           <span className="font-display block text-4xl sm:text-6xl md:text-7xl font-bold text-white">
             Campus
           </span>
-          <span className="font-brand block text-3xl sm:text-5xl md:text-6xl text-white ml-[40%] sm:ml-16 md:ml-80">
+          <span className="font-brand block text-3xl sm:text-5xl md:text-6xl text-white ml-[30%] sm:ml-16 md:ml-80">
             to
           </span>
-          <span className="font-display block text-4xl sm:text-6xl md:text-7xl font-bold text-white ml-[50%] sm:ml-32 md:ml-100">
+          <span className="font-display block text-4xl sm:text-6xl md:text-7xl font-bold text-white ml-[35%] sm:ml-32 md:ml-100">
             Corporate
           </span>
         </h1>
       </div>
 
-      {/* Subtitle + buttons — bottom */}
-      <div className="pb-12 sm:pb-16 flex flex-col items-start gap-5">
-        <div className="font-display text-sm sm:text-lg text-[#A1A1AA] flex items-center gap-1">
+      {/* Subtitle + buttons */}
+      <div className="flex flex-col items-start gap-5">
+        <div className="font-display text-base sm:text-xl text-white/90 flex items-center gap-1.5">
           <span>The club where students</span>
           <TextType
             as="span"
@@ -44,6 +49,12 @@ export const HeroSection = () => {
             Meet the Team <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
+      </div>
+
+      {/* Scroll cue */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/40">
+        <span className="font-nav text-[10px] tracking-[0.2em] uppercase">Scroll</span>
+        <ChevronDown className="w-4 h-4 animate-bounce" />
       </div>
 
     </section>
