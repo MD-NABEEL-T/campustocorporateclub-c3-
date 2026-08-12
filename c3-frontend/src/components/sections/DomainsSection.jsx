@@ -20,13 +20,13 @@ import {
   SiPandas,
   SiNumpy
 } from 'react-icons/si';
-import BlurText from '../BlurText';
-import ViewportGate from '../ViewportGate';
-import LetterGlitch from '../LetterGlitch';
-import Galaxy from '../Galaxy';
-import Strands from '../Strands';
-import DotField from '../DotField';
-import MagicRings from '../MagicRings';
+import BlurText from '../reactbits/BlurText';
+import ViewportGate from '../reactbits/ViewportGate';
+import LetterGlitch from '../reactbits/LetterGlitch';
+import Galaxy from '../reactbits/Galaxy';
+import Strands from '../reactbits/Strands';
+import DotField from '../reactbits/DotField';
+import MagicRings from '../reactbits/MagicRings';
 
 // Tracks the lg breakpoint so DomainRow renders exactly one background
 // instance (boxed panel on desktop, full-bleed backdrop on mobile) instead

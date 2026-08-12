@@ -2,9 +2,9 @@ import { useRef, useState, useEffect } from 'react';
 import { motion, useInView } from 'motion/react';
 import { User, RotateCw, Mail } from 'lucide-react';
 import { FaGithub, FaLinkedin } from 'react-icons/fa';
-import BlurText from '../BlurText';
-import Marquee from '../Marquee';
-import FlipCard from '../FlipCard';
+import BlurText from '../reactbits/BlurText';
+import Marquee from '../reactbits/Marquee';
+import FlipCard from '../reactbits/FlipCard';
 
 // Mock data only - photos, names, quotes and socials are placeholders.
 const LEADERSHIP = [

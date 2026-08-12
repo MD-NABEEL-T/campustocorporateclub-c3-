@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronDown } from 'lucide-react';
-import TextType from '../texttype';
+import TextType from '../ui/TextType';
 
 export const HeroSection = () => {
   return (

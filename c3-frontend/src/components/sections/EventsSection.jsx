@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import BlurText from '../BlurText';
-import CountUp from '../CountUp';
-import Carousel from '../Carousel';
-import Masonry from '../Masonry';
+import BlurText from '../reactbits/BlurText';
+import CountUp from '../reactbits/CountUp';
+import Carousel from '../reactbits/Carousel';
+import Masonry from '../reactbits/Masonry';
 import api from '../../api/axios';
 import { motion } from 'motion/react'; // add to top imports
 

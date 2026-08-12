@@ -2,11 +2,11 @@ import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useInView } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
-import BlurText from '../BlurText';
-import Particles from '../Particles';
+import BlurText from '../reactbits/BlurText';
+import Particles from '../reactbits/Particles';
 import FinisherHeader from '../FinisherHeader';
-import Terminal from '../Terminal';
-import ViewportGate from '../ViewportGate';
+import Terminal from '../reactbits/Terminal';
+import ViewportGate from '../reactbits/ViewportGate';
 
 const finisherConfig = {
   count: 8,
