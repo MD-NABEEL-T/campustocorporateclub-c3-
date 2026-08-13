@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import ClickSpark from './components/ClickSpark';
+import ProtectedRoute from './components/reactbits/ProtectedRoute';
+import ClickSpark from './components/reactbits/ClickSpark';
 
 // Layouts
 import { PublicLayout } from './components/layouts/PublicLayout';

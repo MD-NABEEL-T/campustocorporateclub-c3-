@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import PillNav from '../PillNav';
+import PillNav from '../reactbits/PillNav';
 import { PUBLIC_NAV_LINKS } from '../../constants/navigation';
 
 export const DesktopNav = () => {

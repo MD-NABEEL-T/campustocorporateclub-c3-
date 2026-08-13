@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import BlurText from '../reactbits/BlurText';
-// import CountUp from '../CountUp';
+// import CountUp from '../reactbits/CountUp';
 import ShapeGrid from '../reactbits/ShapeGrid';
 
 const ABOUT_PARAGRAPH =

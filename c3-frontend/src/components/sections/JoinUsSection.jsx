@@ -4,7 +4,7 @@ import { useInView } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import BlurText from '../reactbits/BlurText';
 import Particles from '../reactbits/Particles';
-import FinisherHeader from '../FinisherHeader';
+import FinisherHeader from '../reactbits/FinisherHeader';
 import Terminal from '../reactbits/Terminal';
 import ViewportGate from '../reactbits/ViewportGate';
 
