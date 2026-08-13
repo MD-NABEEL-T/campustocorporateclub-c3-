@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { UploadCloud, CheckCircle2, Send, FileText, X } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';

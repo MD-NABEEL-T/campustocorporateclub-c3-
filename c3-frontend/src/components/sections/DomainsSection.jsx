@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { motion } from 'motion/react';
 import { BarChart3 } from 'lucide-react';
 import {
@@ -23,10 +23,13 @@ import {
 import BlurText from '../reactbits/BlurText';
 import ViewportGate from '../reactbits/ViewportGate';
 import LetterGlitch from '../reactbits/LetterGlitch';
-import Galaxy from '../reactbits/Galaxy';
-import Strands from '../reactbits/Strands';
 import DotField from '../reactbits/DotField';
-import MagicRings from '../reactbits/MagicRings';
+
+// Galaxy/Strands/MagicRings pull in three.js and ogl (WebGL) - heavy, so
+// they're lazy-loaded and only fetched once a domain row scrolls into view.
+const Galaxy = lazy(() => import('../reactbits/Galaxy'));
+const Strands = lazy(() => import('../reactbits/Strands'));
+const MagicRings = lazy(() => import('../reactbits/MagicRings'));
 
 // Tracks the lg breakpoint so DomainRow renders exactly one background
 // instance (boxed panel on desktop, full-bleed backdrop on mobile) instead
@@ -228,7 +231,9 @@ const DomainRow = ({ domain, index }) => {
     <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
       {!isDesktop && (
         <div className="absolute inset-0 overflow-hidden opacity-50 pointer-events-none">
-          <ViewportGate>{domain.background}</ViewportGate>
+          <Suspense fallback={null}>
+            <ViewportGate>{domain.background}</ViewportGate>
+          </Suspense>
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-black/80" />
         </div>
       )}
@@ -240,7 +245,9 @@ const DomainRow = ({ domain, index }) => {
       >
         {isDesktop && (
           <div className="relative w-full h-[340px] sm:h-[420px] lg:h-[480px] rounded-3xl overflow-hidden border border-white/10 bg-black">
-            <ViewportGate>{domain.background}</ViewportGate>
+            <Suspense fallback={null}>
+              <ViewportGate>{domain.background}</ViewportGate>
+            </Suspense>
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 pointer-events-none" />
           </div>
         )}

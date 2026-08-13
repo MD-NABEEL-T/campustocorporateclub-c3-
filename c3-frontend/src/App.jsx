@@ -1,31 +1,40 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
-import ProtectedRoute from './components/reactbits/ProtectedRoute';
+import ProtectedRoute from './routes/ProtectedRoute';
 import ClickSpark from './components/reactbits/ClickSpark';
 
-// Layouts
+// Layouts (kept eager - needed on every route, small)
 import { PublicLayout } from './components/layouts/PublicLayout';
 import { DashboardLayout } from './components/layouts/DashboardLayout';
 
-// Public Pages
-import Home from './pages/public/Home';
-import PublicSessions from './pages/public/PublicSessions';
-import Gallery from './pages/public/Gallery';
-import Apply from './pages/public/Apply';
-import Login from './pages/public/Login';
+// Public Pages - lazy loaded so a visitor's first load doesn't include
+// member/admin portal code
+const Home = lazy(() => import('./pages/public/Home'));
+const PublicSessions = lazy(() => import('./pages/public/PublicSessions'));
+const Gallery = lazy(() => import('./pages/public/Gallery'));
+const Apply = lazy(() => import('./pages/public/Apply'));
+const Login = lazy(() => import('./pages/public/Login'));
 
-// Member Portal Pages
-import Dashboard from './pages/member/Dashboard';
-import MyAttendance from './pages/member/MyAttendance';
-import Sessions from './pages/member/Sessions';
-import SessionDetail from './pages/member/SessionDetail';
+// Member Portal Pages - lazy loaded, only fetched when a logged-in member
+// actually navigates into the dashboard
+const Dashboard = lazy(() => import('./pages/member/Dashboard'));
+const MyAttendance = lazy(() => import('./pages/member/MyAttendance'));
+const Sessions = lazy(() => import('./pages/member/Sessions'));
+const SessionDetail = lazy(() => import('./pages/member/SessionDetail'));
 
-// Admin Portal Pages
-import AllAttendance from './pages/admin/AllAttendance';
-import SessionForm from './pages/admin/SessionForm';
-import EventForm from './pages/admin/EventForm';
+// Admin Portal Pages - lazy loaded, only fetched for admins
+const AllAttendance = lazy(() => import('./pages/admin/AllAttendance'));
+const SessionForm = lazy(() => import('./pages/admin/SessionForm'));
+const EventForm = lazy(() => import('./pages/admin/EventForm'));
+
+// Simple full-page fallback shown while a lazy route's chunk downloads
+const RouteLoading = () => (
+  <div className="min-h-screen flex items-center justify-center bg-black">
+    <div className="h-8 w-8 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+  </div>
+);
 
 // Nav clicks route hash links (#about) to "/#about". React Router doesn't
 // auto-scroll on that, so this watches the URL and scrolls to the matching
@@ -63,6 +72,7 @@ function App() {
         <BrowserRouter>
           <ScrollToHash />
           <ClickSpark sparkColor="#ffffff" sparkSize={10} sparkRadius={15} sparkCount={8} duration={400}>
+            <Suspense fallback={<RouteLoading />}>
             <Routes>
 {/* Public Layout Routes */}
             <Route element={<PublicLayout />}>
@@ -107,6 +117,7 @@ function App() {
               {/* Catch-all Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            </Suspense>
           </ClickSpark>
         </BrowserRouter>
       </ToastProvider>
