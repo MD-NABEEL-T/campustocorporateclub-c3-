@@ -13,7 +13,7 @@ export const Navbar = () => {
       {/* Desktop header - flex row keeps the logo/pill-nav pinned to the far
           left and the login button pinned to the far right, both centered
           on the same vertical axis. */}
-      <header className="hidden md:block sticky top-0 z-40 w-full h-20">
+      <header className="hidden lg:block sticky top-0 z-40 w-full h-20">
         <div className="flex items-center justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <DesktopNav />
 
@@ -40,7 +40,7 @@ export const Navbar = () => {
         </div>
       </header>
 {/* Mobile logo */}
-      <Link to="/" className="md:hidden fixed top-4 left-4 z-50">
+      <Link to="/" className="lg:hidden fixed top-4 left-4 z-50">
         <img
           src="/assets/c3-logo.jpeg"
           alt="C3 Logo"

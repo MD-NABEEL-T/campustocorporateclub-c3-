@@ -11,7 +11,7 @@ export const DesktopNav = () => {
   }));
 
   return (
-<div className="hidden md:block flex-1">
+<div className="hidden lg:block flex-1">
         <PillNav
         logo="/assets/c3-logo.jpeg"
         logoAlt="Campus to Corporate Club"

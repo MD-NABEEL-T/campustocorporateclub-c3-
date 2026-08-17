@@ -28,7 +28,7 @@ export const MobileNav = () => {
   };
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <StaggeredMenu
         position="right"
         items={items}
