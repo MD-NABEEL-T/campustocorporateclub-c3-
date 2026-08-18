@@ -24,8 +24,7 @@ export const PUBLIC_NAV_LINKS = [
   { label: 'Domains', href: '#domains', icon: Layers },
   { label: 'Team', href: '#team', icon: Users },
   { label: 'Events', href: '#events', icon: Calendar },
-  // TODO: swap to an in-page anchor once the Join Us section is built
-  { label: 'Join Us', href: '/apply', icon: Sparkles },
+  { label: 'Join Us', href: '#join', icon: Sparkles },
 ];
 
 export const MEMBER_NAV_LINKS = [

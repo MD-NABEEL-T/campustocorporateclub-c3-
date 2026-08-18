@@ -1,10 +1,11 @@
 import { useRef, useState, useEffect } from 'react';
 import { motion, useInView } from 'motion/react';
-import { User, RotateCw, Mail } from 'lucide-react';
+import { User, RotateCw, Mail, Code2 } from 'lucide-react';
 import { FaGithub, FaLinkedin } from 'react-icons/fa';
 import BlurText from '../reactbits/BlurText';
 import Marquee from '../reactbits/Marquee';
 import FlipCard from '../reactbits/FlipCard';
+import PointerHighlight from '../ui/PointerHighlight';
 
 // Real members are marked with `photo` pointing at /assets/team/<file>
 // - drop the image there and it displays automatically (falls back to the
@@ -24,7 +25,7 @@ const LEADERSHIP = [
     domain: 'Networking & Cybersecurity',
     accent: '#38BDF8',
     quote: null,
-    photo: '/assets/team/ashfaq-ahmed-m2.jpeg',
+    photo: '/assets/team/ashfaq-ahmed-m.jpeg',
     photoPosition: 'center 20%',
     socials: { email: 'mailto:ashfaqashu689@gmail.com', github: null, linkedin: 'https://www.linkedin.com/in/ashfaq-ahmed-m-b3a49a2a5/' }
   },
@@ -33,7 +34,8 @@ const LEADERSHIP = [
     role: 'Vice President',
     domain: 'Design & Development',
     accent: '#2DD4BF',
-    quote: 'Write code. Insipire people. Leave a Legacy.',
+    quote: 'Code . Inspire People . Leave a Legacy .',
+    isDeveloper: true, // permanent PointerHighlight on the name + small "</> Developer" pill on the Team card - visual only
     photo: '/assets/team/nabeel.jpeg',
     photoPosition: 'center 20%',
     socials: {
@@ -188,6 +190,16 @@ const FlipHint = ({ accent }) => (
   </span>
 );
 
+const DeveloperBadge = ({ accent }) => (
+  <span
+    className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-mono font-semibold uppercase tracking-wider bg-black/50 backdrop-blur-sm border"
+    style={{ borderColor: `${accent}55`, color: accent }}
+  >
+    <Code2 className="w-2.5 h-2.5" />
+    Developer
+  </span>
+);
+
 const SocialRow = ({ socials, accent, size = 'sm' }) => {
   const iconClass = size === 'sm' ? 'w-3 h-3' : 'w-3.5 h-3.5';
   const btnClass = size === 'sm' ? 'w-6 h-6' : 'w-7 h-7';
@@ -229,6 +241,7 @@ const LeadershipCard = ({ leader, index }) => (
       className="w-full h-full"
       front={
         <div className="relative w-full h-full rounded-2xl border border-white/10 bg-white/[0.03] p-3 sm:p-4 flex flex-col">
+          {leader.isDeveloper && <DeveloperBadge accent={leader.accent} />}
           <FlipHint accent={leader.accent} />
           <Photo photo={leader.photo} accent={leader.accent} position={leader.photoPosition} className="aspect-square mb-2.5" />
           <p
@@ -237,7 +250,19 @@ const LeadershipCard = ({ leader, index }) => (
           >
             {leader.role}
           </p>
-          <h4 className="font-display text-sm sm:text-lg font-bold text-white truncate">{leader.name}</h4>
+          {leader.isDeveloper ? (
+            <PointerHighlight
+              containerClassName="inline-block max-w-full"
+              rectangleClassName="border-[#38BDF8]/50"
+              pointerClassName="text-[#38BDF8]"
+            >
+              <h4 className="relative z-10 font-display text-sm sm:text-lg font-bold text-white truncate px-0.5">
+                {leader.name}
+              </h4>
+            </PointerHighlight>
+          ) : (
+            <h4 className="font-display text-sm sm:text-lg font-bold text-white truncate">{leader.name}</h4>
+          )}
         </div>
       }
       back={
