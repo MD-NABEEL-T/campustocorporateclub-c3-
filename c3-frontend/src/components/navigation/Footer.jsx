@@ -107,9 +107,13 @@ export const Footer = () => {
                href="https://github.com/MD-NABEEL-T"
                target="_blank"
                rel="noreferrer"
-               className="relative z-10 font-semibold text-white px-1"
+               title="Developer"
+               className="group relative z-10 inline-flex items-center gap-1 font-semibold text-white px-1 transition-all duration-300 hover:text-[#38BDF8] hover:drop-shadow-[0_0_8px_rgba(56,189,248,0.55)]"
              >
                Nabeel
+               <span className="font-mono text-[10px] text-[#38BDF8]/60 transition-colors duration-300 group-hover:text-[#38BDF8]">
+                 {'</>'}
+               </span>
              </a>
            </PointerHighlight>
          </p>

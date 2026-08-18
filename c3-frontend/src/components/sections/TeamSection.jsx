@@ -6,23 +6,41 @@ import BlurText from '../reactbits/BlurText';
 import Marquee from '../reactbits/Marquee';
 import FlipCard from '../reactbits/FlipCard';
 
-// Mock data only - photos, names, quotes and socials are placeholders.
+// Real members are marked with `photo` pointing at /assets/team/<file>
+// - drop the image there and it displays automatically (falls back to the
+// placeholder icon until then). Everyone else here is still mock data
+// (name/socials/quote are placeholders) and stays that way until real
+// info is provided.
+//
+// `photoPosition` is a CSS object-position value (e.g. 'center 20%',
+// 'center top') used with object-fit: cover so each portrait's crop can
+// be tuned per person instead of one setting for everyone. Defaults to
+// 'center 20%' (biases toward the head) - nudge individual values once
+// you can see how each photo actually crops on the live site.
 const LEADERSHIP = [
   {
-    name: 'Member Name',
+    name: 'Ashfaq Ahmed. M',
     role: 'President',
-    domain: 'Design & Development',
-    accent: '#2DD4BF',
-    quote: 'C3 taught me that leading means teaching, not just doing.',
-    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+    domain: 'Networking & Cybersecurity',
+    accent: '#38BDF8',
+    quote: null,
+    photo: '/assets/team/ashfaq-ahmed-m2.jpeg',
+    photoPosition: 'center 20%',
+    socials: { email: 'mailto:ashfaqashu689@gmail.com', github: null, linkedin: 'https://www.linkedin.com/in/ashfaq-ahmed-m-b3a49a2a5/' }
   },
   {
-    name: 'Member Name',
+    name: 'Nabeel',
     role: 'Vice President',
-    domain: 'AI & ML',
-    accent: '#818CF8',
-    quote: 'Every session is a chance to learn alongside the people we teach.',
-    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+    domain: 'Design & Development',
+    accent: '#2DD4BF',
+    quote: 'Write code. Insipire people. Leave a Legacy.',
+    photo: '/assets/team/nabeel.jpeg',
+    photoPosition: 'center 20%',
+    socials: {
+      email: 'mailto:tmdnabeel4656.tmn@gmail.com',
+      github: 'https://github.com/MD-NABEEL-T',
+      linkedin: 'https://linkedin.com/in/mohammed-nabeel-t'
+    }
   },
   {
     name: 'Member Name',
@@ -42,47 +60,64 @@ const LEADERSHIP = [
   }
 ];
 
-// 9 core members, split into three rows of 3 for the marquee.
+// 8 core members, split into TWO rows of 4 for the marquee (previously
+// 3 rows of 3 - trimmed to 2 rows so real members don't feel repeated
+// across an extra row). Slots 1-5 hold real members; the remaining 3
+// mock members fill out row 2 and stay untouched until real info is
+// provided for them. One mock placeholder ("Core Member Nine") was
+// dropped to fit the 2-row/8-card layout - it was never real data, so
+// nothing real was lost, and there's still room to swap any mock slot
+// for a real member later.
 const CORE_MEMBERS = [
   {
-    name: 'Core Member One',
-    tier: 'Senior Core Member',
-    domain: 'Design & Development',
-    accent: '#2DD4BF',
-    quote: 'Every pixel matters when you\u2019re building for people you know.',
-    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
-  },
-  {
-    name: 'Core Member Two',
+    name: 'Shareen Begum.Z',
     tier: 'Core Member',
-    domain: 'AI & ML',
+    domain: 'AI/ML',
     accent: '#818CF8',
-    quote: 'Curiosity got me here, the club kept me around.',
-    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+    quote: 'Stand firm. Think bigger. Deliver better.',
+    photo: '/assets/team/shareen-begum-z.png',
+    photoPosition: 'center 20%',
+    socials: { email: 'mailto:zshareenbegum@gmail.com', github: 'https://github.com/shareenbegum', linkedin: 'https://www.linkedin.com/in/shareen-begum-z-649266379' }
   },
   {
-    name: 'Core Member Three',
-    tier: 'Senior Core Member',
+    name: 'Mohamed Riyaz M',
+    tier: 'Core Member',
     domain: 'Networking & Cybersecurity',
     accent: '#38BDF8',
-    quote: 'Security is a mindset before it\u2019s a skillset.',
-    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+    quote: 'Learning today. Leading tomorrow.',
+    photo: '/assets/team/mohamed-riyaz-m.jpeg',
+    photoPosition: 'center 20%',
+    socials: { email: 'mailto:riyazzen.46@gmail.com', github: 'https://github.com/riyaz062', linkedin: 'https://www.linkedin.com/in/mohamed-riyaz-m-42bab7385' }
   },
   {
-    name: 'Core Member Four',
+    name: 'Mohamed Zaid',
+    tier: 'Core Member',
+    domain: 'Networking & Cybersecurity',
+    accent: '#38BDF8',
+    quote: 'Driven by curiosity, powered by consistency.',
+    photo: '/assets/team/mohamed-zaid.jpeg',
+    photoPosition: 'center 20%',
+    socials: { email: 'mailto:zaid.offl.007@gmail.com', github: 'https://github.com/Minni-Zaid', linkedin: 'https://www.linkedin.com/in/immohamedzaid' }
+  },
+  {
+    name: 'S Mohammad Saifullah Roomy',
     tier: 'Core Member',
     domain: 'Data Analytics',
     accent: '#F59E0B',
-    quote: 'Excel first, Python next, dashboards forever.',
-    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+    quote: null,
+    photo: '/assets/team/s-mohammad-saifullah-roomy.jpg',
+    photoPosition: 'center 20%',
+    socials: { email: 'mailto:saifullahroomy129@gmail.com', github: 'https://github.com/roomy129', linkedin: 'https://www.linkedin.com/in/md-saifullah-roomy-s-14a9493a0/' }
   },
   {
-    name: 'Core Member Five',
-    tier: 'Senior Core Member',
-    domain: 'Communication Skills',
-    accent: '#FB7185',
-    quote: 'Confidence is just practice wearing a good outfit.',
-    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+    name: 'Mohammed Owais Ansari',
+    tier: 'Core Member',
+    domain: 'Networking & Cybersecurity',
+    accent: '#38BDF8',
+    quote: null,
+    photo: '/assets/team/mohammed-owais-ansari.png',
+    photoPosition: 'center 20%',
+    socials: { email: 'mailto:owaisansari1626@gmail.com', github: 'https://github.com/owaisansari1626', linkedin: 'https://www.linkedin.com/in/owaisansari1626' }
   },
   {
     name: 'Core Member Six',
@@ -107,30 +142,42 @@ const CORE_MEMBERS = [
     accent: '#38BDF8',
     quote: 'My first Wireshark capture broke my brain, in a good way.',
     socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
-  },
-  {
-    name: 'Core Member Nine',
-    tier: 'Core Member',
-    domain: 'Data Analytics',
-    accent: '#F59E0B',
-    quote: 'Data tells a story if you\u2019re patient enough to listen.',
-    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
   }
 ];
-const CORE_ROW_1 = CORE_MEMBERS.slice(0, 3);
-const CORE_ROW_2 = CORE_MEMBERS.slice(3, 6);
-const CORE_ROW_3 = CORE_MEMBERS.slice(6, 9);
+const CORE_ROW_1 = CORE_MEMBERS.slice(0, 4);
+const CORE_ROW_2 = CORE_MEMBERS.slice(4, 8);
 
-const PhotoPlaceholder = ({ accent, className = '' }) => (
-  <div
-    className={`relative w-full overflow-hidden rounded-xl border ${className}`}
-    style={{ backgroundColor: `${accent}0d`, borderColor: `${accent}33` }}
-  >
-    <div className="absolute inset-0 flex items-center justify-center">
-      <User className="w-7 h-7" style={{ color: `${accent}55` }} />
+// Shows the real photo when `photo` is set and loads successfully;
+// otherwise falls back to the original icon placeholder unchanged.
+const Photo = ({ photo, accent, position = 'center', className = '' }) => {
+  const [errored, setErrored] = useState(false);
+
+  if (photo && !errored) {
+    return (
+      <div className={`relative w-full overflow-hidden rounded-xl border ${className}`} style={{ borderColor: `${accent}33` }}>
+        <img
+          src={photo}
+          alt=""
+          loading="lazy"
+          onError={() => setErrored(true)}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition: position }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`relative w-full overflow-hidden rounded-xl border ${className}`}
+      style={{ backgroundColor: `${accent}0d`, borderColor: `${accent}33` }}
+    >
+      <div className="absolute inset-0 flex items-center justify-center">
+        <User className="w-7 h-7" style={{ color: `${accent}55` }} />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const FlipHint = ({ accent }) => (
   <span
@@ -149,7 +196,7 @@ const SocialRow = ({ socials, accent, size = 'sm' }) => {
     { key: 'email', href: socials.email, Icon: Mail },
     { key: 'github', href: socials.github, Icon: FaGithub },
     { key: 'linkedin', href: socials.linkedin, Icon: FaLinkedin }
-  ];
+  ].filter(link => link.href);
 
   return (
     <div className="flex items-center gap-2">
@@ -183,7 +230,7 @@ const LeadershipCard = ({ leader, index }) => (
       front={
         <div className="relative w-full h-full rounded-2xl border border-white/10 bg-white/[0.03] p-3 sm:p-4 flex flex-col">
           <FlipHint accent={leader.accent} />
-          <PhotoPlaceholder accent={leader.accent} className="aspect-square mb-2.5" />
+          <Photo photo={leader.photo} accent={leader.accent} position={leader.photoPosition} className="aspect-square mb-2.5" />
           <p
             className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide truncate"
             style={{ color: leader.accent }}
@@ -203,9 +250,11 @@ const LeadershipCard = ({ leader, index }) => (
               {leader.role}
             </p>
             <p className="text-[11px] sm:text-xs text-[#71717A] mb-2">{leader.domain}</p>
-            <p className="text-xs sm:text-sm text-[#D4D4D8] italic leading-relaxed line-clamp-4">
-              "{leader.quote}"
-            </p>
+            {leader.quote && (
+              <p className="text-xs sm:text-sm text-[#D4D4D8] italic leading-relaxed line-clamp-4">
+                "{leader.quote}"
+              </p>
+            )}
           </div>
           <SocialRow socials={leader.socials} accent={leader.accent} size="md" />
         </div>
@@ -220,7 +269,7 @@ const CoreMemberCard = ({ member }) => (
     front={
       <div className="relative w-full h-full rounded-xl border border-white/10 bg-white/[0.02] p-3 flex flex-col">
         <FlipHint accent={member.accent} />
-        <PhotoPlaceholder accent={member.accent} className="aspect-square mb-2.5" />
+        <Photo photo={member.photo} accent={member.accent} position={member.photoPosition} className="aspect-square mb-2.5" />
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: member.accent }} />
           <p className="text-xs font-medium text-white truncate">{member.name}</p>
@@ -235,7 +284,9 @@ const CoreMemberCard = ({ member }) => (
             {member.tier}
           </p>
           <p className="text-[10px] text-[#71717A] mb-2">{member.domain}</p>
-          <p className="text-[11px] text-[#D4D4D8] italic leading-snug line-clamp-4">"{member.quote}"</p>
+          {member.quote && (
+            <p className="text-[11px] text-[#D4D4D8] italic leading-snug line-clamp-4">"{member.quote}"</p>
+          )}
         </div>
         <SocialRow socials={member.socials} accent={member.accent} size="sm" />
       </div>
@@ -313,7 +364,7 @@ export const TeamSection = () => {
         </div>
       </div>
 
-      {/* Core members - three marquee rows of three, alternating directions */}
+      {/* Core members - two marquee rows of four, alternating directions */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div ref={coreHeadingRef}>
           {coreHeadingInView && (
@@ -328,7 +379,6 @@ export const TeamSection = () => {
         </div>
         <CoreMemberRow members={CORE_ROW_1} direction="left" delayStart={0} />
         <CoreMemberRow members={CORE_ROW_2} direction="right" delayStart={0.15} />
-        <CoreMemberRow members={CORE_ROW_3} direction="left" delayStart={0.3} />
       </div>
     </section>
   );
