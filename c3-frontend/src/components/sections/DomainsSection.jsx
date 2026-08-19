@@ -81,13 +81,14 @@ const DOMAINS = [
     ],
     background: (
       <DotField
-        dotRadius={1.4}
-        dotSpacing={16}
+        dotRadius={2.2}
+        dotSpacing={13}
         bulgeStrength={50}
         glowRadius={140}
-        gradientFrom="rgba(56, 189, 248, 0.35)"
-        gradientTo="rgba(45, 212, 191, 0.25)"
-        glowColor="#0B1220"
+        waveAmplitude={5}
+        gradientFrom="rgba(245, 158, 11, 0.65)"
+        gradientTo="rgba(56, 189, 248, 0.45)"
+        glowColor="#F59E0B"
       />
     )
   },
@@ -182,102 +183,96 @@ const MemberProfile = ({ member, accent }) => (
   <div
     role="button"
     tabIndex={0}
-    className="group flex items-center gap-2.5 rounded-full pr-3 pl-1.5 py-1.5 border border-white/10 bg-white/[0.03] cursor-pointer transition-all duration-200 hover:bg-white/[0.07] hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
+    className="group flex items-center gap-2 rounded-full pr-2.5 pl-1 py-1 border border-white/10 bg-black/30 cursor-pointer transition-all duration-200 hover:bg-black/50 hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
     style={{ '--accent': accent }}
   >
     <div
-      className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-[11px] font-semibold text-white border transition-colors duration-200 group-hover:border-[var(--accent)]"
-      style={{ backgroundColor: `${accent}22`, borderColor: `${accent}55` }}
+      className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-[10px] font-semibold text-white border transition-colors duration-200 group-hover:border-[var(--accent)]"
+      style={{ backgroundColor: `${accent}33`, borderColor: `${accent}66` }}
     >
       {initialsOf(member.name)}
     </div>
     <div className="leading-tight">
-      <p className="text-sm text-white font-medium">{member.name}</p>
-      {member.role && <p className="text-[11px] text-[#71717A]">{member.role}</p>}
+      <p className="text-[13px] text-white font-medium">{member.name}</p>
+      {member.role && <p className="text-[10px] text-[#A1A1AA]">{member.role}</p>}
     </div>
   </div>
 );
 
 const TechChip = ({ tech }) => (
-  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-[#E4E4E7] bg-white/5 border border-white/10">
-    <tech.icon className="w-3.5 h-3.5" style={{ color: tech.color }} />
+  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium text-[#E4E4E7] bg-black/30 border border-white/10">
+    <tech.icon className="w-3 h-3" style={{ color: tech.color }} />
     {tech.label}
   </div>
 );
 
-const DomainRow = ({ domain, index }) => {
-  const reversed = index % 2 === 1;
-  return (
-    <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-      <div
-        className={`relative grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-16 items-center ${
-          reversed ? 'lg:[&>*:first-child]:order-2' : ''
-        }`}
-      >
-        {/* Visual panel - one bounded, bordered instance of the domain's
-            background used at every breakpoint (contained card on mobile,
-            side-by-side panel on desktop) instead of two separate DOM
-            branches. The grid naturally stacks it above the text on mobile
-            (grid-cols-1) and places it beside the text on desktop. */}
-        <div className="relative w-full h-[210px] sm:h-[320px] lg:h-[480px] rounded-3xl overflow-hidden border border-white/10 bg-black">
-          <Suspense fallback={null}>
-            <ViewportGate>{domain.background}</ViewportGate>
-          </Suspense>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 pointer-events-none" />
+// One premium card per domain: the ReactBits component is the card's own
+// full-bleed background (not a separate boxed panel above the text), with a
+// graduated scrim - lighter near the top where the large number/title can
+// tolerate a busier backdrop, progressively darker toward the bottom where
+// the description/tech/member text needs solid contrast. The animation is
+// always visible, never fully hidden, and clipped to the card via
+// overflow-hidden so it can never bleed outside it or cause overflow.
+const DomainCard = ({ domain }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, amount: 0.25 }}
+    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+    className="relative w-full sm:w-[calc((100%-1.5rem)/2)] lg:w-[calc((100%-3rem)/3)]"
+  >
+    <div className="relative flex flex-col h-full min-h-[440px] sm:min-h-[460px] rounded-3xl border border-white/10 bg-black overflow-hidden">
+      <div className="absolute inset-0">
+        <Suspense fallback={null}>
+          <ViewportGate>{domain.background}</ViewportGate>
+        </Suspense>
+      </div>
+
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/65 to-black/88" />
+
+      <div className="relative z-10 flex flex-col h-full p-6 sm:p-7">
+        <span
+          className="font-display text-4xl sm:text-5xl font-bold leading-none select-none block [text-shadow:0_2px_16px_rgba(0,0,0,0.85)]"
+          style={{ color: domain.accent }}
+        >
+          {domain.number}
+        </span>
+
+        <h3 className="font-display text-xl sm:text-2xl font-bold text-white mt-2 mb-3 [text-shadow:0_2px_16px_rgba(0,0,0,0.85)]">
+          {domain.title}
+        </h3>
+
+        <p className="text-sm sm:text-[15px] text-[#D4D4D8] leading-relaxed mb-5">
+          {domain.description}
+        </p>
+
+        <div className="mb-5">
+          <div className="flex flex-wrap gap-1.5">
+            {domain.techStack
+              ? domain.techStack.map(tech => <TechChip key={tech.label} tech={tech} />)
+              : domain.skills.map(skill => (
+                  <span
+                    key={skill}
+                    className="px-2.5 py-1 rounded-full text-[11px] font-medium text-[#E4E4E7] bg-black/30 border border-white/10"
+                  >
+                    {skill}
+                  </span>
+                ))}
+          </div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <span
-            className="font-display text-6xl sm:text-7xl font-bold leading-none select-none block"
-            style={{ color: `${domain.accent}4d` }}
-          >
-            {domain.number}
-          </span>
-
-          <h3 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white mt-2 mb-4">
-            {domain.title}
-          </h3>
-
-          <p className="text-base sm:text-lg text-[#A1A1AA] leading-relaxed max-w-lg mb-6">
-            {domain.description}
-          </p>
-
-          <div className="mb-8">
-            {domain.techStack && (
-              <p className="text-xs uppercase tracking-wide text-[#71717A] mb-2.5">Tech We Use</p>
-            )}
-            <div className="flex flex-wrap gap-2">
-              {domain.techStack
-                ? domain.techStack.map(tech => <TechChip key={tech.label} tech={tech} />)
-                : domain.skills.map(skill => (
-                    <span
-                      key={skill}
-                      className="px-3 py-1.5 rounded-full text-xs font-medium text-[#E4E4E7] bg-white/5 border border-white/10"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-            </div>
+        <div className="mt-auto">
+          <p className="text-[10px] uppercase tracking-wide text-[#A1A1AA] mb-2">Domain Members</p>
+          <div className="flex flex-wrap gap-2">
+            {domain.members.map(member => (
+              <MemberProfile key={member.name} member={member} accent={domain.accent} />
+            ))}
           </div>
-
-          <div>
-            <p className="text-xs uppercase tracking-wide text-[#71717A] mb-2.5">Domain Members</p>
-            <div className="flex flex-wrap gap-2.5">
-              {domain.members.map(member => (
-                <MemberProfile key={member.name} member={member} accent={domain.accent} />
-              ))}
-            </div>
-          </div>
-        </motion.div>
+        </div>
       </div>
     </div>
-  );
-};
+  </motion.div>
+);
 
 export const DomainsSection = () => {
   const introRef = useRef(null);
@@ -330,13 +325,19 @@ export const DomainsSection = () => {
         )}
       </div>
 
-      <div className="relative z-10 divide-y divide-white/5">
-        {DOMAINS.map((domain, index) => (
-          <DomainRow key={domain.title} domain={domain} index={index} />
-        ))}
+      {/* Card grid: 3-up on desktop (wrapping to a centered 2-card second
+          row for 5 items), 2-up on tablet, 1-up on mobile. Widths are
+          computed to match `gap-6` exactly at every breakpoint so rows wrap
+          cleanly and `justify-center` centers any trailing partial row. */}
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap justify-center gap-6">
+          {DOMAINS.map(domain => (
+            <DomainCard key={domain.title} domain={domain} />
+          ))}
+        </div>
       </div>
 
-      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-8">
+      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-16 sm:mt-20">
         <div className="h-px w-24 mx-auto mb-10 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
         <h3 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-snug">
           Different Domains. <span className="text-[#71717A]">One Community.</span>
