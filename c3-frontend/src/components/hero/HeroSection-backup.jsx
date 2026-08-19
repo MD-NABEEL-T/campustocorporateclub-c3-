@@ -44,7 +44,7 @@ export const HeroSection = () => {
               />
             </div>
             <div className="flex items-center gap-3">
-              <Link to="/apply" className="font-nav font-semibold bg-white text-black rounded-full px-6 py-2.5 sm:px-7 sm:py-3 text-sm sm:text-base tracking-wide hover:bg-white/90 transition-all duration-300 shadow-[0_0_0_0_rgba(56,189,248,0)] hover:shadow-[0_0_22px_2px_rgba(56,189,248,0.45)]">
+              <Link to="/apply" className="font-nav font-semibold bg-white text-black rounded-full px-6 py-2.5 sm:px-7 sm:py-3 text-sm sm:text-base tracking-wide hover:bg-white/90 transition-colors">
                 Join C3
               </Link>
               <Link to="/#team" className="font-nav font-semibold border border-white/40 text-white rounded-full px-6 py-2.5 sm:px-7 sm:py-3 text-sm sm:text-base tracking-wide flex items-center gap-2 hover:border-white/80 hover:bg-white/5 transition-all">

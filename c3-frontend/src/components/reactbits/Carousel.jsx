@@ -18,7 +18,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useMotionValue, useTransform } from 'motion/react';
 // replace icons with your own if needed
-import { FiCircle, FiCode, FiFileText, FiLayers, FiLayout } from 'react-icons/fi';
+import { Circle, Code, FileText, Layers, Layout } from 'lucide-react';
 
 import './Carousel.css';
 
@@ -27,31 +27,31 @@ const DEFAULT_ITEMS = [
     title: 'Text Animations',
     description: 'Cool text animations for your projects.',
     id: 1,
-    icon: <FiFileText className="carousel-icon" />
+    icon: <FileText className="carousel-icon" />
   },
   {
     title: 'Animations',
     description: 'Smooth animations for your projects.',
     id: 2,
-    icon: <FiCircle className="carousel-icon" />
+    icon: <Circle className="carousel-icon" />
   },
   {
     title: 'Components',
     description: 'Reusable components for your projects.',
     id: 3,
-    icon: <FiLayers className="carousel-icon" />
+    icon: <Layers className="carousel-icon" />
   },
   {
     title: 'Backgrounds',
     description: 'Beautiful backgrounds and patterns for your projects.',
     id: 4,
-    icon: <FiLayout className="carousel-icon" />
+    icon: <Layout className="carousel-icon" />
   },
   {
     title: 'Common UI',
     description: 'Common UI components are coming soon!',
     id: 5,
-    icon: <FiCode className="carousel-icon" />
+    icon: <Code className="carousel-icon" />
   }
 ];
 

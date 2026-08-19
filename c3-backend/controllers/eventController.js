@@ -2,6 +2,7 @@ import Event from '../models/Event.js';
 
 // Create an event - admin only
 export const createEvent = async (req, res) => {
+  console.log('[DIAG 7] createEvent started'); // TEMP DIAGNOSTIC LOGGING - remove after debugging
   try {
     const { title, description, date, summary, attendeeCount, highlights, category, slug } = req.body;
 
@@ -26,8 +27,10 @@ export const createEvent = async (req, res) => {
       createdBy: req.user._id,
     });
 
+    console.log('[DIAG 8] createEvent completed, event id:', event._id.toString()); // TEMP DIAGNOSTIC LOGGING - remove after debugging
     res.status(201).json(event);
   } catch (err) {
+    console.error('[DIAG 8-error] createEvent threw:', JSON.stringify(err, Object.getOwnPropertyNames(err))); // TEMP DIAGNOSTIC LOGGING - remove after debugging
     res.status(500).json({ message: err.message });
   }
 };

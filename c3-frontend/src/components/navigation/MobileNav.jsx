@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import StaggeredMenu from '../StaggeredMenu';
+import StaggeredMenu from '../reactbits/StaggeredMenu';
 import { PUBLIC_NAV_LINKS } from '../../constants/navigation';
 import { useAuth } from '../../context/AuthContext';
 
@@ -28,7 +28,7 @@ export const MobileNav = () => {
   };
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <StaggeredMenu
         position="right"
         items={items}

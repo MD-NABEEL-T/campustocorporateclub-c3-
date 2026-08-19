@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import PillNav from '../PillNav';
+import PillNav from '../reactbits/PillNav';
 import { PUBLIC_NAV_LINKS } from '../../constants/navigation';
 
 export const DesktopNav = () => {
@@ -11,7 +11,7 @@ export const DesktopNav = () => {
   }));
 
   return (
-<div className="hidden md:block flex-1">
+<div className="hidden lg:block flex-1">
         <PillNav
         logo="/assets/c3-logo.jpeg"
         logoAlt="Campus to Corporate Club"

@@ -1,12 +1,15 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
 import { useInView } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
-import BlurText from '../BlurText';
-import Particles from '../Particles';
-import FinisherHeader from '../FinisherHeader';
-import Terminal from '../Terminal';
-import ViewportGate from '../ViewportGate';
+import BlurText from '../reactbits/BlurText';
+import FinisherHeader from '../reactbits/FinisherHeader';
+import Terminal from '../reactbits/Terminal';
+import ViewportGate from '../reactbits/ViewportGate';
+
+// Particles uses ogl (WebGL) - heavy, lazy-loaded so it's only fetched once
+// this section scrolls into view.
+const Particles = lazy(() => import('../reactbits/Particles'));
 
 const finisherConfig = {
   count: 8,
@@ -38,17 +41,19 @@ export const JoinUsSection = () => {
       {/* Ambient particle backdrop for the whole section */}
       <div className="absolute inset-0 opacity-40 pointer-events-none">
         <ViewportGate rootMargin="200px" className="absolute inset-0">
-          <Particles
-            particleColors={['#38BDF8', '#818CF8', '#2DD4BF']}
-            particleCount={140}
-            particleSpread={10}
-            speed={0.1}
-            particleBaseSize={90}
-            moveParticlesOnHover={false}
-            alphaParticles
-            disableRotation
-            pixelRatio={1}
-          />
+          <Suspense fallback={null}>
+            <Particles
+              particleColors={['#38BDF8', '#818CF8', '#2DD4BF']}
+              particleCount={140}
+              particleSpread={10}
+              speed={0.1}
+              particleBaseSize={90}
+              moveParticlesOnHover={false}
+              alphaParticles
+              disableRotation
+              pixelRatio={1}
+            />
+          </Suspense>
         </ViewportGate>
       </div>
 

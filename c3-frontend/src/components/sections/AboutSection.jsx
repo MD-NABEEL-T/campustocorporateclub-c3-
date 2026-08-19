@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import BlurText from '../BlurText';
-// import CountUp from '../CountUp';
-import ShapeGrid from '../ShapeGrid';
+import BlurText from '../reactbits/BlurText';
+// import CountUp from '../reactbits/CountUp';
+import ShapeGrid from '../reactbits/ShapeGrid';
 
 const ABOUT_PARAGRAPH =
   'Campus to Corporate Club (C3) is the official Computer Science and Engineering department club at CAHCET. We believe learning becomes more meaningful when students teach, collaborate, organize, and build together. Through technical sessions, workshops, events, and peer learning, members strengthen both their technical and professional skills while developing communication, leadership, teamwork, and confidence.';

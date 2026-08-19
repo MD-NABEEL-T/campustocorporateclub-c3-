@@ -29,3 +29,5 @@ DiscloseImage component entirely (replace with plain <img>)
 LineReveal component (replace with static positioned text — the Vercel version layout was just CSS, no animation needed for the cascade effect)
 The ready state + useEffect timer in HeroSection (only existed to gate LineReveal)
 TextType can stay but the duplicate LEARN/COLLABORATE line below it should go
+
+USED JUSTIFY CENTER , NOW NEED TO FIX THE PHONE TEXT ALIGNMENT

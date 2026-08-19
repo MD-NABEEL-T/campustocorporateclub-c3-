@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import BlurText from '../BlurText';
-import CountUp from '../CountUp';
-import Carousel from '../Carousel';
-import Masonry from '../Masonry';
+import BlurText from '../reactbits/BlurText';
+import CountUp from '../reactbits/CountUp';
+import Carousel from '../reactbits/Carousel';
+import Masonry from '../reactbits/Masonry';
 import api from '../../api/axios';
 import { motion } from 'motion/react'; // add to top imports
 
@@ -126,9 +126,14 @@ const ClosingCTA = () => {
 };
 
 export const EventsSection = () => {
+  const sectionRef = useRef(null);
   const introRef = useRef(null);
   const [introInView, setIntroInView] = useState(false);
   const [showIntroParagraph, setShowIntroParagraph] = useState(false);
+  // Preload gate: fires well before the section is actually on screen, so the
+  // Carousel (DOM, cover images, GSAP/motion setup) is fully ready by the
+  // time showIntroParagraph reveals it - no cold-start jump/freeze on scroll.
+  const [carouselPrepared, setCarouselPrepared] = useState(false);
   const [carouselRef, carouselWidth] = useMeasuredWidth();
   const { events, loading, error } = useEvents();
 
@@ -172,8 +177,48 @@ export const EventsSection = () => {
     return () => clearTimeout(timer);
   }, [introInView]);
 
+  // Trigger well ahead of the section entering the viewport (roughly a
+  // screen's worth of scroll early on most devices) so mounting/initializing
+  // the carousel and warming its images happens while the user is still
+  // scrolling toward it, not once they've already arrived. One-shot: we
+  // disconnect as soon as it fires, so it costs nothing for visitors who
+  // never scroll this far.
+  useEffect(() => {
+    const node = sectionRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setCarouselPrepared(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '600px 0px 600px 0px' }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  // Warm the browser's image cache for cover images as soon as we're
+  // preparing the carousel, so by reveal time the <img> tags paint instantly
+  // instead of popping in.
+  useEffect(() => {
+    if (!carouselPrepared) return;
+    carouselItems.forEach(item => {
+      if (!item.image) return;
+      const img = new Image();
+      img.src = item.image;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [carouselPrepared, events]);
+
+  // Mount as soon as either signal fires - carouselPrepared normally wins
+  // since its rootMargin trigger is further away, but showIntroParagraph is
+  // kept as a safety net for fast scrolls/large viewports.
+  const mountCarousel = carouselPrepared || showIntroParagraph;
+
   return (
-    <section id="events" className="relative w-full bg-black overflow-hidden py-24 sm:py-28">
+    <section id="events" ref={sectionRef} className="relative w-full bg-black overflow-hidden py-24 sm:py-28">
       {/* Featured events */}
       <div ref={introRef} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <p className="text-xs uppercase tracking-widest text-[#38BDF8] font-medium mb-3">Our Events</p>
@@ -198,16 +243,21 @@ export const EventsSection = () => {
         {!loading && !error && carouselItems.length === 0 && (
           <p className="text-center text-sm text-[#A1A1AA] py-12">No events yet — check back soon.</p>
         )}
-        {!loading && !error && showIntroParagraph && carouselItems.length > 0 && (
-          <Carousel
-            items={carouselItems}
-            baseWidth={Math.max(carouselWidth, 280)}
-            itemHeight={440}
-            autoplay
-            autoplayDelay={5000}
-            pauseOnHover
-            loop
-          />
+        {!loading && !error && mountCarousel && carouselItems.length > 0 && (
+          <div
+            className={`transition-opacity duration-500 ${showIntroParagraph ? 'opacity-100' : 'opacity-0'}`}
+            aria-hidden={!showIntroParagraph}
+          >
+            <Carousel
+              items={carouselItems}
+              baseWidth={Math.max(carouselWidth, 280)}
+              itemHeight={440}
+              autoplay={showIntroParagraph}
+              autoplayDelay={5000}
+              pauseOnHover
+              loop
+            />
+          </div>
         )}
       </div>
 

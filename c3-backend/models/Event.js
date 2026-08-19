@@ -22,11 +22,10 @@ const eventSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Auto-generate the slug from the title if one wasn't provided explicitly.
-eventSchema.pre('save', function (next) {
+eventSchema.pre('save', function () {
   if (!this.slug && this.title) {
     this.slug = slugify(this.title);
   }
-  next();
 });
 
 export default mongoose.model('Event', eventSchema);

@@ -15,7 +15,23 @@ const eventUpload = upload.fields([
   { name: 'gallery', maxCount: 6 },
 ]);
 
-router.post('/', protect, adminOnly, eventUpload, createEvent);
+// TEMP DIAGNOSTIC LOGGING - remove after debugging
+router.post(
+  '/',
+  (req, res, next) => { console.log('[DIAG 1] POST /events request received'); next(); },
+  protect,
+  (req, res, next) => { console.log('[DIAG 2] auth passed, user role:', req.user?.role); next(); },
+  adminOnly,
+  (req, res, next) => { console.log('[DIAG 3] adminOnly passed, entering eventUpload'); next(); },
+  eventUpload,
+  (req, res, next) => {
+    console.log('[DIAG 4] eventUpload middleware finished');
+    console.log('[DIAG 4a] coverImage received:', !!req.files?.coverImage?.length);
+    console.log('[DIAG 4b] gallery files received:', req.files?.gallery?.length || 0);
+    next();
+  },
+  createEvent
+);
 router.get('/', getEvents);
 router.get('/:id', getEventById);
 router.put('/:id', protect, adminOnly, eventUpload, updateEvent);
