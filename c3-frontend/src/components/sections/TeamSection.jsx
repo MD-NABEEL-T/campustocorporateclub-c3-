@@ -25,7 +25,7 @@ const LEADERSHIP = [
     domain: 'Networking & Cybersecurity',
     accent: '#38BDF8',
     quote: null,
-    photo: '/assets/team/ashfaq-ahmed-m.jpeg',
+    photo: '/assets/team/ashfaq-ahmed-m.png',
     photoPosition: 'center 20%',
     socials: { email: 'mailto:ashfaqashu689@gmail.com', github: null, linkedin: 'https://www.linkedin.com/in/ashfaq-ahmed-m-b3a49a2a5/' }
   },
@@ -45,12 +45,14 @@ const LEADERSHIP = [
     }
   },
   {
-    name: 'Member Name',
+    name: 'Harini Radhakrishnan',
     role: 'Session Handler',
-    domain: 'Networking & Cybersecurity',
+    domain: 'Soft Skills',
     accent: '#38BDF8',
+    photo: '/assets/team/Harini-Radhakrishnan.jpg',
+    photoPosition: 'center 20%',
     quote: 'Good sessions come from good questions, not just good slides.',
-    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+    socials: { email: 'hariniradha2727@gmail.com', github: 'https://github.com/hariniradha2727-hue.git', linkedin: 'https://www.linkedin.com/in/r-harini-274fa06h' }
   },
   {
     name: 'Member Name',
@@ -122,12 +124,14 @@ const CORE_MEMBERS = [
     socials: { email: 'mailto:owaisansari1626@gmail.com', github: 'https://github.com/owaisansari1626', linkedin: 'https://www.linkedin.com/in/owaisansari1626' }
   },
   {
-    name: 'Core Member Six',
+    name: 'DHIVYA THARINI KB',
     tier: 'Core Member',
     domain: 'Design & Development',
     accent: '#2DD4BF',
-    quote: 'I learned React by breaking things here first.',
-    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+    photo: '/assets/team/DHIVYA-THARINI-KB.jpg',
+    photoPosition: 'center 20%',
+    quote: 'Code the vision. Create the impact.',
+    socials: { email: 'dhivyatharini369@gmail.com', github: 'dhivya-tharini18 (Dhivya Tharini) https://share.google/Sp0ygy4xvjzA2SBaM', linkedin: 'https://www.linkedin.com/in/dhivyatharini-balakumar-ab07043b0?utm_source=share_via&utm_content=profile&utm_medium=member_android' }
   },
   {
     name: 'Core Member Seven',
@@ -138,12 +142,14 @@ const CORE_MEMBERS = [
     socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
   },
   {
-    name: 'Core Member Eight',
+    name: 'Deepadharshini Sankar',
     tier: 'Core Member',
-    domain: 'Networking & Cybersecurity',
-    accent: '#38BDF8',
-    quote: 'My first Wireshark capture broke my brain, in a good way.',
-    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
+    domain: 'Data Analytics',
+    accent: '#F59E0B',
+    quote: 'while(alive): learn(); build(); innovate();',
+    photo: '/assets/team/Deepadharshini-Sankar.jpg',
+    photoPosition: 'center 20%',
+    socials: { email: 'deepadharshini.sankar@gmail.com', github: 'deepa-dharshini10 (Deepadharshini Sankar) https://share.google/Fqxs5jbsWCRmjP1al', linkedin: 'https://www.linkedin.com/in/deepadharshini-sankar-115266379?utm_source=share_via&utm_content=profile&utm_medium=member_android' }
   }
 ];
 const CORE_ROW_1 = CORE_MEMBERS.slice(0, 4);
