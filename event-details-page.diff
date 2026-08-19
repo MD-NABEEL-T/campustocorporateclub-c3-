@@ -1,0 +1,237 @@
+diff --git a/c3-backend/controllers/publicController.js b/c3-backend/controllers/publicController.js
+index 177f575..a9871f6 100644
+--- a/c3-backend/controllers/publicController.js
++++ b/c3-backend/controllers/publicController.js
+@@ -12,4 +12,23 @@ export const getPublicEvents = async (req, res) => {
+   } catch (err) {
+     res.status(500).json({ message: err.message });
+   }
++};
++
++// GET /api/public/events/:slug - no auth required, used by the public
++// Event Details page (/events/:slug). Looks up by slug (not _id) since
++// that's what the public URL uses, and - like getPublicEvents above -
++// leaves out admin-only fields such as createdBy.
++export const getPublicEventBySlug = async (req, res) => {
++  try {
++    const event = await Event.findOne({ slug: req.params.slug })
++      .select('title slug category description summary date coverImage gallery attendeeCount');
++
++    if (!event) {
++      return res.status(404).json({ message: 'Event not found' });
++    }
++
++    res.json(event);
++  } catch (err) {
++    res.status(500).json({ message: err.message });
++  }
+ };
+\ No newline at end of file
+diff --git a/c3-backend/routes/publicRoutes.js b/c3-backend/routes/publicRoutes.js
+index 9b0ceab..7f7fd8e 100644
+--- a/c3-backend/routes/publicRoutes.js
++++ b/c3-backend/routes/publicRoutes.js
+@@ -1,8 +1,9 @@
+ import express from 'express';
+-import { getPublicEvents } from '../controllers/publicController.js';
++import { getPublicEvents, getPublicEventBySlug } from '../controllers/publicController.js';
+ 
+ const router = express.Router();
+ 
+ router.get('/events', getPublicEvents);
++router.get('/events/:slug', getPublicEventBySlug);
+ 
+ export default router;
+\ No newline at end of file
+diff --git a/c3-frontend/src/App.jsx b/c3-frontend/src/App.jsx
+index 45db1c4..04256a6 100644
+--- a/c3-frontend/src/App.jsx
++++ b/c3-frontend/src/App.jsx
+@@ -16,6 +16,7 @@ const PublicSessions = lazy(() => import('./pages/public/PublicSessions'));
+ const Gallery = lazy(() => import('./pages/public/Gallery'));
+ const Apply = lazy(() => import('./pages/public/Apply'));
+ const Login = lazy(() => import('./pages/public/Login'));
++const EventDetails = lazy(() => import('./pages/public/EventDetails'));
+ 
+ // Member Portal Pages - lazy loaded, only fetched when a logged-in member
+ // actually navigates into the dashboard
+@@ -77,6 +78,7 @@ function App() {
+ {/* Public Layout Routes */}
+             <Route element={<PublicLayout />}>
+               <Route path="/" element={<Home />} />
++                <Route path="/events/:slug" element={<EventDetails />} />
+                 <Route path="/sessions-archive" element={<PublicSessions />} />
+                 <Route path="/gallery" element={<Gallery />} />
+                 <Route path="/apply" element={<Apply />} />
+diff --git a/c3-frontend/src/pages/public/EventDetails.jsx b/c3-frontend/src/pages/public/EventDetails.jsx
+new file mode 100644
+index 0000000..9b7c4d1
+--- /dev/null
++++ b/c3-frontend/src/pages/public/EventDetails.jsx
+@@ -0,0 +1,166 @@
++import { useEffect, useState } from 'react';
++import { useParams, Link } from 'react-router-dom';
++import api from '../../api/axios';
++import { ArrowLeft, Calendar, Users, Tag } from 'lucide-react';
++
++// Public Event Details page - /events/:slug
++// Fetches a single event from GET /api/public/events/:slug (see
++// c3-backend/controllers/publicController.js) and renders that event's own
++// data + gallery only. No mock data, no second upload system - reads the
++// same Event documents the admin form and homepage carousel already use.
++
++const useEvent = (slug) => {
++  const [event, setEvent] = useState(null);
++  const [loading, setLoading] = useState(true);
++  const [error, setError] = useState(null);
++
++  useEffect(() => {
++    let cancelled = false;
++    setLoading(true);
++    setError(null);
++
++    api.get(`/public/events/${slug}`)
++      .then(res => {
++        if (!cancelled) setEvent(res.data);
++      })
++      .catch(err => {
++        if (!cancelled) setError(err);
++      })
++      .finally(() => {
++        if (!cancelled) setLoading(false);
++      });
++
++    return () => {
++      cancelled = true;
++    };
++  }, [slug]);
++
++  return { event, loading, error };
++};
++
++const formatDate = (value) => {
++  if (!value) return null;
++  const d = new Date(value);
++  if (Number.isNaN(d.getTime())) return null;
++  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
++};
++
++export const EventDetails = () => {
++  const { slug } = useParams();
++  const { event, loading, error } = useEvent(slug);
++
++  if (loading) {
++    return (
++      <div className="min-h-screen flex items-center justify-center bg-black">
++        <div className="h-8 w-8 rounded-full border-2 border-white/20 border-t-white animate-spin" />
++      </div>
++    );
++  }
++
++  if (error || !event) {
++    return (
++      <div className="min-h-screen flex flex-col items-center justify-center bg-black px-4 text-center">
++        <p className="text-sm text-[#A1A1AA] mb-6">
++          {error?.response?.status === 404 ? "We couldn't find that event." : "Couldn't load this event right now."}
++        </p>
++        <Link
++          to="/#events"
++          className="inline-flex items-center gap-2 text-sm text-white/80 hover:text-white transition-colors border border-white/10 rounded-full px-4 py-2 bg-white/[0.03]"
++        >
++          <ArrowLeft className="w-4 h-4" /> Back to Events
++        </Link>
++      </div>
++    );
++  }
++
++  const dateLabel = formatDate(event.date);
++
++  return (
++    <div className="relative w-full bg-black overflow-hidden">
++      {/* Hero cover image */}
++      <div className="relative w-full h-[45vh] sm:h-[55vh] min-h-[320px]">
++        <img
++          src={event.coverImage}
++          alt={event.title}
++          className="absolute inset-0 w-full h-full object-cover"
++        />
++        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20" />
++
++        <div className="absolute top-6 left-4 sm:left-6 lg:left-8">
++          <Link
++            to="/#events"
++            className="inline-flex items-center gap-2 text-xs sm:text-sm text-white/80 hover:text-white transition-colors border border-white/10 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 bg-black/40 backdrop-blur-sm"
++          >
++            <ArrowLeft className="w-4 h-4" /> Back to Events
++          </Link>
++        </div>
++
++        <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 max-w-5xl mx-auto w-full">
++          {event.category && (
++            <p className="text-xs uppercase tracking-widest text-[#38BDF8] font-medium mb-3 flex items-center gap-1.5">
++              <Tag className="w-3.5 h-3.5" /> {event.category}
++            </p>
++          )}
++          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white max-w-3xl">
++            {event.title}
++          </h1>
++        </div>
++      </div>
++
++      {/* Event info */}
++      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
++        <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-[#A1A1AA] mb-10 pb-8 border-b border-white/10">
++          {dateLabel && (
++            <span className="flex items-center gap-2">
++              <Calendar className="w-4 h-4 text-[#38BDF8]" /> {dateLabel}
++            </span>
++          )}
++          {typeof event.attendeeCount === 'number' && (
++            <span className="flex items-center gap-2">
++              <Users className="w-4 h-4 text-[#2DD4BF]" /> {event.attendeeCount} participants
++            </span>
++          )}
++        </div>
++
++        {event.description && (
++          <p className="text-base sm:text-lg text-white/90 leading-relaxed mb-8">
++            {event.description}
++          </p>
++        )}
++
++        {event.summary && (
++          <div className="border-t border-white/10 pt-8 mb-4">
++            <p className="text-xs uppercase tracking-widest text-[#71717A] mb-4">Full Summary</p>
++            <p className="text-sm sm:text-base text-[#D4D4D8] leading-relaxed whitespace-pre-line">
++              {event.summary}
++            </p>
++          </div>
++        )}
++
++        {/* This event's own gallery only - never other events' images */}
++        {event.gallery?.length > 0 && (
++          <div className="border-t border-white/10 pt-8 mt-8">
++            <p className="text-xs uppercase tracking-widest text-[#71717A] mb-6">Event Gallery</p>
++            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
++              {event.gallery.map((img, i) => (
++                <div
++                  key={i}
++                  className="relative aspect-[4/3] rounded-xl overflow-hidden border border-white/10 bg-white/[0.02]"
++                >
++                  <img
++                    src={img}
++                    alt={`${event.title} photo ${i + 1}`}
++                    className="w-full h-full object-cover"
++                    loading="lazy"
++                  />
++                </div>
++              ))}
++            </div>
++          </div>
++        )}
++      </div>
++    </div>
++  );
++};
++
++export default EventDetails;

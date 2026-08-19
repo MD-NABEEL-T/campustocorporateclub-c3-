@@ -16,6 +16,7 @@ const PublicSessions = lazy(() => import('./pages/public/PublicSessions'));
 const Gallery = lazy(() => import('./pages/public/Gallery'));
 const Apply = lazy(() => import('./pages/public/Apply'));
 const Login = lazy(() => import('./pages/public/Login'));
+const EventDetails = lazy(() => import('./pages/public/EventDetails'));
 
 // Member Portal Pages - lazy loaded, only fetched when a logged-in member
 // actually navigates into the dashboard
@@ -77,6 +78,7 @@ function App() {
 {/* Public Layout Routes */}
             <Route element={<PublicLayout />}>
               <Route path="/" element={<Home />} />
+                <Route path="/events/:slug" element={<EventDetails />} />
                 <Route path="/sessions-archive" element={<PublicSessions />} />
                 <Route path="/gallery" element={<Gallery />} />
                 <Route path="/apply" element={<Apply />} />

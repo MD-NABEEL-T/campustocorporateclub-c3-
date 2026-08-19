@@ -31,24 +31,6 @@ const Galaxy = lazy(() => import('../reactbits/Galaxy'));
 const Strands = lazy(() => import('../reactbits/Strands'));
 const MagicRings = lazy(() => import('../reactbits/MagicRings'));
 
-// Tracks the lg breakpoint so DomainRow renders exactly one background
-// instance (boxed panel on desktop, full-bleed backdrop on mobile) instead
-// of mounting both and hiding one with CSS.
-const useIsDesktop = (breakpoint = 1024) => {
-  const [isDesktop, setIsDesktop] = useState(
-    () => typeof window !== 'undefined' && window.innerWidth >= breakpoint
-  );
-
-  useEffect(() => {
-    const mq = window.matchMedia(`(min-width: ${breakpoint}px)`);
-    const handler = e => setIsDesktop(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, [breakpoint]);
-
-  return isDesktop;
-};
-
 // Mock data only - these will later link into the Team section.
 const DOMAINS = [
   {
@@ -82,7 +64,36 @@ const DOMAINS = [
   },
   {
     number: '02',
-    title: 'AI & ML',
+    title: 'Data Analytics',
+    accent: '#F59E0B',
+    description:
+      'Convert raw data into meaningful insights using visualization, statistical analysis, dashboards, and business intelligence tools that drive informed decisions.',
+    techStack: [
+      { icon: SiPython, label: 'Python', color: '#3776AB' },
+      { icon: SiMysql, label: 'MySQL', color: '#4479A1' },
+      { icon: SiPandas, label: 'Pandas', color: '#150458' },
+      { icon: SiNumpy, label: 'NumPy', color: '#013243' },
+      { icon: BarChart3, label: 'Power BI', color: '#F2C811' }
+    ],
+    members: [
+      { name: 'Sanya Kapoor', role: 'Domain Lead' },
+      { name: 'Aditya Menon', role: 'Core Member' }
+    ],
+    background: (
+      <DotField
+        dotRadius={1.4}
+        dotSpacing={16}
+        bulgeStrength={50}
+        glowRadius={140}
+        gradientFrom="rgba(56, 189, 248, 0.35)"
+        gradientTo="rgba(45, 212, 191, 0.25)"
+        glowColor="#0B1220"
+      />
+    )
+  },
+  {
+    number: '03',
+    title: 'Artificial Intelligence & Machine Learning',
     accent: '#818CF8',
     description:
       'Explore the future of intelligent systems by building machine learning models, experimenting with AI tools, and solving real-world challenges through data-driven thinking.',
@@ -101,8 +112,8 @@ const DOMAINS = [
     )
   },
   {
-    number: '03',
-    title: 'Networking & Cybersecurity',
+    number: '04',
+    title: 'Cybersecurity & Networks',
     accent: '#38BDF8',
     description:
       'Learn how digital systems communicate, secure networks against threats, and understand ethical hacking through hands-on exploration and security-first thinking.',
@@ -132,37 +143,8 @@ const DOMAINS = [
     )
   },
   {
-    number: '04',
-    title: 'Data Analytics',
-    accent: '#F59E0B',
-    description:
-      'Convert raw data into meaningful insights using visualization, statistical analysis, dashboards, and business intelligence tools that drive informed decisions.',
-    techStack: [
-      { icon: SiPython, label: 'Python', color: '#3776AB' },
-      { icon: SiMysql, label: 'MySQL', color: '#4479A1' },
-      { icon: SiPandas, label: 'Pandas', color: '#150458' },
-      { icon: SiNumpy, label: 'NumPy', color: '#013243' },
-      { icon: BarChart3, label: 'Power BI', color: '#F2C811' }
-    ],
-    members: [
-      { name: 'Sanya Kapoor', role: 'Domain Lead' },
-      { name: 'Aditya Menon', role: 'Core Member' }
-    ],
-    background: (
-      <DotField
-        dotRadius={1.4}
-        dotSpacing={16}
-        bulgeStrength={50}
-        glowRadius={140}
-        gradientFrom="rgba(56, 189, 248, 0.35)"
-        gradientTo="rgba(45, 212, 191, 0.25)"
-        glowColor="#0B1220"
-      />
-    )
-  },
-  {
     number: '05',
-    title: 'Communication Skills',
+    title: 'Public Speaking & Corporate Communication',
     accent: '#FB7185',
     description:
       'Develop confidence in public speaking, technical presentations, leadership, teamwork, and professional communication essential for every successful engineer.',
@@ -225,32 +207,24 @@ const TechChip = ({ tech }) => (
 
 const DomainRow = ({ domain, index }) => {
   const reversed = index % 2 === 1;
-  const isDesktop = useIsDesktop();
-
   return (
     <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-      {!isDesktop && (
-        <div className="absolute inset-0 overflow-hidden opacity-50 pointer-events-none">
-          <Suspense fallback={null}>
-            <ViewportGate>{domain.background}</ViewportGate>
-          </Suspense>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-black/80" />
-        </div>
-      )}
-
       <div
-        className={`relative grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center ${
+        className={`relative grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-16 items-center ${
           reversed ? 'lg:[&>*:first-child]:order-2' : ''
         }`}
       >
-        {isDesktop && (
-          <div className="relative w-full h-[340px] sm:h-[420px] lg:h-[480px] rounded-3xl overflow-hidden border border-white/10 bg-black">
-            <Suspense fallback={null}>
-              <ViewportGate>{domain.background}</ViewportGate>
-            </Suspense>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 pointer-events-none" />
-          </div>
-        )}
+        {/* Visual panel - one bounded, bordered instance of the domain's
+            background used at every breakpoint (contained card on mobile,
+            side-by-side panel on desktop) instead of two separate DOM
+            branches. The grid naturally stacks it above the text on mobile
+            (grid-cols-1) and places it beside the text on desktop. */}
+        <div className="relative w-full h-[210px] sm:h-[320px] lg:h-[480px] rounded-3xl overflow-hidden border border-white/10 bg-black">
+          <Suspense fallback={null}>
+            <ViewportGate>{domain.background}</ViewportGate>
+          </Suspense>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 pointer-events-none" />
+        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
