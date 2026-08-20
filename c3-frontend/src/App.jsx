@@ -29,6 +29,7 @@ const SessionDetail = lazy(() => import('./pages/member/SessionDetail'));
 const AllAttendance = lazy(() => import('./pages/admin/AllAttendance'));
 const SessionForm = lazy(() => import('./pages/admin/SessionForm'));
 const EventForm = lazy(() => import('./pages/admin/EventForm'));
+const Applications = lazy(() => import('./pages/admin/Applications'));
 
 // Simple full-page fallback shown while a lazy route's chunk downloads
 const RouteLoading = () => (
@@ -110,6 +111,7 @@ function App() {
               >
                 <Route index element={<Dashboard />} />
                 <Route path="members" element={<AllAttendance />} />
+                <Route path="applications" element={<Applications />} />
                 <Route path="sessions" element={<Sessions />} />
                 <Route path="sessions/new" element={<SessionForm />} />
                 <Route path="events" element={<EventForm />} />

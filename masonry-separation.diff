@@ -1,0 +1,446 @@
+diff --git a/c3-backend/server.js b/c3-backend/server.js
+index ca30ab6..49b4917 100644
+--- a/c3-backend/server.js
++++ b/c3-backend/server.js
+@@ -9,6 +9,7 @@ import attendanceRoutes from './routes/attendanceRoutes.js';
+ import eventRoutes from './routes/eventRoutes.js';
+ import publicRoutes from './routes/publicRoutes.js';
+ import applicationRoutes from './routes/applicationRoutes.js';
++import galleryRoutes from './routes/galleryRoutes.js';
+ 
+ dotenv.config();
+ connectDB();
+@@ -25,6 +26,7 @@ app.use('/api/attendance', attendanceRoutes);
+ app.use('/api/events', eventRoutes);
+ app.use('/api/public', publicRoutes);
+ app.use('/api/applications', applicationRoutes);
++app.use('/api/gallery', galleryRoutes);
+ 
+ const PORT = process.env.PORT || 5000;
+ app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+\ No newline at end of file
+diff --git a/c3-frontend/src/App.jsx b/c3-frontend/src/App.jsx
+index 04256a6..80e0c4f 100644
+--- a/c3-frontend/src/App.jsx
++++ b/c3-frontend/src/App.jsx
+@@ -29,6 +29,7 @@ const SessionDetail = lazy(() => import('./pages/member/SessionDetail'));
+ const AllAttendance = lazy(() => import('./pages/admin/AllAttendance'));
+ const SessionForm = lazy(() => import('./pages/admin/SessionForm'));
+ const EventForm = lazy(() => import('./pages/admin/EventForm'));
++const GalleryForm = lazy(() => import('./pages/admin/GalleryForm'));
+ 
+ // Simple full-page fallback shown while a lazy route's chunk downloads
+ const RouteLoading = () => (
+@@ -113,6 +114,7 @@ function App() {
+                 <Route path="sessions" element={<Sessions />} />
+                 <Route path="sessions/new" element={<SessionForm />} />
+                 <Route path="events" element={<EventForm />} />
++                <Route path="gallery" element={<GalleryForm />} />
+                 <Route path="attendance" element={<AllAttendance />} />
+               </Route>
+ 
+diff --git a/c3-frontend/src/components/reactbits/Masonry.jsx b/c3-frontend/src/components/reactbits/Masonry.jsx
+index 2f519ef..aca5075 100644
+--- a/c3-frontend/src/components/reactbits/Masonry.jsx
++++ b/c3-frontend/src/components/reactbits/Masonry.jsx
+@@ -259,7 +259,7 @@ const Masonry = ({
+             key={item.id}
+             data-key={item.id}
+             className="item-wrapper"
+-            onClick={() => window.open(item.url, '_blank', 'noopener')}
++            onClick={() => { if (item.url) window.open(item.url, '_blank', 'noopener'); }}
+             onMouseEnter={e => handleMouseEnter(e, item)}
+             onMouseLeave={e => handleMouseLeave(e, item)}
+           >
+diff --git a/c3-frontend/src/components/sections/EventsSection.jsx b/c3-frontend/src/components/sections/EventsSection.jsx
+index d27171a..5b1f80a 100644
+--- a/c3-frontend/src/components/sections/EventsSection.jsx
++++ b/c3-frontend/src/components/sections/EventsSection.jsx
+@@ -38,6 +38,36 @@ const useEvents = () => {
+   return { events, loading, error };
+ };
+ 
++// Homepage Masonry photos - completely independent from events. Comes from
++// its own GalleryPhoto collection (curated via /admin/gallery), never from
++// event.gallery. See c3-backend/controllers/galleryController.js.
++const useGalleryPhotos = () => {
++  const [photos, setPhotos] = useState([]);
++  const [loading, setLoading] = useState(true);
++  const [error, setError] = useState(null);
++
++  useEffect(() => {
++    let cancelled = false;
++
++    api.get('/gallery')
++      .then(res => {
++        if (!cancelled) setPhotos(res.data);
++      })
++      .catch(err => {
++        if (!cancelled) setError(err);
++      })
++      .finally(() => {
++        if (!cancelled) setLoading(false);
++      });
++
++    return () => {
++      cancelled = true;
++    };
++  }, []);
++
++  return { photos, loading, error };
++};
++
+ const STORY_LINES = [
+   'Every event begins with an idea.',
+   'Every idea becomes an experience.',
+@@ -135,7 +165,8 @@ export const EventsSection = () => {
+   // time showIntroParagraph reveals it - no cold-start jump/freeze on scroll.
+   const [carouselPrepared, setCarouselPrepared] = useState(false);
+   const [carouselRef, carouselWidth] = useMeasuredWidth();
+-  const { events, loading, error } = useEvents();
++  const { events, loading, error } = useEvents();
++  const { photos: masonryPhotos } = useGalleryPhotos();
+ 
+   const carouselItems = events.map(event => ({
+     id: event.slug,
+@@ -148,14 +179,11 @@ export const EventsSection = () => {
+     href: `/events/${event.slug}`
+   }));
+ 
+-  const galleryItems = events.flatMap(event =>
+-    (event.gallery || []).map((img, i) => ({
+-      id: `${event.slug}-${i}`,
+-      img,
+-      url: `/events/${event.slug}`,
+-      height: 300 + ((i * 73 + event.slug.length * 17) % 220)
+-    }))
+-  );
++  const galleryItems = masonryPhotos.map((photo, i) => ({
++    id: photo._id,
++    img: photo.image,
++    height: 300 + ((i * 73 + (photo._id?.length || 0) * 17) % 220)
++  }));
+ 
+   useEffect(() => {
+     const node = introRef.current;
+diff --git a/c3-frontend/src/constants/navigation.js b/c3-frontend/src/constants/navigation.js
+index 8dff72a..8b0bf00 100644
+--- a/c3-frontend/src/constants/navigation.js
++++ b/c3-frontend/src/constants/navigation.js
+@@ -43,6 +43,7 @@ export const ADMIN_NAV_LINKS = [
+   { label: 'Junior Applications', href: '/admin/applications', icon: Send },
+   { label: 'Manage Sessions', href: '/admin/sessions', icon: BookOpen },
+   { label: 'Manage Events', href: '/admin/events', icon: Calendar },
++  { label: 'Homepage Gallery', href: '/admin/gallery', icon: Images },
+   { label: 'Global Attendance', href: '/admin/attendance', icon: FileSpreadsheet },
+   { label: 'Resource Uploads', href: '/admin/resources', icon: FolderOpen },
+   { label: 'Broadcasts', href: '/admin/announcements', icon: Bell },
+diff --git a/c3-backend/models/GalleryPhoto.js b/c3-backend/models/GalleryPhoto.js
+new file mode 100644
+index 0000000..755f41e
+--- /dev/null
++++ b/c3-backend/models/GalleryPhoto.js
+@@ -0,0 +1,13 @@
++import mongoose from 'mongoose';
++
++// Curated "best photos" collection for the homepage Masonry section.
++// Completely independent from Event.gallery and Session.images - admin
++// hand-picks what goes here, it is never auto-populated from either.
++const galleryPhotoSchema = new mongoose.Schema({
++  image: { type: String, required: true },   // Cloudinary secure URL
++  publicId: { type: String, required: true }, // Cloudinary public_id, needed to delete the asset cleanly
++  caption: { type: String },
++  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
++}, { timestamps: true });
++
++export default mongoose.model('GalleryPhoto', galleryPhotoSchema);
+diff --git a/c3-backend/controllers/galleryController.js b/c3-backend/controllers/galleryController.js
+new file mode 100644
+index 0000000..dccdd4e
+--- /dev/null
++++ b/c3-backend/controllers/galleryController.js
+@@ -0,0 +1,55 @@
++import GalleryPhoto from '../models/GalleryPhoto.js';
++import cloudinary from '../config/cloudinary.js';
++
++// Create a curated Masonry photo - admin only. Single-image upload.
++export const createGalleryPhoto = async (req, res) => {
++  try {
++    if (!req.file) {
++      return res.status(400).json({ message: 'Image is required' });
++    }
++
++    const { caption } = req.body;
++
++    const photo = await GalleryPhoto.create({
++      image: req.file.path,       // Cloudinary secure URL
++      publicId: req.file.filename, // Cloudinary public_id (set by multer-storage-cloudinary)
++      caption,
++      createdBy: req.user._id,
++    });
++
++    res.status(201).json(photo);
++  } catch (err) {
++    res.status(500).json({ message: err.message });
++  }
++};
++
++// List all curated Masonry photos - public, no auth required.
++export const getGalleryPhotos = async (req, res) => {
++  try {
++    const photos = await GalleryPhoto.find()
++      .sort({ createdAt: -1 })
++      .select('image caption createdAt');
++
++    res.json(photos);
++  } catch (err) {
++    res.status(500).json({ message: err.message });
++  }
++};
++
++// Delete a curated Masonry photo - admin only. Removes both the MongoDB
++// record and the underlying Cloudinary asset so nothing is left orphaned.
++export const deleteGalleryPhoto = async (req, res) => {
++  try {
++    const photo = await GalleryPhoto.findById(req.params.id);
++    if (!photo) {
++      return res.status(404).json({ message: 'Photo not found' });
++    }
++
++    await cloudinary.uploader.destroy(photo.publicId);
++    await photo.deleteOne();
++
++    res.json({ message: 'Photo deleted' });
++  } catch (err) {
++    res.status(500).json({ message: err.message });
++  }
++};
+diff --git a/c3-backend/routes/galleryRoutes.js b/c3-backend/routes/galleryRoutes.js
+new file mode 100644
+index 0000000..3f0c29c
+--- /dev/null
++++ b/c3-backend/routes/galleryRoutes.js
+@@ -0,0 +1,16 @@
++import express from 'express';
++import { protect, adminOnly } from '../middleware/authMiddleware.js';
++import upload from '../middleware/upload.js';
++import {
++  createGalleryPhoto,
++  getGalleryPhotos,
++  deleteGalleryPhoto,
++} from '../controllers/galleryController.js';
++
++const router = express.Router();
++
++router.get('/', getGalleryPhotos);
++router.post('/', protect, adminOnly, upload.single('image'), createGalleryPhoto);
++router.delete('/:id', protect, adminOnly, deleteGalleryPhoto);
++
++export default router;
+diff --git a/c3-frontend/src/pages/admin/GalleryForm.jsx b/c3-frontend/src/pages/admin/GalleryForm.jsx
+new file mode 100644
+index 0000000..e76e26f
+--- /dev/null
++++ b/c3-frontend/src/pages/admin/GalleryForm.jsx
+@@ -0,0 +1,201 @@
++import { useEffect, useState, useCallback } from 'react';
++import { Link } from 'react-router-dom';
++import { useAuth } from '../../context/AuthContext';
++import api from '../../api/axios';
++import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
++import { Button } from '../../components/ui/Button';
++import { ArrowLeft, Plus, CheckCircle2, Trash2 } from 'lucide-react';
++
++const RECOMMENDED_COUNT = 12;
++
++const GalleryForm = () => {
++  const { user } = useAuth();
++
++  const [caption, setCaption] = useState('');
++  const [image, setImage] = useState(null);
++  const [error, setError] = useState('');
++  const [submitting, setSubmitting] = useState(false);
++  const [created, setCreated] = useState(null);
++
++  const [photos, setPhotos] = useState([]);
++  const [loadingPhotos, setLoadingPhotos] = useState(true);
++  const [deletingId, setDeletingId] = useState(null);
++
++  const fetchPhotos = useCallback(async () => {
++    setLoadingPhotos(true);
++    try {
++      const res = await api.get('/gallery');
++      setPhotos(res.data);
++    } catch {
++      // Non-fatal for the upload form itself - the count/list just won't show.
++    } finally {
++      setLoadingPhotos(false);
++    }
++  }, []);
++
++  useEffect(() => {
++    fetchPhotos();
++  }, [fetchPhotos]);
++
++  const handleSubmit = async e => {
++    e.preventDefault();
++    setError('');
++    setCreated(null);
++
++    if (!image) {
++      setError('Image is required');
++      return;
++    }
++
++    setSubmitting(true);
++    try {
++      const formData = new FormData();
++      formData.append('image', image);
++      if (caption) formData.append('caption', caption);
++
++      const res = await api.post('/gallery', formData, {
++        headers: {
++          Authorization: `Bearer ${user.token}`,
++          'Content-Type': 'multipart/form-data',
++        },
++      });
++
++      setCreated(res.data);
++      setCaption('');
++      setImage(null);
++      fetchPhotos();
++    } catch (err) {
++      setError(err.response?.data?.message || 'Failed to upload photo');
++    } finally {
++      setSubmitting(false);
++    }
++  };
++
++  const handleDelete = async id => {
++    setDeletingId(id);
++    try {
++      await api.delete(`/gallery/${id}`, {
++        headers: { Authorization: `Bearer ${user.token}` },
++      });
++      setPhotos(prev => prev.filter(p => p._id !== id));
++    } catch (err) {
++      setError(err.response?.data?.message || 'Failed to delete photo');
++    } finally {
++      setDeletingId(null);
++    }
++  };
++
++  const count = photos.length;
++  const countLabel = loadingPhotos
++    ? 'Masonry Photos: …'
++    : `Masonry Photos: ${count} / ${RECOMMENDED_COUNT}`;
++  const countTone = count === RECOMMENDED_COUNT
++    ? 'text-[#22C55E] border-[#22C55E]/30 bg-[#22C55E]/10'
++    : count > RECOMMENDED_COUNT
++      ? 'text-[#38BDF8] border-[#38BDF8]/30 bg-[#38BDF8]/10'
++      : 'text-[#F59E0B] border-[#F59E0B]/30 bg-[#F59E0B]/10';
++
++  return (
++    <div className="space-y-6">
++      <Link to="/admin">
++        <Button variant="ghost" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
++          Back to Admin Overview
++        </Button>
++      </Link>
++
++      <Card className="max-w-2xl mx-auto">
++        <CardHeader>
++          <div className="flex items-center justify-between gap-4 flex-wrap">
++            <CardTitle className="text-2xl">Homepage Masonry Photos</CardTitle>
++            <span className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${countTone}`}>
++              {countLabel}
++            </span>
++          </div>
++          <p className="text-xs text-[#94A3B8] mt-1">
++            Recommended: {RECOMMENDED_COUNT} photos for the current homepage layout. This is
++            separate from event galleries - these are your best session/activity photos.
++          </p>
++        </CardHeader>
++        <CardContent>
++          {error && (
++            <div className="p-3 mb-4 rounded-lg bg-[#EF4444]/10 border border-[#EF4444]/30 text-xs font-medium text-[#EF4444]">
++              {error}
++            </div>
++          )}
++
++          {created && (
++            <div className="p-3 mb-4 rounded-lg bg-[#22C55E]/10 border border-[#22C55E]/30 text-xs font-medium text-[#22C55E] flex items-start gap-2">
++              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
++              <span>Photo uploaded. It's now live in the homepage Masonry.</span>
++            </div>
++          )}
++
++          <form onSubmit={handleSubmit} className="space-y-4">
++            <div className="space-y-1.5">
++              <label className="block text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">
++                Photo (Required)
++              </label>
++              <input
++                type="file"
++                accept="image/*"
++                onChange={e => setImage(e.target.files[0])}
++                className="w-full text-xs text-[#94A3B8] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#38BDF8]/10 file:text-[#38BDF8] hover:file:bg-[#38BDF8]/20"
++                required
++              />
++            </div>
++
++            <div className="space-y-1.5">
++              <label className="block text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">
++                Caption (optional)
++              </label>
++              <input
++                type="text"
++                placeholder="e.g. GitHub & LinkedIn session, Aug 2026"
++                value={caption}
++                onChange={e => setCaption(e.target.value)}
++                className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-[#F8FAFC] placeholder:text-[#64748B] focus:outline-none focus:border-[#38BDF8]/50"
++              />
++            </div>
++
++            <Button
++              type="submit"
++              variant="primary"
++              size="lg"
++              className="w-full mt-4"
++              isLoading={submitting}
++              leftIcon={<Plus className="w-4 h-4" />}
++            >
++              Add to Masonry
++            </Button>
++          </form>
++
++          {photos.length > 0 && (
++            <div className="mt-8 pt-6 border-t border-white/10">
++              <p className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] mb-4">
++                Current Photos ({count})
++              </p>
++              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
++                {photos.map(photo => (
++                  <div key={photo._id} className="relative group rounded-lg overflow-hidden border border-white/10 aspect-square">
++                    <img src={photo.image} alt={photo.caption || 'Gallery photo'} className="w-full h-full object-cover" />
++                    <button
++                      type="button"
++                      onClick={() => handleDelete(photo._id)}
++                      disabled={deletingId === photo._id}
++                      className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center disabled:opacity-100"
++                      title="Delete photo"
++                    >
++                      <Trash2 className="w-5 h-5 text-[#EF4444]" />
++                    </button>
++                  </div>
++                ))}
++              </div>
++            </div>
++          )}
++        </CardContent>
++      </Card>
++    </div>
++  );
++};
++
++export default GalleryForm;
