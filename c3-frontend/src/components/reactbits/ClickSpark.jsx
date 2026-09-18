@@ -71,20 +71,22 @@ const ClickSpark = ({
     [easing]
   );
 
-  useEffect(() => {
+  const animIdRef = useRef(null);
+  const isRunningRef = useRef(false);
+
+  const startAnimation = useCallback(() => {
+    if (isRunningRef.current) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    let animationId;
+    isRunningRef.current = true;
 
-    const draw = timestamp => {
-      if (!startTimeRef.current) {
-        startTimeRef.current = timestamp;
-      }
+    const draw = (timestamp) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      sparksRef.current = sparksRef.current.filter(spark => {
+      sparksRef.current = sparksRef.current.filter((spark) => {
         const elapsed = timestamp - spark.startTime;
         if (elapsed >= duration) {
           return false;
@@ -111,17 +113,28 @@ const ClickSpark = ({
         return true;
       });
 
-      animationId = requestAnimationFrame(draw);
+      if (sparksRef.current.length > 0) {
+        animIdRef.current = requestAnimationFrame(draw);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        isRunningRef.current = false;
+        animIdRef.current = null;
+      }
     };
 
-    animationId = requestAnimationFrame(draw);
+    animIdRef.current = requestAnimationFrame(draw);
+  }, [duration, easeFunc, extraScale, sparkColor, sparkRadius, sparkSize]);
 
+  useEffect(() => {
     return () => {
-      cancelAnimationFrame(animationId);
+      if (animIdRef.current) {
+        cancelAnimationFrame(animIdRef.current);
+      }
+      isRunningRef.current = false;
     };
-  }, [sparkColor, sparkSize, sparkRadius, sparkCount, duration, easeFunc, extraScale]);
+  }, []);
 
-  const handleClick = e => {
+  const handleClick = (e) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
@@ -137,6 +150,7 @@ const ClickSpark = ({
     }));
 
     sparksRef.current.push(...newSparks);
+    startAnimation();
   };
 
   return (

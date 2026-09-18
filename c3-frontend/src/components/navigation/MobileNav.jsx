@@ -15,7 +15,7 @@ export const MobileNav = () => {
 
   const ctaItem = user
     ? { label: 'Portal Dashboard', ariaLabel: 'Go to portal dashboard', link: '/dashboard' }
-    : { label: 'C3 Member Login', ariaLabel: 'Go to member login', link: '/login' };
+    : { label: 'Member Login', ariaLabel: 'Go to member login', link: '/login' };
 
   const items = [...navItems, ctaItem];
 

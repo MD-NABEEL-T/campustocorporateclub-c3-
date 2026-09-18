@@ -53,25 +53,10 @@ const LEADERSHIP = [
     photoPosition: 'center 20%',
     quote: 'Good sessions come from good questions, not just good slides.',
     socials: { email: 'hariniradha2727@gmail.com', github: 'https://github.com/hariniradha2727-hue.git', linkedin: 'https://www.linkedin.com/in/r-harini-274fa06h' }
-  },
-  {
-    name: 'Member Name',
-    role: 'Event Manager',
-    domain: 'Data Analytics',
-    accent: '#F59E0B',
-    quote: 'An event is just a team working well together, in public.',
-    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
   }
 ];
 
-// 8 core members, split into TWO rows of 4 for the marquee (previously
-// 3 rows of 3 - trimmed to 2 rows so real members don't feel repeated
-// across an extra row). Slots 1-5 hold real members; the remaining 3
-// mock members fill out row 2 and stay untouched until real info is
-// provided for them. One mock placeholder ("Core Member Nine") was
-// dropped to fit the 2-row/8-card layout - it was never real data, so
-// nothing real was lost, and there's still room to swap any mock slot
-// for a real member later.
+// 9 core members, split into two rows for the marquee
 const CORE_MEMBERS = [
   {
     name: 'Shareen Begum.Z',
@@ -82,6 +67,56 @@ const CORE_MEMBERS = [
     photo: '/assets/team/shareen-begum-z.png',
     photoPosition: 'center 20%',
     socials: { email: 'mailto:zshareenbegum@gmail.com', github: 'https://github.com/shareenbegum', linkedin: 'https://www.linkedin.com/in/shareen-begum-z-649266379' }
+  },
+  {
+    name: 'Sahira Fathima N',
+    tier: 'Core Member',
+    domain: 'AI/ML',
+    accent: '#818CF8',
+    quote: 'Curiosity fuels progress, action creates results.',
+    photo: '/assets/team/sahira-fathima.png',
+    photoPosition: 'center 20%',
+    socials: { email: 'mailto:sahirafathima0809@gmail.com', github: null, linkedin: 'https://www.linkedin.com/in/sahira-fathima-n-b6a72439b' }
+  },
+  {
+    name: 'Bargavi R',
+    tier: 'Core Member',
+    domain: 'AI/ML',
+    accent: '#818CF8',
+    quote: null,
+    photo: '/assets/team/bargavi-r.jpeg',
+    photoPosition: 'center 20%',
+    socials: { email: 'mailto:bargavi042@gmail.com', github: null, linkedin: 'http://www.linkedin.com/in/bargavi-rajesh-5977783b3' }
+  },
+  {
+    name: 'DHIVYA THARINI KB',
+    tier: 'Core Member',
+    domain: 'Design & Development',
+    accent: '#2DD4BF',
+    photo: '/assets/team/DHIVYA-THARINI-KB.jpg',
+    photoPosition: 'center 20%',
+    quote: 'Code the vision. Create the impact.',
+    socials: { email: 'dhivyatharini369@gmail.com', github: 'dhivya-tharini18 (Dhivya Tharini) https://share.google/Sp0ygy4xvjzA2SBaM', linkedin: 'https://www.linkedin.com/in/dhivyatharini-balakumar-ab07043b0?utm_source=share_via&utm_content=profile&utm_medium=member_android' }
+  },
+  {
+    name: 'Deepadharshini Sankar',
+    tier: 'Core Member',
+    domain: 'Data Analytics',
+    accent: '#F59E0B',
+    quote: 'while(alive): learn(); build(); innovate();',
+    photo: '/assets/team/Deepadharshini-Sankar.jpg',
+    photoPosition: 'center 20%',
+    socials: { email: 'deepadharshini.sankar@gmail.com', github: 'deepa-dharshini10 (Deepadharshini Sankar) https://share.google/Fqxs5jbsWCRmjP1al', linkedin: 'https://www.linkedin.com/in/deepadharshini-sankar-115266379?utm_source=share_via&utm_content=profile&utm_medium=member_android' }
+  },
+  {
+    name: 'S Mohammad Saifullah Roomy',
+    tier: 'Core Member',
+    domain: 'Data Analytics',
+    accent: '#F59E0B',
+    quote: null,
+    photo: '/assets/team/s-mohammad-saifullah-roomy.jpg',
+    photoPosition: 'center 20%',
+    socials: { email: 'mailto:saifullahroomy129@gmail.com', github: 'https://github.com/roomy129', linkedin: 'https://www.linkedin.com/in/md-saifullah-roomy-s-14a9493a0/' }
   },
   {
     name: 'Mohamed Riyaz M',
@@ -104,16 +139,6 @@ const CORE_MEMBERS = [
     socials: { email: 'mailto:zaid.offl.007@gmail.com', github: 'https://github.com/Minni-Zaid', linkedin: 'https://www.linkedin.com/in/immohamedzaid' }
   },
   {
-    name: 'S Mohammad Saifullah Roomy',
-    tier: 'Core Member',
-    domain: 'Data Analytics',
-    accent: '#F59E0B',
-    quote: null,
-    photo: '/assets/team/s-mohammad-saifullah-roomy.jpg',
-    photoPosition: 'center 20%',
-    socials: { email: 'mailto:saifullahroomy129@gmail.com', github: 'https://github.com/roomy129', linkedin: 'https://www.linkedin.com/in/md-saifullah-roomy-s-14a9493a0/' }
-  },
-  {
     name: 'Mohammed Owais Ansari',
     tier: 'Core Member',
     domain: 'Networking & Cybersecurity',
@@ -122,38 +147,10 @@ const CORE_MEMBERS = [
     photo: '/assets/team/mohammed-owais-ansari.png',
     photoPosition: 'center 20%',
     socials: { email: 'mailto:owaisansari1626@gmail.com', github: 'https://github.com/owaisansari1626', linkedin: 'https://www.linkedin.com/in/owaisansari1626' }
-  },
-  {
-    name: 'DHIVYA THARINI KB',
-    tier: 'Core Member',
-    domain: 'Design & Development',
-    accent: '#2DD4BF',
-    photo: '/assets/team/DHIVYA-THARINI-KB.jpg',
-    photoPosition: 'center 20%',
-    quote: 'Code the vision. Create the impact.',
-    socials: { email: 'dhivyatharini369@gmail.com', github: 'dhivya-tharini18 (Dhivya Tharini) https://share.google/Sp0ygy4xvjzA2SBaM', linkedin: 'https://www.linkedin.com/in/dhivyatharini-balakumar-ab07043b0?utm_source=share_via&utm_content=profile&utm_medium=member_android' }
-  },
-  {
-    name: 'Core Member Seven',
-    tier: 'Core Member',
-    domain: 'AI & ML',
-    accent: '#818CF8',
-    quote: 'Models are easy. Explaining them well is the real skill.',
-    socials: { email: 'mailto:member@c3club.dev', github: 'https://github.com', linkedin: 'https://linkedin.com' }
-  },
-  {
-    name: 'Deepadharshini Sankar',
-    tier: 'Core Member',
-    domain: 'Data Analytics',
-    accent: '#F59E0B',
-    quote: 'while(alive): learn(); build(); innovate();',
-    photo: '/assets/team/Deepadharshini-Sankar.jpg',
-    photoPosition: 'center 20%',
-    socials: { email: 'deepadharshini.sankar@gmail.com', github: 'deepa-dharshini10 (Deepadharshini Sankar) https://share.google/Fqxs5jbsWCRmjP1al', linkedin: 'https://www.linkedin.com/in/deepadharshini-sankar-115266379?utm_source=share_via&utm_content=profile&utm_medium=member_android' }
   }
 ];
-const CORE_ROW_1 = CORE_MEMBERS.slice(0, 4);
-const CORE_ROW_2 = CORE_MEMBERS.slice(4, 8);
+const CORE_ROW_1 = CORE_MEMBERS.slice(0, 5);
+const CORE_ROW_2 = CORE_MEMBERS.slice(5);
 
 // Shows the real photo when `photo` is set and loads successfully;
 // otherwise falls back to the original icon placeholder unchanged.
@@ -167,6 +164,7 @@ const Photo = ({ photo, accent, position = 'center', className = '' }) => {
           src={photo}
           alt=""
           loading="lazy"
+          decoding="async"
           onError={() => setErrored(true)}
           className="absolute inset-0 w-full h-full object-cover"
           style={{ objectPosition: position }}
@@ -296,27 +294,27 @@ const LeadershipCard = ({ leader, index }) => (
 
 const CoreMemberCard = ({ member }) => (
   <FlipCard
-    className="w-[172px] h-[230px] sm:w-[190px] sm:h-[250px] shrink-0"
+    className="w-[145px] h-[195px] sm:w-[160px] sm:h-[215px] shrink-0"
     front={
-      <div className="relative w-full h-full rounded-xl border border-white/10 bg-white/[0.02] p-3 flex flex-col">
+      <div className="relative w-full h-full rounded-xl border border-white/10 bg-white/[0.02] p-2.5 sm:p-3 flex flex-col">
         <FlipHint accent={member.accent} />
-        <Photo photo={member.photo} accent={member.accent} position={member.photoPosition} className="aspect-square mb-2.5" />
+        <Photo photo={member.photo} accent={member.accent} position={member.photoPosition} className="aspect-square mb-2" />
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: member.accent }} />
-          <p className="text-xs font-medium text-white truncate">{member.name}</p>
+          <p className="text-[11px] sm:text-xs font-medium text-white truncate">{member.name}</p>
         </div>
-        <p className="text-[10px] text-[#71717A] pl-3 truncate">{member.tier}</p>
+        <p className="text-[9px] sm:text-[10px] text-[#71717A] pl-3 truncate">{member.tier}</p>
       </div>
     }
     back={
-      <div className="relative w-full h-full rounded-xl border border-white/10 bg-[#0a0a0a] p-3 flex flex-col justify-between">
+      <div className="relative w-full h-full rounded-xl border border-white/10 bg-[#0a0a0a] p-2.5 sm:p-3 flex flex-col justify-between">
         <div>
-          <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: member.accent }}>
+          <p className="text-[9px] sm:text-[10px] uppercase tracking-wide mb-1" style={{ color: member.accent }}>
             {member.tier}
           </p>
-          <p className="text-[10px] text-[#71717A] mb-2">{member.domain}</p>
+          <p className="text-[9px] sm:text-[10px] text-[#71717A] mb-1.5 truncate">{member.domain}</p>
           {member.quote && (
-            <p className="text-[11px] text-[#D4D4D8] italic leading-snug line-clamp-4">"{member.quote}"</p>
+            <p className="text-[10px] sm:text-[11px] text-[#D4D4D8] italic leading-snug line-clamp-3">"{member.quote}"</p>
           )}
         </div>
         <SocialRow socials={member.socials} accent={member.accent} size="sm" />
@@ -335,10 +333,10 @@ const CoreMemberRow = ({ members, direction, delayStart }) => {
       initial={{ opacity: 0 }}
       animate={inView ? { opacity: 1 } : {}}
       transition={{ duration: 0.6, delay: delayStart }}
-      className="mb-4 last:mb-0"
+      className="mb-3.5 last:mb-0 select-none"
     >
-      <Marquee direction={direction} speed={30}>
-        <div className="flex gap-4 pr-4">
+      <Marquee direction={direction} speed={18} pauseOnHover>
+        <div className="flex gap-3.5 pr-3.5">
           {members.map(member => (
             <CoreMemberCard key={member.name} member={member} />
           ))}
@@ -386,27 +384,30 @@ export const TeamSection = () => {
         )}
       </div>
 
-      {/* Leadership - constant, 2-up even on the smallest phones */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 sm:mb-16">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+      {/* Leadership - balanced 3-col layout */}
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 sm:mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           {LEADERSHIP.map((leader, i) => (
             <LeadershipCard key={leader.role} leader={leader} index={i} />
           ))}
         </div>
       </div>
 
-      {/* Core members - two marquee rows of four, alternating directions */}
+      {/* Core members - two fast marquee rows with horizontal scroll & swipe support */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div ref={coreHeadingRef}>
+        <div ref={coreHeadingRef} className="flex items-center justify-between mb-4 sm:mb-6">
           {coreHeadingInView && (
             <BlurText
               text="Core Members"
               direction="top"
               delay={30}
               stepDuration={0.3}
-              className="text-xs uppercase tracking-widest text-[#71717A] mb-6"
+              className="text-xs uppercase tracking-widest text-[#71717A]"
             />
           )}
+          <span className="text-[11px] text-[#71717A] hidden sm:inline-block">
+            Hover to pause • Drag / Swipe horizontally to browse
+          </span>
         </div>
         <CoreMemberRow members={CORE_ROW_1} direction="left" delayStart={0} />
         <CoreMemberRow members={CORE_ROW_2} direction="right" delayStart={0.15} />

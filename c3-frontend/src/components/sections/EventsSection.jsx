@@ -280,17 +280,19 @@ export const EventsSection = () => {
       </div>
 
       {/* Event statistics */}
-      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-      <div className="grid grid-cols-4 gap-x-2 sm:gap-8 text-center">
-
-
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-6 text-center">
           {STATS.map(stat => (
-            <div key={stat.label}>
-           <div className="font-display text-lg sm:text-5xl font-bold text-white flex items-baseline justify-center flex-wrap">
+            <div
+              key={stat.label}
+              className="relative p-4 sm:p-6 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-md transition-all duration-300 hover:border-white/20 hover:bg-white/[0.05] group"
+            >
+              <div className="font-display text-3xl sm:text-5xl font-bold text-white flex items-baseline justify-center gap-0.5 group-hover:text-[#38BDF8] transition-colors">
                 <CountUp to={stat.to} duration={2} />
-<span>{stat.suffix}</span>
-           </div>
-<div className="text-[10px] sm:text-sm text-[#A1A1AA] mt-1 sm:mt-2 leading-tight">{stat.label}</div>            </div>
+                <span className="text-xl sm:text-3xl text-[#38BDF8]">{stat.suffix}</span>
+              </div>
+              <div className="text-xs sm:text-sm font-medium text-[#A1A1AA] mt-2 tracking-wide">{stat.label}</div>
+            </div>
           ))}
         </div>
       </div>

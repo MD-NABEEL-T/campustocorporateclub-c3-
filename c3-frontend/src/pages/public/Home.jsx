@@ -21,40 +21,25 @@ export const Home = () => {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_88%_80%,rgba(45,212,191,0.09),transparent_65%)]" />
 
         {SHOW_HERO_PHOTO && (
-          <div className="absolute inset-0">
-            {/* Full-bleed, unmasked - people should actually be visible.
-                Object-position keeps heads clear of the headline zone
-                (top-left on mobile, left column on desktop); the scrim
-                below does the rest of the work so we don't have to lean on
-                heavy grayscale/brightness filters to keep text readable. */}
+          <div className="absolute inset-0 overflow-hidden">
+            {/* On desktop, image occupies right ~60% so left side is dedicated to high-contrast text.
+                On mobile, object-position keeps members' faces framed cleanly. */}
             <picture>
-              <source media="(max-width: 639px)" srcSet="/assets/c3fullmembers2.jpg" />
+              <source media="(max-width: 768px)" srcSet="/assets/c3fullmembers2.jpg" />
               <img
                 src="/assets/c3fullmembers.jpg.jpeg"
                 alt="C3 Club Members"
-                className="absolute inset-0 w-full h-full object-cover object-[center_28%] sm:object-[68%_38%] [filter:grayscale(0.15)_contrast(1.05)_brightness(0.92)]"
+                fetchPriority="high"
+                decoding="async"
+                className="absolute right-0 inset-y-0 w-full lg:w-[62%] h-full object-cover object-[center_20%] lg:object-[center_35%] [filter:grayscale(0.08)_contrast(1.04)_brightness(0.95)]"
               />
             </picture>
 
-            {/* Directional scrim: dark where the headline sits, clearer
-                where people should stay recognizable. Mobile stacks the
-                heading over the top, so it's a vertical fade with a
-                brighter band in the middle where faces are; desktop reads
-                left-to-right (text column vs. image side), so it's a
-                diagonal fade instead. */}
+            {/* Directional scrim: deep black on left where text lives, soft transparent blend toward right photo */}
             <div
               className="absolute inset-0
-                bg-[linear-gradient(to_bottom,black_0%,rgba(0,0,0,0.72)_16%,rgba(0,0,0,0.28)_40%,rgba(0,0,0,0.22)_58%,rgba(0,0,0,0.74)_84%,black_100%)]
-                sm:bg-[linear-gradient(115deg,black_0%,rgba(0,0,0,0.8)_28%,rgba(0,0,0,0.42)_48%,rgba(0,0,0,0.12)_72%,rgba(0,0,0,0.05)_100%)]"
-            />
-
-            {/* Premium detail 1/2: a slow, barely-there breathing glow
-                behind the photo - reads as depth, not motion. Pure opacity
-                tween, cheap on mobile. */}
-            <motion.div
-              className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_75%_45%,rgba(56,189,248,0.16),transparent_65%)]"
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+                bg-[linear-gradient(to_bottom,black_0%,rgba(0,0,0,0.85)_25%,rgba(0,0,0,0.45)_55%,rgba(0,0,0,0.92)_85%,black_100%)]
+                lg:bg-[linear-gradient(to_right,black_0%,black_38%,rgba(0,0,0,0.75)_52%,rgba(0,0,0,0.2)_72%,rgba(0,0,0,0.05)_100%)]"
             />
           </div>
         )}

@@ -1,8 +1,21 @@
 .marquee-viewport {
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   width: 100%;
-  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
-  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  touch-action: pan-x;
+  cursor: grab;
+}
+
+.marquee-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.marquee-viewport:active {
+  cursor: grabbing;
 }
 
 .marquee-track {
@@ -18,7 +31,8 @@
   flex-shrink: 0;
 }
 
-.marquee-pause-hover:hover {
+.marquee-pause-hover:hover,
+.marquee-viewport:active .marquee-track {
   animation-play-state: paused;
 }
 

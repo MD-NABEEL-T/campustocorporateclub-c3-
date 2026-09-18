@@ -1,106 +1,121 @@
-import { useRef, useState, useEffect, Suspense, lazy } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useInView } from 'motion/react';
-import { ArrowRight } from 'lucide-react';
+import { motion, useInView } from 'motion/react';
+import { ArrowRight, Sparkles, CheckCircle2, Code2, Users, BookOpen, ShieldCheck, Zap } from 'lucide-react';
 import BlurText from '../reactbits/BlurText';
-import FinisherHeader from '../reactbits/FinisherHeader';
 import Terminal from '../reactbits/Terminal';
-import ViewportGate from '../reactbits/ViewportGate';
 
-// Particles uses ogl (WebGL) - heavy, lazy-loaded so it's only fetched once
-// this section scrolls into view.
-const Particles = lazy(() => import('../reactbits/Particles'));
+const VALUE_PILLARS = [
+  { icon: BookOpen, text: 'Daily 15-Min Peer Presentations' },
+  { icon: Code2, text: 'Hands-on Projects & Hackathons' },
+  { icon: Users, text: 'Direct Senior Mentorship' },
+  { icon: CheckCircle2, text: 'Placement & Aptitude Preparation' },
+];
 
-const finisherConfig = {
-  count: 8,
-  size: { min: 900, max: 1200, pulse: 0 },
-  speed: { x: { min: 0.1, max: 0.4 }, y: { min: 0.1, max: 0.4 } },
-  colors: {
-    background: 'transparent',
-    particles: ['#1d4ed8', '#0f172a', '#2DD4BF', '#000000', '#38BDF8']
-  },
-  blending: 'overlay',
-  opacity: { center: 0.5, edge: 0 },
-  skew: -2,
-  shapes: ['c']
-};
+const QUICK_PERKS = [
+  { label: 'Club Membership', value: '100% Free' },
+  { label: 'Technical Domains', value: '5 Tracks' },
+  { label: 'Skill Building', value: 'Live Peer Labs' },
+  { label: 'Career Focus', value: 'Placement Prep' }
+];
 
 export const JoinUsSection = () => {
   const introRef = useRef(null);
-  const introInView = useInView(introRef, { once: true, amount: 0.4 });
-  const [showIntroParagraph, setShowIntroParagraph] = useState(false);
-
-  useEffect(() => {
-    if (!introInView) return;
-    const timer = setTimeout(() => setShowIntroParagraph(true), 350);
-    return () => clearTimeout(timer);
-  }, [introInView]);
+  const introInView = useInView(introRef, { once: true, amount: 0.2 });
 
   return (
-    <section id="join" className="relative w-full bg-black overflow-hidden py-24 sm:py-28">
-      {/* Ambient particle backdrop for the whole section */}
-      <div className="absolute inset-0 opacity-40 pointer-events-none">
-        <ViewportGate rootMargin="200px" className="absolute inset-0">
-          <Suspense fallback={null}>
-            <Particles
-              particleColors={['#38BDF8', '#818CF8', '#2DD4BF']}
-              particleCount={140}
-              particleSpread={10}
-              speed={0.1}
-              particleBaseSize={90}
-              moveParticlesOnHover={false}
-              alphaParticles
-              disableRotation
-              pixelRatio={1}
-            />
-          </Suspense>
-        </ViewportGate>
-      </div>
+    <section id="join" className="relative w-full bg-black overflow-hidden py-20 sm:py-28 lg:py-32">
+      {/* Pure CSS ambient atmosphere - 0% CPU/GPU overhead */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-[#060B12] to-black pointer-events-none" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.12),transparent_70%)] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-[450px] h-[300px] bg-[radial-gradient(ellipse_at_center,rgba(45,212,191,0.08),transparent_70%)] pointer-events-none" />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Heading, on its own animated blob backdrop */}
-        <div className="relative rounded-3xl overflow-hidden border border-white/10 mb-10" style={{ height: 220 }}>
-          <FinisherHeader config={finisherConfig} className="absolute inset-0">
-            <div className="relative z-10 w-full h-full flex flex-col items-center justify-center text-center px-4">
-              {introInView && (
-                <BlurText
-                  text="Join C3"
-                  direction="top"
-                  delay={60}
-                  stepDuration={0.4}
-                  className="font-display text-4xl sm:text-5xl md:text-6xl font-bold text-white justify-center"
-                />
-              )}
-            </div>
-          </FinisherHeader>
-        </div>
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Title Header */}
+        <div ref={introRef} className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-nav font-medium text-[#38BDF8] bg-[#38BDF8]/10 border border-[#38BDF8]/20 mb-4">
+            <Sparkles className="w-3.5 h-3.5" />
+            Recruitment Open 2026
+          </span>
 
-        <div ref={introRef} className="text-center mb-12">
-          {showIntroParagraph && (
+          {introInView && (
             <BlurText
-              text="Every member started exactly where you are now - curious, a little unsure, ready to learn. Pick a domain, show up, and build with people who'll actually teach you."
+              text="Join Campus to Corporate Club"
               direction="top"
-              delay={6}
-              stepDuration={0.28}
-              className="text-base sm:text-lg text-[#A1A1AA] leading-relaxed max-w-2xl mx-auto justify-center"
+              delay={40}
+              stepDuration={0.35}
+              className="font-display text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-4"
             />
           )}
+
+          <p className="text-sm sm:text-base md:text-lg text-[#A1A1AA] leading-relaxed max-w-2xl mx-auto px-2">
+            Every member started exactly where you are now — curious, ready to learn, and looking to build. Pick a domain, show up, and grow with people who will actually teach you.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          <Terminal />
+        {/* Main CTA Card Box */}
+        <div className="relative rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-white/[0.01] backdrop-blur-xl p-5 sm:p-10 lg:p-14 overflow-hidden shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
+          {/* Subtle top light edge */}
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#38BDF8]/50 to-transparent" />
 
-          <div className="flex flex-col items-center lg:items-start text-center lg:text-left gap-5">
-            <p className="text-sm text-[#71717A] max-w-sm">
-              Applications are reviewed on a rolling basis. No prior experience required - just curiosity
-              and a willingness to show up.
-            </p>
-            <Link
-              to="/apply"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-[#3B82F6] to-[#2563EB] hover:from-[#4B8FF7] hover:to-[#2E6EEF] shadow-lg shadow-[#3B82F6]/25 hover:shadow-[#3B82F6]/40 transition-all"
-            >
-              Apply Now <ArrowRight className="w-4 h-4" />
-            </Link>
+          {/* Quick Perks Strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 mb-8 sm:mb-12">
+            {QUICK_PERKS.map((perk, i) => (
+              <div
+                key={i}
+                className="p-3 sm:p-4 rounded-xl bg-white/[0.02] border border-white/5 text-center"
+              >
+                <div className="font-display text-sm sm:text-lg font-bold text-[#38BDF8]">{perk.value}</div>
+                <div className="text-[10px] sm:text-xs text-[#71717A] mt-0.5">{perk.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* 2-Column interactive grid: Terminal + Action Column */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* Left: Terminal simulator */}
+            <div className="lg:col-span-6 w-full min-w-0">
+              <Terminal />
+            </div>
+
+            {/* Right: Value Pillars & Direct CTA */}
+            <div className="lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left min-w-0">
+              <h3 className="font-display text-xl sm:text-2xl font-bold text-white mb-4">
+                What You Get as a C3 Member
+              </h3>
+
+              {/* Value Pillars List */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mb-8">
+                {VALUE_PILLARS.map((pillar, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/10 text-left"
+                  >
+                    <div className="p-1.5 rounded-lg bg-[#38BDF8]/10 text-[#38BDF8] shrink-0">
+                      <pillar.icon className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs sm:text-sm font-medium text-white/90 leading-snug">
+                      {pillar.text}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Action Button */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mb-3 w-full">
+                <Link
+                  to="/apply"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full text-sm sm:text-base font-semibold text-black bg-white hover:bg-white/90 shadow-[0_0_20px_rgba(56,189,248,0.4)] hover:shadow-[0_0_30px_rgba(56,189,248,0.7)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  Apply Now <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+
+              {/* Reassurance text */}
+              <p className="text-xs text-[#71717A] max-w-sm mt-1">
+                Applications reviewed on a rolling basis • No prior experience required
+              </p>
+            </div>
           </div>
         </div>
       </div>

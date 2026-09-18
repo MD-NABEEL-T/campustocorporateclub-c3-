@@ -98,7 +98,7 @@ export const Footer = () => {
         {/* Bottom Credits */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#71717A] gap-4">
           <p>© {new Date().getFullYear()} Campus to Corporate (C3) Club. All rights reserved.</p>
-          <p className="flex items-center gap-1.5 flex-wrap justify-center">
+          <div className="flex items-center gap-1.5 flex-wrap justify-center">
             Engineered with <Heart className="w-3.5 h-3.5 text-[#EF4444] fill-current inline" /> by{' '}
             <PointerHighlight
               containerClassName="inline-block"
@@ -115,7 +115,7 @@ export const Footer = () => {
                 Nabeel
               </a>
             </PointerHighlight>
-          </p>
+          </div>
         </div>
       </div>
     </footer>

@@ -7,20 +7,21 @@ export function initSmoothScroll() {
   if (typeof window === 'undefined') return;
 
   const lenis = new Lenis({
-    duration: 1.2,
+    duration: 1.0,
     easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     smoothWheel: true,
   });
 
+  let animId;
   function raf(time) {
     lenis.raf(time);
-    requestAnimationFrame(raf);
+    animId = requestAnimationFrame(raf);
   }
 
-  const animId = requestAnimationFrame(raf);
+  animId = requestAnimationFrame(raf);
 
   return () => {
-    cancelAnimationFrame(animId);
+    if (animId) cancelAnimationFrame(animId);
     lenis.destroy();
   };
 }

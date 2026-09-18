@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, Suspense, lazy } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, Code2, Database, Brain, ShieldAlert, Mic } from 'lucide-react';
 import {
   SiHtml5,
   SiCss,
@@ -21,24 +21,62 @@ import {
   SiNumpy
 } from 'react-icons/si';
 import BlurText from '../reactbits/BlurText';
-import ViewportGate from '../reactbits/ViewportGate';
-import LetterGlitch from '../reactbits/LetterGlitch';
-import DotField from '../reactbits/DotField';
 
-// Galaxy/Strands/MagicRings pull in three.js and ogl (WebGL) - heavy, so
-// they're lazy-loaded and only fetched once a domain row scrolls into view.
-const Galaxy = lazy(() => import('../reactbits/Galaxy'));
-const Strands = lazy(() => import('../reactbits/Strands'));
-const MagicRings = lazy(() => import('../reactbits/MagicRings'));
+// Custom lightweight SVG/CSS backdrops tailored per domain (0% GPU/WebGL load)
+const DomainBackdrop = ({ type, accent }) => {
+  if (type === 'dev') {
+    return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-25">
+        <div className="absolute -top-12 -right-12 w-64 h-64 rounded-full bg-[radial-gradient(circle,rgba(45,212,191,0.35),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px]" />
+        <Code2 className="absolute -bottom-6 -right-6 w-36 h-36 text-[#2DD4BF]/10" />
+      </div>
+    );
+  }
+  if (type === 'data') {
+    return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-25">
+        <div className="absolute -top-12 -right-12 w-64 h-64 rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.35),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(#F59E0B15_1px,transparent_1px)] bg-[size:18px_18px]" />
+        <Database className="absolute -bottom-6 -right-6 w-36 h-36 text-[#F59E0B]/10" />
+      </div>
+    );
+  }
+  if (type === 'aiml') {
+    return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-25">
+        <div className="absolute -top-12 -right-12 w-64 h-64 rounded-full bg-[radial-gradient(circle,rgba(129,140,248,0.35),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(45deg,#818CF80d_1px,transparent_1px),linear-gradient(-45deg,#818CF80d_1px,transparent_1px)] bg-[size:20px_20px]" />
+        <Brain className="absolute -bottom-6 -right-6 w-36 h-36 text-[#818CF8]/10" />
+      </div>
+    );
+  }
+  if (type === 'cyber') {
+    return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-25">
+        <div className="absolute -top-12 -right-12 w-64 h-64 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.35),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#38BDF80a_1px,transparent_1px),linear-gradient(to_bottom,#38BDF80a_1px,transparent_1px)] bg-[size:16px_16px]" />
+        <ShieldAlert className="absolute -bottom-6 -right-6 w-36 h-36 text-[#38BDF8]/10" />
+      </div>
+    );
+  }
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-25">
+      <div className="absolute -top-12 -right-12 w-64 h-64 rounded-full bg-[radial-gradient(circle,rgba(251,113,133,0.35),transparent_70%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(#FB718515_1px,transparent_1px)] bg-[size:22px_22px]" />
+      <Mic className="absolute -bottom-6 -right-6 w-36 h-36 text-[#FB7185]/10" />
+    </div>
+  );
+};
 
-// Mock data only - these will later link into the Team section.
 const DOMAINS = [
   {
     number: '01',
     title: 'Design & Development',
     accent: '#2DD4BF',
+    type: 'dev',
     description:
-      'Transform ideas into beautiful digital experiences. Learn modern UI/UX principles, frontend development, backend technologies, and full-stack application development through real-world projects and collaborative learning.',
+      'Transform ideas into beautiful digital experiences. Learn modern UI/UX principles, frontend development, backend systems, and full-stack application architecture through real-world projects and collaborative building.',
     techStack: [
       { icon: SiHtml5, label: 'HTML5', color: '#E34F26' },
       { icon: SiCss, label: 'CSS3', color: '#1572B6' },
@@ -48,26 +86,17 @@ const DOMAINS = [
       { icon: SiFigma, label: 'Figma', color: '#F24E1E' }
     ],
     members: [
-      { name: 'Aarav Sharma', role: 'Domain Lead' },
-      { name: 'Diya Patel', role: 'Core Member' },
-      { name: 'Kabir Mehta', role: 'Core Member' }
-    ],
-    background: (
-      <LetterGlitch
-        glitchColors={['#0d1b1a', '#2DD4BF', '#38BDF8']}
-        glitchSpeed={60}
-        centerVignette
-        outerVignette={false}
-        smooth
-      />
-    )
+      { name: 'Nabeel', role: 'Domain Lead' },
+      { name: 'DHIVYA THARINI KB', role: 'Core Member' }
+    ]
   },
   {
     number: '02',
     title: 'Data Analytics',
     accent: '#F59E0B',
+    type: 'data',
     description:
-      'Convert raw data into meaningful insights using visualization, statistical analysis, dashboards, and business intelligence tools that drive informed decisions.',
+      'Convert raw data into meaningful insights using visualization, statistical modeling, dashboards, and business intelligence tools that drive informed decision making.',
     techStack: [
       { icon: SiPython, label: 'Python', color: '#3776AB' },
       { icon: SiMysql, label: 'MySQL', color: '#4479A1' },
@@ -76,28 +105,17 @@ const DOMAINS = [
       { icon: BarChart3, label: 'Power BI', color: '#F2C811' }
     ],
     members: [
-      { name: 'Sanya Kapoor', role: 'Domain Lead' },
-      { name: 'Aditya Menon', role: 'Core Member' }
-    ],
-    background: (
-      <DotField
-        dotRadius={2.2}
-        dotSpacing={13}
-        bulgeStrength={50}
-        glowRadius={140}
-        waveAmplitude={5}
-        gradientFrom="rgba(245, 158, 11, 0.65)"
-        gradientTo="rgba(56, 189, 248, 0.45)"
-        glowColor="#F59E0B"
-      />
-    )
+      { name: 'Deepadharshini Sankar', role: 'Core Member' },
+      { name: 'S Mohammad Saifullah Roomy', role: 'Core Member' }
+    ]
   },
   {
     number: '03',
     title: 'Artificial Intelligence & Machine Learning',
     accent: '#818CF8',
+    type: 'aiml',
     description:
-      'Explore the future of intelligent systems by building machine learning models, experimenting with AI tools, and solving real-world challenges through data-driven thinking.',
+      'Explore the future of intelligent systems by building machine learning models, experimenting with neural networks, and solving real-world challenges through data-driven thinking.',
     techStack: [
       { icon: SiPython, label: 'Python', color: '#3776AB' },
       { icon: SiTensorflow, label: 'TensorFlow', color: '#FF6F00' },
@@ -105,19 +123,18 @@ const DOMAINS = [
       { icon: SiScikitlearn, label: 'Scikit-learn', color: '#F7931E' }
     ],
     members: [
-      { name: 'Ishaan Rao', role: 'Domain Lead' },
-      { name: 'Ananya Iyer', role: 'Core Member' }
-    ],
-    background: (
-      <Galaxy density={1} glowIntensity={0.4} saturation={0.2} hueShift={220} twinkleIntensity={0.4} rotationSpeed={0.08} starSpeed={0.4} speed={0.8} />
-    )
+      { name: 'Shareen Begum.Z', role: 'Core Member' },
+      { name: 'Sahira Fathima N', role: 'Core Member' },
+      { name: 'Bargavi R', role: 'Core Member' }
+    ]
   },
   {
     number: '04',
     title: 'Cybersecurity & Networks',
     accent: '#38BDF8',
+    type: 'cyber',
     description:
-      'Learn how digital systems communicate, secure networks against threats, and understand ethical hacking through hands-on exploration and security-first thinking.',
+      'Learn how digital networks communicate, secure infrastructure against threats, and understand ethical hacking through hands-on exploration and security-first engineering.',
     techStack: [
       { icon: SiLinux, label: 'Linux', color: '#FCC624' },
       { icon: SiPython, label: 'Python', color: '#3776AB' },
@@ -126,48 +143,23 @@ const DOMAINS = [
       { icon: SiDocker, label: 'Docker', color: '#2496ED' }
     ],
     members: [
-      { name: 'Rohan Nair', role: 'Domain Lead' },
-      { name: 'Meera Krishnan', role: 'Core Member' },
-      { name: 'Vivaan Joshi', role: 'Core Member' }
-    ],
-    background: (
-      <Strands
-        colors={['#38BDF8', '#0f172a', '#1e293b']}
-        count={4}
-        speed={0.5}
-        amplitude={1}
-        waviness={1.2}
-        thickness={0.6}
-        glow={2.2}
-        spread={1.1}
-      />
-    )
+      { name: 'Ashfaq Ahmed. M', role: 'Domain Lead' },
+      { name: 'Mohamed Riyaz M', role: 'Core Member' },
+      { name: 'Mohamed Zaid', role: 'Core Member' },
+      { name: 'Mohammed Owais Ansari', role: 'Core Member' }
+    ]
   },
   {
     number: '05',
     title: 'Public Speaking & Corporate Communication',
     accent: '#FB7185',
+    type: 'speech',
     description:
-      'Develop confidence in public speaking, technical presentations, leadership, teamwork, and professional communication essential for every successful engineer.',
-    skills: ['Public Speaking', 'Presentation', 'Leadership', 'Teamwork'],
+      'Develop confidence in public speaking, technical presentations, leadership, teamwork, and professional communication essential for placement and industry success.',
+    skills: ['Public Speaking', 'Technical Presentations', 'Leadership', 'Aptitude Drills'],
     members: [
-      { name: 'Neha Bhatt', role: 'Domain Lead' },
-      { name: 'Arjun Verma', role: 'Core Member' },
-      { name: 'Priya Suresh', role: 'Core Member' }
-    ],
-    background: (
-      <MagicRings
-        color="#A1A1AA"
-        colorTwo="#38BDF8"
-        ringCount={6}
-        speed={0.8}
-        baseRadius={0.24}
-        radiusStep={0.12}
-        lineThickness={1.6}
-        fadeIn={0.7}
-        fadeOut={0.5}
-      />
-    )
+      { name: 'Harini Radhakrishnan', role: 'Domain Lead' }
+    ]
   }
 ];
 
@@ -183,36 +175,29 @@ const MemberProfile = ({ member, accent }) => (
   <div
     role="button"
     tabIndex={0}
-    className="group flex items-center gap-2 rounded-full pr-2.5 pl-1 py-1 border border-white/10 bg-black/30 cursor-pointer transition-all duration-200 hover:bg-black/50 hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
+    className="group flex items-center gap-2 rounded-full pr-2.5 pl-1 py-1 border border-white/10 bg-black/40 cursor-pointer transition-all duration-200 hover:bg-black/70 hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
     style={{ '--accent': accent }}
   >
     <div
       className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-[10px] font-semibold text-white border transition-colors duration-200 group-hover:border-[var(--accent)]"
-      style={{ backgroundColor: `${accent}33`, borderColor: `${accent}66` }}
+      style={{ backgroundColor: `${accent}25`, borderColor: `${accent}55` }}
     >
       {initialsOf(member.name)}
     </div>
     <div className="leading-tight">
-      <p className="text-[13px] text-white font-medium">{member.name}</p>
+      <p className="text-[12px] sm:text-[13px] text-white font-medium">{member.name}</p>
       {member.role && <p className="text-[10px] text-[#A1A1AA]">{member.role}</p>}
     </div>
   </div>
 );
 
 const TechChip = ({ tech }) => (
-  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium text-[#E4E4E7] bg-black/30 border border-white/10">
+  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium text-[#E4E4E7] bg-black/40 border border-white/10">
     <tech.icon className="w-3 h-3" style={{ color: tech.color }} />
     {tech.label}
   </div>
 );
 
-// One premium card per domain: the ReactBits component is the card's own
-// full-bleed background (not a separate boxed panel above the text), with a
-// graduated scrim - lighter near the top where the large number/title can
-// tolerate a busier backdrop, progressively darker toward the bottom where
-// the description/tech/member text needs solid contrast. The animation is
-// always visible, never fully hidden, and clipped to the card via
-// overflow-hidden so it can never bleed outside it or cause overflow.
 const DomainCard = ({ domain }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
@@ -221,14 +206,11 @@ const DomainCard = ({ domain }) => (
     transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     className="relative w-full sm:w-[calc((100%-1.5rem)/2)] lg:w-[calc((100%-3rem)/3)]"
   >
-    <div className="relative flex flex-col h-full min-h-[440px] sm:min-h-[460px] rounded-3xl border border-white/10 bg-black overflow-hidden">
-      <div className="absolute inset-0">
-        <Suspense fallback={null}>
-          <ViewportGate>{domain.background}</ViewportGate>
-        </Suspense>
-      </div>
+    <div className="relative flex flex-col h-full min-h-[440px] sm:min-h-[460px] rounded-3xl border border-white/10 bg-[#07090D] hover:border-white/20 transition-colors overflow-hidden">
+      {/* Bespoke CSS/SVG Backdrop */}
+      <DomainBackdrop type={domain.type} accent={domain.accent} />
 
-      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/65 to-black/88" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/55 to-black/85 pointer-events-none" />
 
       <div className="relative z-10 flex flex-col h-full p-6 sm:p-7">
         <span
@@ -253,7 +235,7 @@ const DomainCard = ({ domain }) => (
               : domain.skills.map(skill => (
                   <span
                     key={skill}
-                    className="px-2.5 py-1 rounded-full text-[11px] font-medium text-[#E4E4E7] bg-black/30 border border-white/10"
+                    className="px-2.5 py-1 rounded-full text-[11px] font-medium text-[#E4E4E7] bg-black/40 border border-white/10"
                   >
                     {skill}
                   </span>
@@ -315,13 +297,14 @@ export const DomainsSection = () => {
         )}
 
         {showIntroParagraph && (
-          <BlurText
-            text="Discover the areas where our members learn, teach, collaborate, and grow throughout their journey at C3."
-            direction="top"
-            delay={6}
-            stepDuration={0.28}
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="text-base sm:text-lg text-[#A1A1AA] leading-relaxed max-w-xl"
-          />
+          >
+            Discover the areas where our members learn, teach, collaborate, and grow throughout their journey at C3.
+          </motion.p>
         )}
       </div>
 
