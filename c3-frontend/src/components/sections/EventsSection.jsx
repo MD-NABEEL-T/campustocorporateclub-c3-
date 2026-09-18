@@ -18,7 +18,7 @@ const useEvents = () => {
   useEffect(() => {
     let cancelled = false;
 
-    api.get('/public/events')
+    api.get('/events')
       .then(res => {
         if (!cancelled) setEvents(res.data);
       })
