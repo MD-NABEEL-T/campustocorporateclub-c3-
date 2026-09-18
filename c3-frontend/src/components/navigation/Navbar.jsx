@@ -32,7 +32,7 @@ export const Navbar = () => {
                   className="font-nav tracking-wide"
                   leftIcon={<LogIn className="w-4 h-4" />}
                 >
-                  C3 Member Login
+                  Member Login
                 </Button>
               </Link>
             )}
