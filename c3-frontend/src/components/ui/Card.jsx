@@ -5,8 +5,8 @@ export const Card = ({ className, children, hoverable = false, ...props }) => {
   return (
     <div
       className={cn(
-        'bg-[#10273D]/90 border border-white/10 rounded-xl p-6 shadow-xl transition-all duration-300',
-        hoverable && 'hover:border-[#38BDF8]/40 hover:shadow-2xl hover:shadow-[#38BDF8]/5 hover:-translate-y-0.5',
+        'bg-zinc-950/90 border border-white/10 rounded-xl p-6 shadow-xl transition-all duration-300',
+        hoverable && 'hover:border-white/30 hover:shadow-2xl hover:-translate-y-0.5',
         className
       )}
       {...props}

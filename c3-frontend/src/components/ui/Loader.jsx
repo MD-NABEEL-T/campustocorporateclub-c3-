@@ -12,17 +12,17 @@ export const Loader = ({ size = 'md', label = 'Loading...', fullScreen = false, 
     <div className={cn('flex flex-col items-center justify-center gap-3', className)}>
       <div
         className={cn(
-          'border-[#38BDF8] border-t-transparent rounded-full animate-spin',
+          'border-white border-t-transparent rounded-full animate-spin',
           sizes[size]
         )}
       />
-      {label && <p className="text-xs font-mono text-[#94A3B8]">{label}</p>}
+      {label && <p className="text-xs font-mono text-zinc-400">{label}</p>}
     </div>
   );
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#071A2B]/90 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
         {spinner}
       </div>
     );

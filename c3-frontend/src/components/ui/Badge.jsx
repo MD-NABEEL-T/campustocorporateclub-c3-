@@ -9,12 +9,13 @@ export const Badge = ({
   ...props
 }) => {
   const variants = {
-    primary: 'bg-[#38BDF8]/10 text-[#38BDF8] border-[#38BDF8]/30',
-    accent: 'bg-[#2DD4BF]/10 text-[#2DD4BF] border-[#2DD4BF]/30',
-    success: 'bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/30',
-    warning: 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/30',
-    danger: 'bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/30',
-    neutral: 'bg-white/5 text-[#94A3B8] border-white/10',
+    primary: 'bg-white/10 text-white border-white/20',
+    accent: 'bg-white/15 text-white border-white/25',
+    success: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+    warning: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
+    danger: 'bg-red-500/10 text-red-400 border-red-500/30',
+    neutral: 'bg-zinc-900 text-zinc-400 border-white/10',
+    default: 'bg-white/10 text-white border-white/20',
   };
 
   return (

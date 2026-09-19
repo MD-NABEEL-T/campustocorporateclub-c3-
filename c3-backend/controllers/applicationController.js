@@ -3,12 +3,7 @@ import Application from '../models/Application.js';
 
 const REQUIRED_FIELDS = [
   'fullName',
-  'collegeEmail',
-  'phone',
-  'department',
-  'year',
-  'preferredDomain',
-  'skills',
+  'section',
   'whyJoin',
 ];
 
@@ -159,16 +154,18 @@ export const createApplication = async (req, res) => {
       return res.status(400).json({ message: validationError });
     }
 
-    const collegeEmail = clean(body.collegeEmail).toLowerCase();
-
-    const existing = await Application.findOne({ collegeEmail, status: { $ne: 'draft' } });
-    if (existing) {
-      return res.status(409).json({ message: 'An application with this college email already exists' });
-    }
-
     const applicationData = { status: 'pending' };
     assignFields(applicationData, body);
-    applicationData.collegeEmail = collegeEmail;
+
+    if (body.collegeEmail && clean(body.collegeEmail)) {
+      const collegeEmail = clean(body.collegeEmail).toLowerCase();
+      const existing = await Application.findOne({ collegeEmail, status: { $ne: 'draft' } });
+      if (existing) {
+        return res.status(409).json({ message: 'An application with this college email already exists' });
+      }
+      applicationData.collegeEmail = collegeEmail;
+    }
+
     extractUploadedFiles(req, applicationData);
 
     const application = await Application.create(applicationData);
@@ -286,13 +283,15 @@ export const submitDraft = async (req, res) => {
       return res.status(400).json({ message: completeError });
     }
 
-    const existing = await Application.findOne({
-      collegeEmail: draft.collegeEmail,
-      status: { $ne: 'draft' },
-      _id: { $ne: draft._id },
-    });
-    if (existing) {
-      return res.status(409).json({ message: 'An application with this college email already exists' });
+    if (draft.collegeEmail) {
+      const existing = await Application.findOne({
+        collegeEmail: draft.collegeEmail,
+        status: { $ne: 'draft' },
+        _id: { $ne: draft._id },
+      });
+      if (existing) {
+        return res.status(409).json({ message: 'An application with this college email already exists' });
+      }
     }
 
     draft.status = 'pending';

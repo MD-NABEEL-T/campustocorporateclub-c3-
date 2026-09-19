@@ -155,8 +155,8 @@ const DOMAINS = [
     accent: '#FB7185',
     type: 'speech',
     description:
-      'Develop confidence in public speaking, technical presentations, leadership, teamwork, and professional communication essential for placement and industry success.',
-    skills: ['Public Speaking', 'Technical Presentations', 'Leadership', 'Aptitude Drills'],
+      'Develop confidence in public speaking, technical presentations, leadership, teamwork, and articulate communication.',
+    skills: ['Public Speaking', 'Technical Presentations', 'Leadership', 'Group Discussions'],
     members: [
       { name: 'Harini Radhakrishnan', role: 'Domain Lead' }
     ]

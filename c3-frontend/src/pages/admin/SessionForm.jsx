@@ -115,7 +115,7 @@ const SessionForm = () => {
 
             <Textarea
               label="Session Summary & Key Notes"
-              placeholder="Provide a detailed summary of key concepts covered during the 15-minute presentation..."
+              placeholder="Provide a detailed summary of key concepts covered during the 30-minute presentation..."
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
             />

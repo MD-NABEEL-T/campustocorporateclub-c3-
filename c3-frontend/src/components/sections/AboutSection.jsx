@@ -18,7 +18,7 @@ const PILLARS = [
   {
     icon: GraduationCap,
     title: 'Learn by Teaching',
-    badge: 'Daily 15-Min Slots',
+    badge: 'Daily 30-Min Slots',
     desc: 'Juniors and seniors take turns breaking down engineering concepts, cementing understanding through active explanation.',
     highlight: 'Peer-to-Peer'
   },
@@ -31,10 +31,10 @@ const PILLARS = [
   },
   {
     icon: Presentation,
-    title: 'Corporate Prep',
-    badge: 'Placement Ready',
-    desc: 'Communication mastery, aptitude drills, technical resume reviews, and live mock interview simulations.',
-    highlight: 'Career First'
+    title: 'Presentation & Speaking',
+    badge: 'Communication',
+    desc: 'Public speaking mastery, slide decks, technical seminars, and peer-to-peer knowledge transfer.',
+    highlight: 'Daily Focus'
   },
   {
     icon: Award,
@@ -54,7 +54,7 @@ const TABS = [
     description:
       'C3 eliminates the barrier between juniors and seniors. We believe that true engineering excellence comes not from cramming exams, but from continuous daily curiosity, open debate, and peer-to-peer mentorship.',
     points: [
-      'Daily 15-minute presentation slots in the department',
+      'Daily 30-minute presentation slots in the department',
       'Open discussion without fear of judgment or hierarchy',
       'Shared technical notes, problem sets, and roadmaps'
     ]
@@ -63,13 +63,13 @@ const TABS = [
     id: 'execution',
     label: 'Execution Model',
     icon: Zap,
-    headline: 'Continuous micro-actions that build corporate readiness.',
+    headline: 'Continuous micro-actions that build engineering confidence.',
     description:
-      'Rather than relying only on annual fests, C3 operates on a daily rhythm. Members present technical concepts, solve DSA problems together, build GitHub projects, and practice public speaking regularly.',
+      'Rather than relying only on annual fests, C3 operates on a daily rhythm. Members present technical concepts, build projects together, and practice public speaking regularly.',
     points: [
       'Hands-on coding sprints across web, AI, and systems',
-      'Placement aptitude and algorithmic problem solving',
-      'Portfolio building and resume optimization'
+      'Peer-to-peer technical presentations and debates',
+      'Portfolio building and collaborative open source'
     ]
   },
   {

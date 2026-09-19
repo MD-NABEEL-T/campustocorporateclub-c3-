@@ -36,6 +36,7 @@ export const MEMBER_NAV_LINKS = [
 
 export const ADMIN_NAV_LINKS = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard },
+  { label: 'Announcements', href: '/admin/announcements', icon: Bell },
   { label: 'Member Approvals', href: '/admin/members', icon: Users },
   { label: 'Junior Applications', href: '/admin/applications', icon: Send },
   { label: 'Manage Sessions', href: '/admin/sessions', icon: BookOpen },

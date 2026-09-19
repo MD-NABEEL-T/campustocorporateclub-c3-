@@ -52,7 +52,17 @@ const LEADERSHIP = [
     photo: '/assets/team/Harini-Radhakrishnan.jpg',
     photoPosition: 'center 20%',
     quote: 'Good sessions come from good questions, not just good slides.',
-    socials: { email: 'hariniradha2727@gmail.com', github: 'https://github.com/hariniradha2727-hue.git', linkedin: 'https://www.linkedin.com/in/r-harini-274fa06h' }
+    socials: { email: 'mailto:hariniradha2727@gmail.com', github: 'https://github.com/hariniradha2727-hue.git', linkedin: 'https://www.linkedin.com/in/r-harini-274fa06h' }
+  },
+  {
+    name: 'Aamir',
+    role: 'Event Manager',
+    domain: 'Events & Operations',
+    accent: '#E4E4E7',
+    quote: 'Bringing vision into reality through high-energy department events and student workshops.',
+    photo: null,
+    photoPosition: 'center 20%',
+    socials: { email: 'mailto:aamir@gmail.com', github: null, linkedin: null }
   }
 ];
 
@@ -239,38 +249,41 @@ const LeadershipCard = ({ leader, index }) => (
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, amount: 0.3 }}
     transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-    className="h-56 sm:h-72"
+    className="h-[320px] sm:h-[300px] w-full"
   >
     <FlipCard
       className="w-full h-full"
       front={
-        <div className="relative w-full h-full rounded-2xl border border-white/10 bg-white/[0.03] p-3 sm:p-4 flex flex-col">
-          {leader.isDeveloper && <DeveloperBadge accent={leader.accent} />}
-          <FlipHint accent={leader.accent} />
-          <Photo photo={leader.photo} accent={leader.accent} position={leader.photoPosition} className="aspect-square mb-2.5" />
-          <p
-            className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide truncate"
-            style={{ color: leader.accent }}
-          >
-            {leader.role}
-          </p>
-          {leader.isDeveloper ? (
-            <PointerHighlight
-              containerClassName="inline-block max-w-full"
-              rectangleClassName="border-[#38BDF8]/50"
-              pointerClassName="text-[#38BDF8]"
+        <div className="relative w-full h-full rounded-2xl border border-white/10 bg-zinc-950/80 p-3 sm:p-3.5 flex flex-col justify-between overflow-hidden">
+          <div className="relative">
+            {leader.isDeveloper && <DeveloperBadge accent={leader.accent} />}
+            <FlipHint accent={leader.accent} />
+            <Photo photo={leader.photo} accent={leader.accent} position={leader.photoPosition} className="h-40 sm:h-36 w-full mb-2.5 rounded-xl object-cover" />
+            <p
+              className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide truncate"
+              style={{ color: leader.accent }}
             >
-              <h4 className="relative z-10 font-display text-sm sm:text-lg font-bold text-white truncate px-0.5">
-                {leader.name}
-              </h4>
-            </PointerHighlight>
-          ) : (
-            <h4 className="font-display text-sm sm:text-lg font-bold text-white truncate">{leader.name}</h4>
-          )}
+              {leader.role}
+            </p>
+            {leader.isDeveloper ? (
+              <PointerHighlight
+                containerClassName="inline-block max-w-full"
+                rectangleClassName="border-[#38BDF8]/50"
+                pointerClassName="text-[#38BDF8]"
+              >
+                <h4 className="relative z-10 font-display text-sm sm:text-base font-bold text-white truncate px-0.5">
+                  {leader.name}
+                </h4>
+              </PointerHighlight>
+            ) : (
+              <h4 className="font-display text-sm sm:text-base font-bold text-white truncate">{leader.name}</h4>
+            )}
+          </div>
+          <p className="text-[11px] text-zinc-400 truncate">{leader.domain}</p>
         </div>
       }
       back={
-        <div className="relative w-full h-full rounded-2xl border border-white/10 bg-[#0a0a0a] p-3 sm:p-4 flex flex-col justify-between">
+        <div className="relative w-full h-full rounded-2xl border border-white/10 bg-zinc-950 p-4 flex flex-col justify-between overflow-hidden">
           <div>
             <p
               className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-1"
@@ -280,7 +293,7 @@ const LeadershipCard = ({ leader, index }) => (
             </p>
             <p className="text-[11px] sm:text-xs text-[#71717A] mb-2">{leader.domain}</p>
             {leader.quote && (
-              <p className="text-xs sm:text-sm text-[#D4D4D8] italic leading-relaxed line-clamp-4">
+              <p className="text-xs text-[#D4D4D8] italic leading-relaxed line-clamp-4">
                 "{leader.quote}"
               </p>
             )}
@@ -384,9 +397,9 @@ export const TeamSection = () => {
         )}
       </div>
 
-      {/* Leadership - balanced 3-col layout */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 sm:mb-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+      {/* Leadership - balanced 4-col layout */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 sm:mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {LEADERSHIP.map((leader, i) => (
             <LeadershipCard key={leader.role} leader={leader} index={i} />
           ))}

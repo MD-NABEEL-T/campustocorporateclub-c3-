@@ -17,6 +17,7 @@ const Home = lazy(() => import('./pages/public/Home'));
 const PublicSessions = lazy(() => import('./pages/public/PublicSessions'));
 const Gallery = lazy(() => import('./pages/public/Gallery'));
 const Apply = lazy(() => import('./pages/public/Apply'));
+const ApplyForm = lazy(() => import('./pages/public/ApplyForm'));
 const Login = lazy(() => import('./pages/public/Login'));
 const Register = lazy(() => import('./pages/public/Register'));
 const EventDetails = lazy(() => import('./pages/public/EventDetails'));
@@ -27,6 +28,7 @@ const SessionForm = lazy(() => import('./pages/admin/SessionForm'));
 const AdminEvents = lazy(() => import('./pages/admin/AdminEvents'));
 const Applications = lazy(() => import('./pages/admin/Applications'));
 const GalleryManager = lazy(() => import('./pages/admin/GalleryManager'));
+const Announcements = lazy(() => import('./pages/admin/Announcements'));
 
 // Member Portal Pages - lazy loaded, only fetched when a logged-in member
 const Dashboard = lazy(() => import('./pages/member/Dashboard'));
@@ -48,7 +50,10 @@ const ScrollToHash = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (!location.hash) return;
+    if (!location.hash) {
+      window.scrollTo(0, 0);
+      return;
+    }
     const id = location.hash.slice(1);
     let attempts = 0;
     let frameId;
@@ -86,6 +91,8 @@ function App() {
                   <Route path="/sessions-archive" element={<PublicSessions />} />
                   <Route path="/gallery" element={<Gallery />} />
                   <Route path="/apply" element={<Apply />} />
+                  <Route path="/apply/form" element={<ApplyForm />} />
+                  <Route path="/apply-form" element={<ApplyForm />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                 </Route>
@@ -115,6 +122,7 @@ function App() {
                   }
                 >
                   <Route index element={<Dashboard />} />
+                  <Route path="announcements" element={<Announcements />} />
                   <Route path="members" element={<Members />} />
                   <Route path="applications" element={<Applications />} />
                   <Route path="sessions" element={<Sessions />} />

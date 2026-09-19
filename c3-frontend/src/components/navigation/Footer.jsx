@@ -83,7 +83,7 @@ export const Footer = () => {
                 <span className="w-1.5 h-1.5 rounded-full bg-white/40" /> Learn by Teaching
               </li>
               <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-white/40" /> Daily 15-Min Sessions
+                <span className="w-1.5 h-1.5 rounded-full bg-white/40" /> Daily 30-Min Sessions
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-white/40" /> Peer Accountability
