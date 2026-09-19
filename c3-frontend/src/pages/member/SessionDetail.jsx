@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Loader } from '../../components/ui/Loader';
@@ -16,20 +16,22 @@ const SessionDetail = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let isMounted = true;
     const fetchSession = async () => {
       try {
-        const res = await api.get(`/sessions/${id}`, {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
-        setSession(res.data);
+        const res = await api.get(`/sessions/${id}`);
+        if (isMounted) setSession(res.data);
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load session details');
+        if (isMounted) setError(err.response?.data?.message || 'Failed to load session details');
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchSession();
-  }, [id, user.token]);
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
 
   if (loading) return <Loader fullScreen label="Loading session record..." />;
   if (error)
@@ -48,8 +50,8 @@ const SessionDetail = () => {
         </Button>
       </Link>
 
-      <Card className="overflow-hidden p-0">
-        <div className="relative h-72 w-full bg-[#071A2B]">
+      <Card className="overflow-hidden p-0 bg-zinc-950/80 border border-white/10">
+        <div className="relative h-60 sm:h-72 w-full bg-zinc-900">
           <img
             src={session.coverImage}
             alt={session.topic}
@@ -62,17 +64,17 @@ const SessionDetail = () => {
           </div>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="p-5 sm:p-8 space-y-6">
           <div>
-            <h1 className="text-3xl font-extrabold font-heading text-[#F8FAFC]">
+            <h1 className="text-2xl sm:text-3xl font-extrabold font-heading text-white">
               {session.topic}
             </h1>
-            <div className="flex items-center gap-6 text-sm text-[#94A3B8] mt-2">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs sm:text-sm text-zinc-400 mt-2">
               <span className="flex items-center gap-1.5">
-                <User className="w-4 h-4 text-[#38BDF8]" /> Handled by {session.handledBy}
+                <User className="w-4 h-4 text-zinc-300" /> Handled by {session.handledBy}
               </span>
               <span className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-[#2DD4BF]" />{' '}
+                <Calendar className="w-4 h-4 text-zinc-300" />{' '}
                 {new Date(session.date).toLocaleDateString()}
               </span>
             </div>
@@ -80,10 +82,10 @@ const SessionDetail = () => {
 
           {session.summary && (
             <div className="border-t border-white/10 pt-6">
-              <h4 className="text-xs font-mono uppercase text-[#94A3B8] mb-2 font-semibold">
+              <h4 className="text-xs font-mono uppercase text-zinc-400 mb-2 font-semibold tracking-wider">
                 Session Summary Notes
               </h4>
-              <p className="text-sm text-[#F8FAFC] leading-relaxed whitespace-pre-line">
+              <p className="text-xs sm:text-sm text-zinc-200 leading-relaxed whitespace-pre-line">
                 {session.summary}
               </p>
             </div>
@@ -91,16 +93,16 @@ const SessionDetail = () => {
 
           {session.images?.length > 0 && (
             <div className="border-t border-white/10 pt-6">
-              <h4 className="text-xs font-mono uppercase text-[#94A3B8] mb-4 font-semibold">
+              <h4 className="text-xs font-mono uppercase text-zinc-400 mb-4 font-semibold tracking-wider">
                 Session Photos Archive
               </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {session.images.map((img, i) => (
                   <img
                     key={i}
                     src={img}
                     alt={`${session.topic} photo ${i + 1}`}
-                    className="w-full h-36 object-cover rounded-xl border border-white/10"
+                    className="w-full h-28 sm:h-36 object-cover rounded-xl border border-white/10"
                   />
                 ))}
               </div>
@@ -113,3 +115,4 @@ const SessionDetail = () => {
 };
 
 export default SessionDetail;
+

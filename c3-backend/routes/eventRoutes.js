@@ -6,6 +6,7 @@ import {
   getEvents,
   getEventById,
   updateEvent,
+  deleteEvent,
 } from '../controllers/eventController.js';
 
 const router = express.Router();
@@ -19,5 +20,6 @@ router.post('/', protect, adminOnly, eventUpload, createEvent);
 router.get('/', getEvents);
 router.get('/:id', getEventById);
 router.put('/:id', protect, adminOnly, eventUpload, updateEvent);
+router.delete('/:id', protect, adminOnly, deleteEvent);
 
 export default router;

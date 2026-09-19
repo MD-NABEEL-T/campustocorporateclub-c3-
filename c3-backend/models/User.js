@@ -6,6 +6,8 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['admin', 'member'], default: 'member' },
   year: { type: Number },
+  section: { type: String, trim: true },
+  registerNumber: { type: String, trim: true },
   isApproved: { type: Boolean, default: false },
 }, { timestamps: true });
 

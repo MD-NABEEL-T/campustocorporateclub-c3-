@@ -7,7 +7,7 @@ import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
 import { Button } from '../../components/ui/Button';
-import { ArrowLeft, Upload, Plus } from 'lucide-react';
+import { ArrowLeft, Plus } from 'lucide-react';
 
 const SessionForm = () => {
   const { user } = useAuth();
@@ -45,7 +45,6 @@ const SessionForm = () => {
 
       const res = await api.post('/sessions', formData, {
         headers: {
-          Authorization: `Bearer ${user.token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
@@ -60,17 +59,17 @@ const SessionForm = () => {
 
   return (
     <div className="space-y-6">
-      <Link to="/admin/sessions">
+      <Link to="/admin">
         <Button variant="ghost" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
-          Back to Sessions List
+          Back to Admin Overview
         </Button>
       </Link>
 
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="text-2xl">Log New Daily Session</CardTitle>
+      <Card className="max-w-2xl mx-auto bg-zinc-950/80 border border-white/10 p-6 sm:p-8">
+        <CardHeader className="p-0 pb-6">
+          <CardTitle className="text-xl sm:text-2xl font-bold font-heading text-white">Log New Daily Session</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {error && (
             <div className="p-3 mb-4 rounded-lg bg-[#EF4444]/10 border border-[#EF4444]/30 text-xs font-medium text-[#EF4444]">
               {error}
@@ -129,7 +128,7 @@ const SessionForm = () => {
                 type="file"
                 accept="image/*"
                 onChange={(e) => setCoverImage(e.target.files[0])}
-                className="w-full text-xs text-[#94A3B8] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#38BDF8]/10 file:text-[#38BDF8] hover:file:bg-[#38BDF8]/20"
+                className="w-full text-xs text-[#94A3B8] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#38BDF8]/10 file:text-[#38BDF8] hover:file:bg-[#38BDF8]/20 cursor-pointer"
                 required
               />
             </div>
@@ -143,7 +142,7 @@ const SessionForm = () => {
                 accept="image/*"
                 multiple
                 onChange={(e) => setImages(Array.from(e.target.files))}
-                className="w-full text-xs text-[#94A3B8] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#2DD4BF]/10 file:text-[#2DD4BF] hover:file:bg-[#2DD4BF]/20"
+                className="w-full text-xs text-[#94A3B8] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#2DD4BF]/10 file:text-[#2DD4BF] hover:file:bg-[#2DD4BF]/20 cursor-pointer"
               />
             </div>
 
@@ -165,3 +164,4 @@ const SessionForm = () => {
 };
 
 export default SessionForm;
+

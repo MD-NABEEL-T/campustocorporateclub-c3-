@@ -14,15 +14,15 @@ export const Select = React.forwardRef(
           <select
             ref={ref}
             className={cn(
-              'w-full bg-[#071A2B]/80 text-[#F8FAFC] border border-white/10 rounded-lg px-3.5 py-2.5 text-sm appearance-none focus:outline-none focus:border-[#38BDF8] focus:ring-1 focus:ring-[#38BDF8] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed pr-10',
-              error && 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]',
+              'w-full bg-zinc-900/90 text-white border border-white/10 rounded-xl px-3.5 py-2.5 text-sm appearance-none focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed pr-10',
+              error && 'border-red-500 focus:border-red-500 focus:ring-red-500',
               className
             )}
             {...props}
           >
             {options.length > 0
               ? options.map((opt) => (
-                  <option key={opt.value} value={opt.value} className="bg-[#10273D] text-[#F8FAFC]">
+                  <option key={opt.value} value={opt.value} className="bg-zinc-900 text-white">
                     {opt.label}
                   </option>
                 ))

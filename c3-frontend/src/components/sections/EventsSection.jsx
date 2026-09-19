@@ -265,7 +265,7 @@ export const EventsSection = () => {
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
         <p className="text-xs uppercase tracking-widest text-[#71717A] mb-6">From past events</p>
       </div>
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8" style={{ height: 900 }}>
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <Masonry
           items={galleryItems}
           ease="power3.out"

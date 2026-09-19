@@ -27,6 +27,7 @@ const ASSIGNABLE_FIELDS = [
   'personalEmail',
   'phone',
   'department',
+  'section',
   'year',
   'registerNumber',
   'preferredDomain',
@@ -37,6 +38,8 @@ const ASSIGNABLE_FIELDS = [
   'portfolioUrl',
   'githubUrl',
   'linkedinUrl',
+  'idCardUrl',
+  'resumeUrl',
 ];
 
 const URL_FIELDS = [
@@ -128,11 +131,25 @@ const serializeDraft = (application) => {
   return obj;
 };
 
+const extractUploadedFiles = (req, target) => {
+  if (req.files) {
+    if (req.files.idCard && req.files.idCard[0]) {
+      target.idCardUrl = req.files.idCard[0].path;
+    }
+    if (req.files.resume && req.files.resume[0]) {
+      target.resumeUrl = req.files.resume[0].path;
+    }
+  }
+  if (req.file) {
+    if (req.file.fieldname === 'idCard') {
+      target.idCardUrl = req.file.path;
+    } else {
+      target.resumeUrl = req.file.path;
+    }
+  }
+};
+
 // PUBLIC - submit a recruitment application in one shot (no draft step).
-// No account is created here; selection and User creation for accepted
-// applicants is a manual admin step. Unchanged behavior from before drafts
-// existed, aside from explicitly setting status to 'pending' now that the
-// schema default changed to 'draft'.
 export const createApplication = async (req, res) => {
   try {
     const body = req.body || {};
@@ -144,9 +161,6 @@ export const createApplication = async (req, res) => {
 
     const collegeEmail = clean(body.collegeEmail).toLowerCase();
 
-    // Only a non-draft application with this email counts as a real
-    // duplicate - a stray abandoned draft shouldn't block a fresh
-    // submission.
     const existing = await Application.findOne({ collegeEmail, status: { $ne: 'draft' } });
     if (existing) {
       return res.status(409).json({ message: 'An application with this college email already exists' });
@@ -155,7 +169,7 @@ export const createApplication = async (req, res) => {
     const applicationData = { status: 'pending' };
     assignFields(applicationData, body);
     applicationData.collegeEmail = collegeEmail;
-    if (req.file) applicationData.resumeUrl = req.file.path;
+    extractUploadedFiles(req, applicationData);
 
     const application = await Application.create(applicationData);
 
@@ -175,11 +189,7 @@ export const createApplication = async (req, res) => {
   }
 };
 
-// PUBLIC - start a new draft application. Accepts an optional partial body
-// (whatever the applicant has filled in on step 1) and returns the
-// resumeToken the frontend must hold onto (in localStorage) to update,
-// retrieve, or submit this draft later. No auth - the token itself is the
-// only thing that grants access to this draft.
+// PUBLIC - start a new draft application.
 export const createDraft = async (req, res) => {
   try {
     const body = req.body || {};
@@ -190,7 +200,7 @@ export const createDraft = async (req, res) => {
 
     const draftData = { status: 'draft', resumeToken: generateResumeToken() };
     assignFields(draftData, body);
-    if (req.file) draftData.resumeUrl = req.file.path;
+    extractUploadedFiles(req, draftData);
 
     const draft = await Application.create(draftData);
 
@@ -208,9 +218,7 @@ export const createDraft = async (req, res) => {
   }
 };
 
-// PUBLIC - update an existing draft. Requires the resumeToken issued at
-// creation; only matches documents still in 'draft' status, so a token can
-// never be replayed to edit an application that has already been submitted.
+// PUBLIC - update an existing draft.
 export const updateDraft = async (req, res) => {
   try {
     const { resumeToken } = req.params;
@@ -227,7 +235,7 @@ export const updateDraft = async (req, res) => {
     }
 
     assignFields(draft, body);
-    if (req.file) draft.resumeUrl = req.file.path;
+    extractUploadedFiles(req, draft);
 
     await draft.save();
 
@@ -241,8 +249,7 @@ export const updateDraft = async (req, res) => {
   }
 };
 
-// PUBLIC - resume a draft. Requires the resumeToken; only matches documents
-// still in 'draft' status. Used on page load to repopulate the form.
+// PUBLIC - resume a draft.
 export const getDraft = async (req, res) => {
   try {
     const { resumeToken } = req.params;
@@ -256,11 +263,7 @@ export const getDraft = async (req, res) => {
   }
 };
 
-// PUBLIC - finalize a draft into a real, complete application. Validates
-// every required field is present and well-formed (same rule as the
-// one-shot endpoint), enforces the college-email duplicate check, flips
-// status to 'pending', and clears the resumeToken so it can no longer be
-// used to view or edit the application afterwards.
+// PUBLIC - finalize a draft into a real, complete application.
 export const submitDraft = async (req, res) => {
   try {
     const { resumeToken } = req.params;
@@ -271,15 +274,12 @@ export const submitDraft = async (req, res) => {
       return res.status(404).json({ message: 'Draft not found. It may have already been submitted or expired.' });
     }
 
-    // Allow a final round of field edits to arrive with the submit call
-    // itself (e.g. the review step lets someone fix a typo, or the resume
-    // file is attached only at the very end).
     const partialError = validatePartial(body);
     if (partialError) {
       return res.status(400).json({ message: partialError });
     }
     assignFields(draft, body);
-    if (req.file) draft.resumeUrl = req.file.path;
+    extractUploadedFiles(req, draft);
 
     const completeError = validateComplete(draft.toObject());
     if (completeError) {

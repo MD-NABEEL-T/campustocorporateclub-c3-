@@ -30,20 +30,15 @@ export const PUBLIC_NAV_LINKS = [
 export const MEMBER_NAV_LINKS = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'My Attendance', href: '/attendance', icon: UserCheck },
-  { label: 'Sessions', href: '/sessions', icon: BookOpen },
-  { label: 'Events & Reports', href: '/events', icon: Calendar },
-  { label: 'Resources Hub', href: '/resources', icon: FolderOpen },
-  { label: 'Announcements', href: '/announcements', icon: Bell },
-  { label: 'My Profile', href: '/profile', icon: User },
+  { label: 'Peer Sessions', href: '/sessions', icon: BookOpen },
+  { label: 'Junior Applications', href: '/applications', icon: Send },
 ];
 
 export const ADMIN_NAV_LINKS = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard },
-  { label: 'Member Roster', href: '/admin/members', icon: Users },
+  { label: 'Member Approvals', href: '/admin/members', icon: Users },
   { label: 'Junior Applications', href: '/admin/applications', icon: Send },
   { label: 'Manage Sessions', href: '/admin/sessions', icon: BookOpen },
   { label: 'Manage Events', href: '/admin/events', icon: Calendar },
-  { label: 'Global Attendance', href: '/admin/attendance', icon: FileSpreadsheet },
-  { label: 'Resource Uploads', href: '/admin/resources', icon: FolderOpen },
-  { label: 'Broadcasts', href: '/admin/announcements', icon: Bell },
+  { label: 'Gallery Resources', href: '/admin/resources', icon: FolderOpen },
 ];

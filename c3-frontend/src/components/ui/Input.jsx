@@ -19,10 +19,10 @@ export const Input = React.forwardRef(
           <input
             ref={ref}
             className={cn(
-              'w-full bg-[#071A2B]/80 text-[#F8FAFC] border border-white/10 rounded-lg px-3.5 py-2.5 text-sm placeholder-[#94A3B8]/50 focus:outline-none focus:border-[#38BDF8] focus:ring-1 focus:ring-[#38BDF8] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed',
+              'w-full bg-zinc-900/90 text-white border border-white/10 rounded-xl px-3.5 py-2.5 text-sm placeholder-zinc-500 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed',
               leftIcon && 'pl-10',
               rightIcon && 'pr-10',
-              error && 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]',
+              error && 'border-red-500 focus:border-red-500 focus:ring-red-500',
               className
             )}
             {...props}

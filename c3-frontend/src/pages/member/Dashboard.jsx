@@ -10,33 +10,40 @@ export const Dashboard = () => {
   const [attendance, setAttendance] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
     if (user?._id) {
       axios
         .get(`/attendance/member/${user._id}`)
-        .then((res) => setAttendance(res.data))
+        .then((res) => {
+          if (isMounted) setAttendance(res.data);
+        })
         .catch((err) => console.error(err));
     }
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Welcome Banner */}
-      <div className="p-8 rounded-2xl bg-gradient-to-r from-[#10273D] to-[#071A2B] border border-white/10 relative overflow-hidden">
+      <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-white/[0.06] via-white/[0.03] to-transparent border border-white/10 relative overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[radial-gradient(circle,rgba(56,189,248,0.12),transparent_70%)] pointer-events-none" />
         <div className="relative z-10">
           <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#38BDF8]">
             Welcome Back
           </span>
-          <h2 className="text-3xl font-extrabold font-heading text-[#F8FAFC] mt-1">
+          <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-[#F8FAFC] mt-1">
             Hello, {user?.name || 'Member'} 👋
           </h2>
-          <p className="text-sm text-[#94A3B8] mt-2 max-w-xl">
+          <p className="text-xs sm:text-sm text-[#94A3B8] mt-2 max-w-xl leading-relaxed">
             Track your peer session attendance, access learning resources, and participate in upcoming C3 events.
           </p>
         </div>
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatsCard
           title="Attendance Rate"
           value={attendance ? `${attendance.percentage}%` : '100%'}
@@ -68,24 +75,24 @@ export const Dashboard = () => {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <Card className="bg-zinc-950/80 border border-white/10">
           <CardHeader>
-            <CardTitle>Today's Peer Session</CardTitle>
+            <CardTitle className="text-base sm:text-lg text-white">Today's Peer Session</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-[#94A3B8]">
+            <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
               Daily 15-minute presentation session schedule and topic information.
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-zinc-950/80 border border-white/10">
           <CardHeader>
-            <CardTitle>Recent Club Broadcasts</CardTitle>
+            <CardTitle className="text-base sm:text-lg text-white">Recent Club Broadcasts</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-[#94A3B8]">
+            <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
               Official club announcements and schedule updates.
             </p>
           </CardContent>
@@ -96,3 +103,4 @@ export const Dashboard = () => {
 };
 
 export default Dashboard;
+

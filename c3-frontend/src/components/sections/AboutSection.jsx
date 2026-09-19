@@ -1,76 +1,102 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
-import { ChevronLeft, ChevronRight, GraduationCap, Laptop, Users, Target, Presentation, Award } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import {
+  GraduationCap,
+  Laptop,
+  Presentation,
+  Award,
+  Users,
+  Compass,
+  Zap,
+  CheckCircle2,
+  Sparkles,
+  ArrowRight
+} from 'lucide-react';
 import BlurText from '../reactbits/BlurText';
-
-const ABOUT_PARAGRAPH =
-  'Campus to Corporate Club (C3) is the official Computer Science and Engineering department club at CAHCET. We believe learning becomes more meaningful when students teach, collaborate, organize, and build together. Through technical sessions, workshops, events, and peer learning, members strengthen both their technical and professional skills while developing communication, leadership, teamwork, and confidence.';
 
 const PILLARS = [
   {
     icon: GraduationCap,
     title: 'Learn by Teaching',
-    desc: 'Daily 15-minute peer sessions where juniors and seniors break down complex topics together.'
+    badge: 'Daily 15-Min Slots',
+    desc: 'Juniors and seniors take turns breaking down engineering concepts, cementing understanding through active explanation.',
+    highlight: 'Peer-to-Peer'
   },
   {
     icon: Laptop,
     title: 'Hands-on Building',
-    desc: 'Collaborative development across web, AI/ML, cloud, and security tracks.'
+    badge: 'Real-World Stack',
+    desc: 'Collaborative development across web, AI/ML, cloud infrastructure, and security tracks to build real products.',
+    highlight: 'Ship Weekly'
   },
   {
     icon: Presentation,
     title: 'Corporate Prep',
-    desc: 'Public speaking drills, presentation mastery, and real-world aptitude training.'
+    badge: 'Placement Ready',
+    desc: 'Communication mastery, aptitude drills, technical resume reviews, and live mock interview simulations.',
+    highlight: 'Career First'
   },
   {
     icon: Award,
     title: 'Leadership & Events',
-    desc: 'Organize high-impact campus events, hackathons, and technical symposiums.'
+    badge: 'High Impact',
+    desc: 'Organizing campus hackathons, symposiums, technical debate battles, and department showcases.',
+    highlight: 'Student Run'
   }
 ];
 
-const MEDIA_ITEMS = [
-  { type: 'video', src: '', poster: '/assets/c3fullmembers.jpg.jpeg', alt: 'C3 Community Members' }
+const TABS = [
+  {
+    id: 'culture',
+    label: 'Club Culture',
+    icon: Users,
+    headline: 'A student-driven collective where learning is an everyday habit.',
+    description:
+      'C3 eliminates the barrier between juniors and seniors. We believe that true engineering excellence comes not from cramming exams, but from continuous daily curiosity, open debate, and peer-to-peer mentorship.',
+    points: [
+      'Daily 15-minute presentation slots in the department',
+      'Open discussion without fear of judgment or hierarchy',
+      'Shared technical notes, problem sets, and roadmaps'
+    ]
+  },
+  {
+    id: 'execution',
+    label: 'Execution Model',
+    icon: Zap,
+    headline: 'Continuous micro-actions that build corporate readiness.',
+    description:
+      'Rather than relying only on annual fests, C3 operates on a daily rhythm. Members present technical concepts, solve DSA problems together, build GitHub projects, and practice public speaking regularly.',
+    points: [
+      'Hands-on coding sprints across web, AI, and systems',
+      'Placement aptitude and algorithmic problem solving',
+      'Portfolio building and resume optimization'
+    ]
+  },
+  {
+    id: 'heritage',
+    label: 'CAHCET CSE Heritage',
+    icon: Compass,
+    headline: 'The official department club fostering future leaders.',
+    description:
+      'Founded under the Computer Science and Engineering Department at CAHCET, C3 acts as the bridge connecting academic curriculum with modern industry expectations and startup culture.',
+    points: [
+      'Faculty-supported, student-executed initiatives',
+      'Cross-batch collaboration between all engineering years',
+      'Alumni interaction and industry mentorship'
+    ]
+  }
 ];
 
-const MediaShowcase = () => {
-  return (
-    <div className="relative w-full max-w-md aspect-[4/5] mx-auto group">
-      {/* Outer ambient glow */}
-      <div className="absolute -inset-1 bg-gradient-to-r from-[#38BDF8]/20 via-[#818CF8]/20 to-[#2DD4BF]/20 rounded-3xl blur-xl opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
-
-      <div className="relative h-full rounded-3xl bg-white/[0.04] backdrop-blur-xl border border-white/15 shadow-[0_12px_50px_rgba(0,0,0,0.6)] overflow-hidden">
-        {/* Soft background blurred cover */}
-        <img
-          src="/assets/c3fullmembers.jpg.jpeg"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40"
-        />
-        <img
-          src="/assets/c3fullmembers.jpg.jpeg"
-          alt="C3 Community Members"
-          className="absolute inset-0 w-full h-full object-contain object-center transition-transform duration-700 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
-
-        <div className="absolute bottom-5 inset-x-5 flex items-center justify-between">
-          <div>
-            <div className="text-xs font-semibold text-white tracking-wide">C3 Community</div>
-            <div className="text-[11px] text-[#A1A1AA]">CAHCET CSE Department</div>
-          </div>
-          <span className="px-3 py-1 rounded-full text-[10px] font-semibold text-[#38BDF8] bg-[#38BDF8]/10 border border-[#38BDF8]/25 backdrop-blur-md">
-            Est. CAHCET
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
+const STATS = [
+  { value: '100+', label: 'Peer Sessions' },
+  { value: '4', label: 'Tech Domains' },
+  { value: '100%', label: 'Student-Driven' }
+];
 
 export const AboutSection = () => {
   const sectionRef = useRef(null);
   const [inView, setInView] = useState(false);
+  const [activeTab, setActiveTab] = useState('culture');
 
   useEffect(() => {
     const node = sectionRef.current;
@@ -88,58 +114,164 @@ export const AboutSection = () => {
     return () => observer.disconnect();
   }, []);
 
+  const currentTab = TABS.find(t => t.id === activeTab) || TABS[0];
+
   return (
     <section
       ref={sectionRef}
       id="about"
-      className="relative w-full overflow-hidden py-20 sm:py-28 lg:py-32 px-4 sm:px-6 lg:px-8 bg-black"
+      className="relative w-full overflow-hidden py-24 sm:py-32 px-4 sm:px-6 lg:px-8 bg-black text-white"
     >
-      {/* Technical blueprint grid atmosphere */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
-      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-[radial-gradient(circle,rgba(56,189,248,0.08),transparent_70%)] pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[radial-gradient(circle,rgba(45,212,191,0.06),transparent_70%)] pointer-events-none" />
+      {/* Background architectural grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(255,255,255,0.03),transparent_70%)] pointer-events-none" />
 
-      <div className="relative z-10 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
-        {/* Left Column - Content & Pillars */}
-        <div className="lg:col-span-7">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-nav font-medium text-[#2DD4BF] bg-[#2DD4BF]/10 border border-[#2DD4BF]/20 mb-4">
-            About the Club
+      <div className="relative z-10 max-w-7xl mx-auto">
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-16 sm:mb-20">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-mono font-medium text-white/90 bg-white/[0.06] border border-white/15 mb-4">
+            <Sparkles className="w-3.5 h-3.5 text-white" />
+            ABOUT THE CLUB
           </div>
 
-          {inView && (
+          {inView ? (
             <BlurText
-              text="Empowering Students from Campus to Corporate"
+              text="Bridging the Gap Between Campus & Corporate"
               direction="top"
-              delay={35}
-              stepDuration={0.3}
+              delay={25}
+              stepDuration={0.25}
               className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 leading-tight"
             />
+          ) : (
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+              Bridging the Gap Between Campus & Corporate
+            </h2>
           )}
 
-          <p className="text-base sm:text-lg text-[#A1A1AA] leading-relaxed mb-8">
-            {ABOUT_PARAGRAPH}
+          <p className="text-base sm:text-lg text-zinc-400 leading-relaxed">
+            Campus to Corporate Club (C3) is the official student-led engineering initiative of the Computer Science and
+            Engineering department at CAHCET, dedicated to transforming aspiring students into industry-ready leaders.
           </p>
-
-          {/* 4 Thematic Pillars Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {PILLARS.map((pillar, i) => (
-              <div
-                key={i}
-                className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-[#38BDF8]/40 hover:bg-white/[0.05] transition-all duration-300 group"
-              >
-                <div className="w-8 h-8 rounded-lg bg-[#38BDF8]/10 text-[#38BDF8] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                  <pillar.icon className="w-4 h-4" />
-                </div>
-                <div className="text-sm font-semibold text-white mb-1">{pillar.title}</div>
-                <div className="text-xs text-[#8E8E93] leading-relaxed">{pillar.desc}</div>
-              </div>
-            ))}
-          </div>
         </div>
 
-        {/* Right Column - Media Showcase */}
-        <div className="lg:col-span-5 w-full">
-          <MediaShowcase />
+        {/* 4 Pillars Interactive Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-16 sm:mb-20">
+          {PILLARS.map((pillar, idx) => {
+            const Icon = pillar.icon;
+            return (
+              <div
+                key={idx}
+                className="group relative p-6 rounded-2xl bg-zinc-950/80 border border-white/10 hover:border-white/30 transition-all duration-300 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-white group-hover:text-black transition-all duration-300">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-white/[0.05] border border-white/10 text-zinc-400">
+                      {pillar.highlight}
+                    </span>
+                  </div>
+
+                  <h3 className="text-base font-bold text-white mb-1 group-hover:text-white transition-colors">
+                    {pillar.title}
+                  </h3>
+                  <p className="text-xs text-zinc-400 leading-relaxed mb-4">{pillar.desc}</p>
+                </div>
+
+                <div className="pt-3 border-t border-white/5 text-[11px] font-mono text-zinc-400 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  {pillar.badge}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Deep Dive Interactive Showcase */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center bg-zinc-950/60 border border-white/10 rounded-3xl p-6 sm:p-10 backdrop-blur-xl">
+          {/* Left Column: Interactive Nav & Content */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* Tab selector */}
+            <div className="flex flex-wrap gap-2 p-1.5 bg-black/80 rounded-xl border border-white/10 w-fit">
+              {TABS.map(tab => {
+                const TabIcon = tab.icon;
+                const isSelected = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                      isSelected
+                        ? 'bg-white text-black shadow-md'
+                        : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
+                    }`}
+                  >
+                    <TabIcon className="w-3.5 h-3.5" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Tab Body */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentTab.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-4"
+              >
+                <h4 className="text-xl sm:text-2xl font-bold font-heading text-white">{currentTab.headline}</h4>
+                <p className="text-sm text-zinc-400 leading-relaxed">{currentTab.description}</p>
+
+                <div className="space-y-2.5 pt-2">
+                  {currentTab.points.map((pt, i) => (
+                    <div key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-zinc-300">
+                      <CheckCircle2 className="w-4 h-4 text-white shrink-0 mt-0.5" />
+                      <span>{pt}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Quick Metrics Bar */}
+            <div className="grid grid-cols-3 gap-3 pt-6 border-t border-white/10">
+              {STATS.map((stat, i) => (
+                <div key={i} className="text-left">
+                  <div className="text-xl sm:text-2xl font-bold font-heading text-white">{stat.value}</div>
+                  <div className="text-[11px] text-zinc-400 font-mono uppercase tracking-wider">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right Column: Visual Community Media Showcase */}
+          <div className="lg:col-span-5">
+            <div className="relative rounded-2xl bg-black border border-white/15 overflow-hidden shadow-2xl group">
+              <div className="aspect-[4/3] w-full overflow-hidden relative">
+                <img
+                  src="/assets/c3fullmembers.jpg.jpeg"
+                  alt="C3 Community Members"
+                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+              </div>
+
+              <div className="p-5 relative bg-zinc-950/90 border-t border-white/10 flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-bold text-white tracking-wide">C3 Core Community</div>
+                  <div className="text-xs text-zinc-400">Department of Computer Science & Engineering</div>
+                </div>
+                <span className="px-2.5 py-1 rounded text-[10px] font-mono font-semibold text-white bg-white/10 border border-white/20">
+                  CAHCET CSE
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
