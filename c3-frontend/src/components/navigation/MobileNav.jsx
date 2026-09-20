@@ -1,10 +1,12 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import StaggeredMenu from '../reactbits/StaggeredMenu';
 import { PUBLIC_NAV_LINKS } from '../../constants/navigation';
 import { useAuth } from '../../context/AuthContext';
+import { scrollToTarget } from '../../utils/smoothScroll';
 
 export const MobileNav = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
   const navItems = PUBLIC_NAV_LINKS.map((link) => ({
@@ -21,7 +23,14 @@ export const MobileNav = () => {
 
   const handleItemClick = (item) => {
     if (item.link.startsWith('#')) {
-      navigate('/' + item.link);
+      if (location.pathname === '/' || window.location.pathname === '/') {
+        window.history.pushState(null, '', '/' + item.link);
+        setTimeout(() => {
+          scrollToTarget(item.link);
+        }, 50);
+      } else {
+        navigate('/' + item.link);
+      }
     } else {
       navigate(item.link);
     }
@@ -33,12 +42,12 @@ export const MobileNav = () => {
         position="right"
         items={items}
         displaySocials={false}
-displayItemNumbering={false}
-menuButtonColor="#FFFFFF"
+        displayItemNumbering={false}
+        menuButtonColor="#FFFFFF"
         openMenuButtonColor="#FFFFFF"
         changeMenuColorOnOpen={false}
-        accentColor="#3B82F6"
-        colors={['#1E3A8A', '#3B82F6']}
+        accentColor="#FFFFFF"
+        colors={['#27272A', '#09090B']}
         isFixed
         onItemClick={handleItemClick}
         logoUrl={null}

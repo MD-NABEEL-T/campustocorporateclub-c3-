@@ -36,6 +36,8 @@ const MyAttendance = lazy(() => import('./pages/member/MyAttendance'));
 const Sessions = lazy(() => import('./pages/member/Sessions'));
 const SessionDetail = lazy(() => import('./pages/member/SessionDetail'));
 
+import { scrollToTarget } from './utils/smoothScroll';
+
 // Simple full-page fallback shown while a lazy route's chunk downloads
 const RouteLoading = () => (
   <div className="min-h-screen flex items-center justify-center bg-black">
@@ -51,18 +53,18 @@ const ScrollToHash = () => {
 
   useEffect(() => {
     if (!location.hash) {
-      window.scrollTo(0, 0);
+      scrollToTarget(0);
       return;
     }
-    const id = location.hash.slice(1);
+    const hash = location.hash;
     let attempts = 0;
     let frameId;
 
     const tryScroll = () => {
-      const el = document.getElementById(id);
+      const el = document.querySelector(hash);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else if (attempts < 30) {
+        scrollToTarget(el);
+      } else if (attempts < 40) {
         attempts += 1;
         frameId = requestAnimationFrame(tryScroll);
       }
