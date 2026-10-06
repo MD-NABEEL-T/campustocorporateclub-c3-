@@ -27,6 +27,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
+import { scrollToTarget } from '../../utils/smoothScroll';
 import './PillNav.css';
 
 const PillNav = ({
@@ -244,6 +245,16 @@ const PillNav = ({
   // they work no matter which route the user is currently on.
   const resolveTo = href => (href.startsWith('#') ? `/${href}` : href);
 
+  const handleLinkClick = (e, href) => {
+    if (href && href.startsWith('#')) {
+      if (window.location.pathname === '/') {
+        e.preventDefault();
+        window.history.pushState(null, '', '/' + href);
+        scrollToTarget(href);
+      }
+    }
+  };
+
   const cssVars = {
     ['--base']: baseColor,
     ['--pill-bg']: pillColor,
@@ -259,6 +270,7 @@ const PillNav = ({
             className="pill-logo"
             to={resolveTo(items[0].href)}
             aria-label="Home"
+            onClick={e => handleLinkClick(e, items[0].href)}
             onMouseEnter={handleLogoEnter}
             role="menuitem"
             ref={el => {
@@ -272,6 +284,7 @@ const PillNav = ({
             className="pill-logo"
             href={items?.[0]?.href || '#'}
             aria-label="Home"
+            onClick={e => handleLinkClick(e, items?.[0]?.href)}
             onMouseEnter={handleLogoEnter}
             ref={el => {
               logoRef.current = el;
@@ -291,6 +304,7 @@ const PillNav = ({
                     to={resolveTo(item.href)}
                     className={`pill${activeHref === item.href ? ' is-active' : ''}`}
                     aria-label={item.ariaLabel || item.label}
+                    onClick={e => handleLinkClick(e, item.href)}
                     onMouseEnter={() => handleEnter(i)}
                     onMouseLeave={() => handleLeave(i)}
                   >
@@ -314,6 +328,7 @@ const PillNav = ({
                     href={item.href}
                     className={`pill${activeHref === item.href ? ' is-active' : ''}`}
                     aria-label={item.ariaLabel || item.label}
+                    onClick={e => handleLinkClick(e, item.href)}
                     onMouseEnter={() => handleEnter(i)}
                     onMouseLeave={() => handleLeave(i)}
                   >
@@ -356,7 +371,10 @@ const PillNav = ({
                 <Link
                   to={resolveTo(item.href)}
                   className={`mobile-menu-link${activeHref === item.href ? ' is-active' : ''}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={e => {
+                    setIsMobileMenuOpen(false);
+                    handleLinkClick(e, item.href);
+                  }}
                 >
                   {item.label}
                 </Link>
@@ -364,7 +382,10 @@ const PillNav = ({
                 <a
                   href={item.href}
                   className={`mobile-menu-link${activeHref === item.href ? ' is-active' : ''}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={e => {
+                    setIsMobileMenuOpen(false);
+                    handleLinkClick(e, item.href);
+                  }}
                 >
                   {item.label}
                 </a>

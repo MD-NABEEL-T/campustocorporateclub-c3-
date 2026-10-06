@@ -42,15 +42,19 @@ import { gsap } from 'gsap';
 import './Masonry.css';
 
 const useMedia = (queries, values, defaultValue) => {
-  const get = () => values[queries.findIndex(q => matchMedia(q).matches)] ?? defaultValue;
+  const get = () => {
+    if (typeof window === 'undefined') return defaultValue;
+    const index = queries.findIndex(q => window.matchMedia(q).matches);
+    return index !== -1 ? values[index] : defaultValue;
+  };
 
   const [value, setValue] = useState(get);
 
   useEffect(() => {
-    const handler = () => setValue(get);
-    queries.forEach(q => matchMedia(q).addEventListener('change', handler));
-    return () => queries.forEach(q => matchMedia(q).removeEventListener('change', handler));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const handler = () => setValue(get());
+    const mqls = queries.map(q => window.matchMedia(q));
+    mqls.forEach(mql => mql.addEventListener('change', handler));
+    return () => mqls.forEach(mql => mql.removeEventListener('change', handler));
   }, [queries]);
 
   return value;
@@ -63,8 +67,10 @@ const useMeasure = () => {
   useLayoutEffect(() => {
     if (!ref.current) return;
     const ro = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect;
-      setSize({ width, height });
+      if (entry) {
+        const { width, height } = entry.contentRect;
+        setSize({ width, height });
+      }
     });
     ro.observe(ref.current);
     return () => ro.disconnect();
@@ -74,10 +80,15 @@ const useMeasure = () => {
 };
 
 const preloadImages = async urls => {
+  if (!urls || urls.length === 0) return;
   await Promise.all(
     urls.map(
       src =>
         new Promise(resolve => {
+          if (!src) {
+            resolve();
+            return;
+          }
           const img = new Image();
           img.src = src;
           img.onload = img.onerror = () => resolve();
@@ -97,16 +108,16 @@ const Masonry = ({
   blurToFocus = true,
   colorShiftOnHover = false
 }) => {
-  const columns = useMedia(
-['(min-width:1500px)', '(min-width:1000px)', '(min-width:640px)', '(min-width:400px)'],
-    [5, 4, 3, 2],
-    2
+  const mediaQueries = useMemo(
+    () => ['(min-width:1500px)', '(min-width:1000px)', '(min-width:640px)', '(min-width:400px)'],
+    []
   );
+  const columns = useMedia(mediaQueries, [5, 4, 3, 2], 2);
 
   const [containerRef, { width }] = useMeasure();
   const [imagesReady, setImagesReady] = useState(false);
 
-  const getInitialPosition = item => {
+  const getInitialPosition = (item) => {
     const containerRect = containerRef.current?.getBoundingClientRect();
     if (!containerRect) return { x: item.x, y: item.y };
 
@@ -137,31 +148,37 @@ const Masonry = ({
   };
 
   useEffect(() => {
+    if (!items || items.length === 0) {
+      setImagesReady(true);
+      return;
+    }
     preloadImages(items.map(i => i.img)).then(() => setImagesReady(true));
   }, [items]);
 
-  const grid = useMemo(() => {
-    if (!width) return [];
+  const { grid, totalHeight } = useMemo(() => {
+    if (!width || !items.length) return { grid: [], totalHeight: 0 };
 
     const colHeights = new Array(columns).fill(0);
     const columnWidth = width / columns;
 
-    return items.map(child => {
+    const layoutGrid = items.map(child => {
       const col = colHeights.indexOf(Math.min(...colHeights));
       const x = columnWidth * col;
-      const height = child.height / 2;
+      const height = (child.height || 400) / 2;
       const y = colHeights[col];
 
       colHeights[col] += height;
 
       return { ...child, x, y, w: columnWidth, h: height };
     });
+
+    return { grid: layoutGrid, totalHeight: Math.max(...colHeights, 300) };
   }, [columns, items, width]);
 
   const hasMounted = useRef(false);
 
   useLayoutEffect(() => {
-    if (!imagesReady) return;
+    if (!imagesReady || !grid.length) return;
 
     grid.forEach((item, index) => {
       const selector = `[data-key="${item.id}"]`;
@@ -173,7 +190,7 @@ const Masonry = ({
       };
 
       if (!hasMounted.current) {
-        const initialPos = getInitialPosition(item, index);
+        const initialPos = getInitialPosition(item);
         const initialState = {
           opacity: 0,
           x: initialPos.x,
@@ -202,7 +219,6 @@ const Masonry = ({
     });
 
     hasMounted.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [grid, imagesReady, stagger, animateFrom, blurToFocus, duration, ease]);
 
   const handleMouseEnter = (e, item) => {
@@ -252,14 +268,20 @@ const Masonry = ({
   };
 
   return (
-    <div ref={containerRef} className="list">
+    <div
+      ref={containerRef}
+      className="list"
+      style={{ height: totalHeight > 0 ? totalHeight : 'auto', minHeight: 200 }}
+    >
       {grid.map(item => {
         return (
           <div
             key={item.id}
             data-key={item.id}
             className="item-wrapper"
-            onClick={() => window.open(item.url, '_blank', 'noopener')}
+            onClick={() => {
+              if (item.url && item.url !== '#') window.open(item.url, '_blank', 'noopener');
+            }}
             onMouseEnter={e => handleMouseEnter(e, item)}
             onMouseLeave={e => handleMouseLeave(e, item)}
           >
@@ -289,3 +311,4 @@ const Masonry = ({
 };
 
 export default Masonry;
+

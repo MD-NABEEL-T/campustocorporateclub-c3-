@@ -8,13 +8,16 @@ import cloudinary from '../config/cloudinary.js';
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: 'c3-applications/resumes',
-    resource_type: 'raw',
-    allowed_formats: ['pdf', 'doc', 'docx'],
+    folder: 'c3-applications',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'pdf', 'doc', 'docx'],
   },
 });
 
 const ALLOWED_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/jpg',
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -22,12 +25,12 @@ const ALLOWED_MIME_TYPES = [
 
 const resumeUpload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB cap
+  limits: { fileSize: 8 * 1024 * 1024 }, // 8MB cap
   fileFilter: (req, file, cb) => {
-    if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+    if (ALLOWED_MIME_TYPES.includes(file.mimetype) || file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
-      cb(new Error('Resume must be a PDF or Word document'));
+      cb(new Error('File must be an image (JPG/PNG/WEBP) or PDF/Word document'));
     }
   },
 });

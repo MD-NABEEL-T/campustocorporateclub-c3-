@@ -16,32 +16,34 @@ const Sessions = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let isMounted = true;
     const fetchSessions = async () => {
       try {
-        const res = await api.get('/sessions', {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
-        setSessions(res.data);
+        const res = await api.get('/sessions');
+        if (isMounted) setSessions(res.data);
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load sessions');
+        if (isMounted) setError(err.response?.data?.message || 'Failed to load sessions');
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchSessions();
-  }, [user.token]);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   if (loading) return <Loader fullScreen label="Loading daily sessions..." />;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold font-heading text-[#F8FAFC]">Daily Sessions</h2>
-          <p className="text-sm text-[#94A3B8]">List of all technical and non-technical peer learning sessions</p>
+          <p className="text-xs sm:text-sm text-[#94A3B8] mt-1">List of all technical and non-technical peer learning sessions</p>
         </div>
 
-        {user.role === 'admin' && (
+        {user?.role === 'admin' && (
           <Link to="/admin/sessions/new">
             <Button variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />}>
               Create Session
@@ -63,12 +65,12 @@ const Sessions = () => {
           description="There are currently no daily sessions recorded in the database."
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {sessions.map((session) => (
             <Link key={session._id} to={`/sessions/${session._id}`}>
-              <Card hoverable className="h-full flex flex-col justify-between overflow-hidden p-0">
+              <Card hoverable className="h-full flex flex-col justify-between overflow-hidden p-0 bg-zinc-950/80 border border-white/10 group">
                 <div>
-                  <div className="relative h-44 w-full bg-[#071A2B] overflow-hidden">
+                  <div className="relative h-44 w-full bg-zinc-900 overflow-hidden">
                     <img
                       src={session.coverImage}
                       alt={session.topic}
@@ -81,16 +83,16 @@ const Sessions = () => {
                     </div>
                   </div>
 
-                  <div className="p-5 space-y-2">
-                    <h3 className="text-lg font-bold font-heading text-[#F8FAFC] line-clamp-1">
+                  <div className="p-4 sm:p-5 space-y-2">
+                    <h3 className="text-base sm:text-lg font-bold font-heading text-white line-clamp-1 group-hover:text-zinc-300 transition-colors">
                       {session.topic}
                     </h3>
-                    <div className="flex items-center gap-4 text-xs text-[#94A3B8]">
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-400">
                       <span className="flex items-center gap-1">
-                        <User className="w-3.5 h-3.5 text-[#38BDF8]" /> {session.handledBy}
+                        <User className="w-3.5 h-3.5 text-zinc-300" /> {session.handledBy}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-[#2DD4BF]" />{' '}
+                        <Calendar className="w-3.5 h-3.5 text-zinc-300" />{' '}
                         {new Date(session.date).toLocaleDateString()}
                       </span>
                     </div>
@@ -106,3 +108,4 @@ const Sessions = () => {
 };
 
 export default Sessions;
+

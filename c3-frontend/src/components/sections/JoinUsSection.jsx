@@ -6,17 +6,17 @@ import BlurText from '../reactbits/BlurText';
 import Terminal from '../reactbits/Terminal';
 
 const VALUE_PILLARS = [
-  { icon: BookOpen, text: 'Daily 15-Min Peer Presentations' },
-  { icon: Code2, text: 'Hands-on Projects & Hackathons' },
+  { icon: BookOpen, text: 'Daily 30-Min Peer Sessions' },
+  { icon: Code2, text: 'Hands-on Activities & Events' },
   { icon: Users, text: 'Direct Senior Mentorship' },
-  { icon: CheckCircle2, text: 'Placement & Aptitude Preparation' },
+  { icon: CheckCircle2, text: 'Technical Seminars & Reviews' },
 ];
 
 const QUICK_PERKS = [
   { label: 'Club Membership', value: '100% Free' },
   { label: 'Technical Domains', value: '5 Tracks' },
-  { label: 'Skill Building', value: 'Live Peer Labs' },
-  { label: 'Career Focus', value: 'Placement Prep' }
+  { label: 'Skill Building', value: 'Daily Sessions' },
+  { label: 'Recruitment', value: '2nd Year CSE' }
 ];
 
 export const JoinUsSection = () => {
@@ -33,9 +33,9 @@ export const JoinUsSection = () => {
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Title Header */}
         <div ref={introRef} className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
-          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-nav font-medium text-[#38BDF8] bg-[#38BDF8]/10 border border-[#38BDF8]/20 mb-4">
+          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-nav font-medium text-white bg-white/10 border border-white/20 mb-4">
             <Sparkles className="w-3.5 h-3.5" />
-            Recruitment Open 2026
+            2nd Year CSE Recruitment (A & B)
           </span>
 
           {introInView && (

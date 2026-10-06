@@ -10,6 +10,7 @@ import eventRoutes from './routes/eventRoutes.js';
 import publicRoutes from './routes/publicRoutes.js';
 import applicationRoutes from './routes/applicationRoutes.js';
 import galleryRoutes from './routes/galleryRoutes.js';
+import announcementRoutes from './routes/announcementRoutes.js';
 
 
 dotenv.config();
@@ -30,6 +31,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

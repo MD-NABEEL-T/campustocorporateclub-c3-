@@ -22,6 +22,12 @@ import { fadeInUp } from '../../utils/animations';
 import { useToast } from '../../context/ToastContext';
 import api from '../../api/axios';
 
+const SECTION_OPTIONS = [
+  { value: 'CSE A', label: 'CSE - Section A' },
+  { value: 'CSE B', label: 'CSE - Section B' },
+  { value: 'Other', label: 'Other Section / Branch' },
+];
+
 const YEAR_OPTIONS = [
   { value: '1', label: '1st Year' },
   { value: '2', label: '2nd Year' },
@@ -35,8 +41,9 @@ const EMPTY_FORM = {
   collegeEmail: '',
   personalEmail: '',
   phone: '',
-  department: '',
-  year: '',
+  department: 'Computer Science & Engineering',
+  section: 'CSE A',
+  year: '1',
   registerNumber: '',
   preferredDomain: '',
   secondaryDomain: '',
@@ -53,9 +60,6 @@ const PHONE_REGEX = /^[6-9]\d{9}$/;
 const URL_REGEX = /^https?:\/\/.+/i;
 const MAX_RESUME_SIZE = 5 * 1024 * 1024; // 5MB
 
-// A draft is only ever identified by this locally-stored resumeToken - it's
-// never derived from the applicant's email, so nobody can pull up someone
-// else's in-progress application by guessing an address or an ID.
 const DRAFT_STORAGE_KEY = 'c3_apply_draft';
 
 const loadStoredDraft = () => {
@@ -71,9 +75,7 @@ const storeDraft = (applicationId, resumeToken, step) => {
   try {
     localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ applicationId, resumeToken, step }));
   } catch {
-    // Storage can fail (private browsing, quota) - the draft still exists
-    // server-side, the applicant just won't get an automatic resume prompt
-    // on this device next time.
+    // Storage can fail
   }
 };
 
@@ -87,9 +89,9 @@ const clearStoredDraft = () => {
 
 const STEPS = [
   { key: 'personal', label: 'Personal', fields: ['fullName', 'phone', 'collegeEmail', 'personalEmail'] },
-  { key: 'academic', label: 'Academic', fields: ['department', 'year', 'registerNumber'] },
-  { key: 'domain', label: 'Domain & Skills', fields: ['preferredDomain', 'secondaryDomain', 'skills', 'experience', 'whyJoin'] },
-  { key: 'links', label: 'Links & Resume', fields: ['portfolioUrl', 'githubUrl', 'linkedinUrl'] },
+  { key: 'academic', label: 'Academic', fields: ['department', 'section', 'year', 'registerNumber'] },
+  { key: 'domain', label: 'Domain & Motivation', fields: ['preferredDomain', 'secondaryDomain', 'skills', 'whyJoin'] },
+  { key: 'idcard', label: 'ID Card & Links', fields: ['portfolioUrl', 'githubUrl', 'linkedinUrl'] },
   { key: 'review', label: 'Review', fields: [] },
 ];
 
@@ -112,14 +114,16 @@ const validateField = (form, resumeFile, field) => {
       return undefined;
     case 'department':
       return !form.department.trim() ? 'Department is required' : undefined;
+    case 'section':
+      return !form.section ? 'Select your section' : undefined;
     case 'year':
       return !form.year ? 'Select your current year' : undefined;
     case 'preferredDomain':
       return !form.preferredDomain ? 'Select a preferred domain' : undefined;
     case 'skills':
-      return !form.skills.trim() ? 'List at least a few relevant skills' : undefined;
+      return !form.skills.trim() ? 'List at least a few relevant skills or interests' : undefined;
     case 'whyJoin':
-      return !form.whyJoin.trim() ? 'Tell us why you want to join' : undefined;
+      return !form.whyJoin.trim() ? 'Tell us why you want to join C3' : undefined;
     case 'portfolioUrl':
     case 'githubUrl':
     case 'linkedinUrl':
@@ -153,6 +157,8 @@ const validateAll = (form, resumeFile) => {
 export const ApplicationForm = () => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [resumeFile, setResumeFile] = useState(null);
+  const [idCardFile, setIdCardFile] = useState(null);
+  const [idCardPreview, setIdCardPreview] = useState('');
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -165,10 +171,6 @@ export const ApplicationForm = () => {
 
   const draftRef = useRef({ applicationId: null, resumeToken: null });
 
-  // On mount, check for a locally-stored draft and try to pull it from the
-  // backend. If the token is gone/expired/already-submitted, silently start
-  // fresh instead of showing an error - this is a nice-to-have resume, not
-  // a hard requirement.
   useEffect(() => {
     const restoreDraft = async () => {
       const stored = loadStoredDraft();
@@ -205,25 +207,36 @@ export const ApplicationForm = () => {
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  const handleFileChange = (e) => {
+  const handleResumeChange = (e) => {
     const file = e.target.files?.[0] || null;
     setResumeFile(file);
     if (errors.resume) setErrors((prev) => ({ ...prev, resume: undefined }));
   };
 
+  const handleIdCardChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setIdCardFile(file);
+    if (file) {
+      setIdCardPreview(URL.createObjectURL(file));
+    } else {
+      setIdCardPreview('');
+    }
+  };
+
   const buildFormData = () => {
     const formData = new FormData();
     Object.entries(form).forEach(([key, value]) => {
-      if (value.trim()) formData.append(key, value.trim());
+      if (typeof value === 'string' && value.trim()) {
+        formData.append(key, value.trim());
+      } else if (value) {
+        formData.append(key, value);
+      }
     });
+    if (idCardFile) formData.append('idCard', idCardFile);
     if (resumeFile) formData.append('resume', resumeFile);
     return formData;
   };
 
-  // Creates the draft on the backend if one doesn't exist yet, otherwise
-  // PATCHes the existing one. Returns true on success. `silent` controls
-  // whether a toast/loading state is shown - background saves triggered by
-  // "Next" stay quiet, the explicit "Save & Continue Later" button doesn't.
   const persistDraft = async ({ silent }) => {
     if (!silent) setSavingDraft(true);
     try {
@@ -243,7 +256,7 @@ export const ApplicationForm = () => {
         };
       }
       storeDraft(draftRef.current.applicationId, draftRef.current.resumeToken, stepIndex);
-      if (!silent) addToast('Draft saved - you can close this tab and continue later.', 'success');
+      if (!silent) addToast('Draft saved successfully.', 'success');
       return true;
     } catch (err) {
       const message = err.response?.data?.message || 'Could not save your progress right now.';
@@ -258,13 +271,12 @@ export const ApplicationForm = () => {
     const stepErrors = validateStep(form, resumeFile, stepIndex);
     if (Object.keys(stepErrors).length > 0) {
       setErrors((prev) => ({ ...prev, ...stepErrors }));
-      addToast('Please fix the highlighted fields', 'warning');
+      addToast('Please fill all required fields', 'warning');
       return;
     }
     const nextIndex = Math.min(stepIndex + 1, STEPS.length - 1);
     setStepIndex(nextIndex);
     storeDraft(draftRef.current.applicationId, draftRef.current.resumeToken, nextIndex);
-    // Best-effort background save - don't block navigation on it.
     persistDraft({ silent: true });
   };
 
@@ -283,6 +295,8 @@ export const ApplicationForm = () => {
     draftRef.current = { applicationId: null, resumeToken: null };
     setForm(EMPTY_FORM);
     setResumeFile(null);
+    setIdCardFile(null);
+    setIdCardPreview('');
     setErrors({});
     setStepIndex(0);
     setResumeBannerVisible(false);
@@ -300,19 +314,18 @@ export const ApplicationForm = () => {
         step.fields.some((field) => validationErrors[field])
       );
       if (firstInvalidStep !== -1) setStepIndex(firstInvalidStep);
-      addToast('Please fix the highlighted fields', 'warning');
+      addToast('Please fill all required fields', 'warning');
       return;
     }
 
     setSubmitting(true);
     try {
+      const formData = buildFormData();
       if (draftRef.current.resumeToken) {
-        const formData = buildFormData();
         await api.post(`/applications/draft/${draftRef.current.resumeToken}/submit`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       } else {
-        const formData = buildFormData();
         await api.post('/applications', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
@@ -331,8 +344,8 @@ export const ApplicationForm = () => {
 
   if (resuming) {
     return (
-      <Card className="max-w-3xl mx-auto text-center p-10">
-        <div className="mx-auto w-8 h-8 border-2 border-[#38BDF8] border-t-transparent rounded-full animate-spin" />
+      <Card className="max-w-3xl mx-auto text-center p-10 bg-zinc-950 border border-white/10">
+        <div className="mx-auto w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
       </Card>
     );
   }
@@ -340,16 +353,19 @@ export const ApplicationForm = () => {
   if (submitted) {
     return (
       <motion.div variants={fadeInUp} initial="hidden" animate="visible">
-        <Card className="max-w-2xl mx-auto text-center p-10 space-y-4 border-[#22C55E]/30">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-[#22C55E]/10 border border-[#22C55E]/30 flex items-center justify-center">
-            <CheckCircle2 className="w-7 h-7 text-[#22C55E]" />
+        <Card className="max-w-2xl mx-auto text-center p-8 sm:p-12 space-y-4 bg-zinc-950 border border-white/15 rounded-3xl">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+            <CheckCircle2 className="w-7 h-7" />
           </div>
-          <h3 className="text-2xl font-bold font-heading text-[#F8FAFC]">Application Submitted</h3>
-          <p className="text-sm text-[#94A3B8] leading-relaxed max-w-md mx-auto">
-            Thanks for applying to Campus to Corporate. Our coordinators will review your application and
-            reach out via your college email if you're shortlisted for the next round.
+          <h3 className="text-2xl font-bold font-heading text-white">Application Submitted!</h3>
+          <p className="text-sm text-zinc-400 leading-relaxed max-w-md mx-auto">
+            Thanks for applying to Campus to Corporate Club (C3). All club members and coordinators can now review your profile. You will be reached out to for the next round.
           </p>
-          <Badge variant="success">Status: Pending Review</Badge>
+          <div className="pt-2">
+            <span className="px-3 py-1 rounded-full text-xs font-mono font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+              Status: Pending Review
+            </span>
+          </div>
         </Card>
       </motion.div>
     );
@@ -358,45 +374,44 @@ export const ApplicationForm = () => {
   const currentStep = STEPS[stepIndex];
 
   return (
-    <Card className="max-w-3xl mx-auto text-left p-6 sm:p-10">
+    <Card className="max-w-3xl mx-auto text-left p-6 sm:p-10 bg-zinc-950/90 border border-white/10 rounded-3xl shadow-2xl backdrop-blur-xl">
       <div className="mb-6 space-y-1">
-        <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#38BDF8]">
-          Junior Batch Application
-        </span>
-        <h3 className="text-2xl font-bold font-heading text-[#F8FAFC]">Tell us about yourself</h3>
-        <p className="text-sm text-[#94A3B8]">
-          Fields marked with <span className="text-[#EF4444]">*</span> are required. This is an application
-          only - accounts are created manually after selection.
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold text-white bg-white/10 border border-white/15 mb-2">
+          JUNIOR BATCH HIRING
+        </div>
+        <h3 className="text-2xl font-bold font-heading text-white">Apply to Join C3</h3>
+        <p className="text-xs sm:text-sm text-zinc-400">
+          Open to junior students. Fill in your details below. Fields marked with <span className="text-red-400">*</span> are required.
         </p>
       </div>
 
       {resumeBannerVisible && (
-        <div className="mb-6 p-3 rounded-lg bg-[#38BDF8]/10 border border-[#38BDF8]/30 flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-xs text-[#38BDF8] font-medium">
-            Continuing your saved application - pick up right where you left off.
+        <div className="mb-6 p-3 rounded-xl bg-white/[0.05] border border-white/15 flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-xs text-zinc-300 font-medium">
+            Resumed your saved application draft.
           </p>
           <button
             type="button"
             onClick={handleStartOver}
-            className="flex items-center gap-1.5 text-xs font-semibold text-[#94A3B8] hover:text-[#F8FAFC] transition-colors shrink-0"
+            className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 hover:text-white transition-colors shrink-0"
           >
-            <RotateCcw className="w-3.5 h-3.5" /> Start over instead
+            <RotateCcw className="w-3.5 h-3.5" /> Start over
           </button>
         </div>
       )}
 
-      {/* Step progress */}
+      {/* Step progress bar */}
       <div className="mb-8 flex items-center gap-2">
         {STEPS.map((step, i) => (
           <div key={step.key} className="flex-1 flex flex-col items-center gap-1.5">
             <div
               className={`w-full h-1.5 rounded-full transition-colors ${
-                i <= stepIndex ? 'bg-[#38BDF8]' : 'bg-white/10'
+                i <= stepIndex ? 'bg-white' : 'bg-white/10'
               }`}
             />
             <span
               className={`text-[10px] font-mono uppercase tracking-wide hidden sm:block ${
-                i === stepIndex ? 'text-[#38BDF8] font-bold' : 'text-[#94A3B8]/60'
+                i === stepIndex ? 'text-white font-bold' : 'text-zinc-500'
               }`}
             >
               {step.label}
@@ -404,17 +419,17 @@ export const ApplicationForm = () => {
           </div>
         ))}
       </div>
-      <p className="text-xs font-mono text-[#94A3B8] mb-6 sm:hidden">
+      <p className="text-xs font-mono text-zinc-400 mb-6 sm:hidden">
         Step {stepIndex + 1} of {STEPS.length}: {currentStep.label}
       </p>
 
       {serverError && (
-        <div className="mb-6 p-3 rounded-lg bg-[#EF4444]/10 border border-[#EF4444]/30 text-xs font-medium text-[#EF4444]">
+        <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs font-medium text-red-400">
           {serverError}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-8">
+      <form onSubmit={handleSubmit} noValidate className="space-y-6">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep.key}
@@ -422,17 +437,18 @@ export const ApplicationForm = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -12 }}
             transition={{ duration: 0.18 }}
-            className="space-y-8"
+            className="space-y-6"
           >
+            {/* 1. PERSONAL */}
             {currentStep.key === 'personal' && (
               <div className="space-y-4">
-                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#2DD4BF]">
-                  Personal Details
+                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-white border-b border-white/10 pb-2">
+                  1. Personal Information
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label="Full Name *"
-                    placeholder="Jane Doe"
+                    placeholder="e.g. Mohammed Fazil"
                     value={form.fullName}
                     onChange={handleChange('fullName')}
                     error={errors.fullName}
@@ -448,15 +464,15 @@ export const ApplicationForm = () => {
                   <Input
                     label="College Email *"
                     type="email"
-                    placeholder="you@college.edu"
+                    placeholder="yourname@cahcet.edu.in"
                     value={form.collegeEmail}
                     onChange={handleChange('collegeEmail')}
                     error={errors.collegeEmail}
                   />
                   <Input
-                    label="Personal Email"
+                    label="Personal Email (Optional)"
                     type="email"
-                    placeholder="you@gmail.com"
+                    placeholder="yourname@gmail.com"
                     value={form.personalEmail}
                     onChange={handleChange('personalEmail')}
                     error={errors.personalEmail}
@@ -465,12 +481,29 @@ export const ApplicationForm = () => {
               </div>
             )}
 
+            {/* 2. ACADEMIC */}
             {currentStep.key === 'academic' && (
               <div className="space-y-4">
-                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#2DD4BF]">
-                  Academic Details
+                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-white border-b border-white/10 pb-2">
+                  2. Academic & Section Details
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Select
+                    label="Section *"
+                    value={form.section}
+                    onChange={handleChange('section')}
+                    error={errors.section}
+                    options={SECTION_OPTIONS}
+                  />
+
+                  <Select
+                    label="Current Year *"
+                    value={form.year}
+                    onChange={handleChange('year')}
+                    error={errors.year}
+                    options={YEAR_OPTIONS}
+                  />
+
                   <Input
                     label="Department *"
                     placeholder="Computer Science & Engineering"
@@ -478,29 +511,22 @@ export const ApplicationForm = () => {
                     onChange={handleChange('department')}
                     error={errors.department}
                   />
-                  <Select
-                    label="Year *"
-                    value={form.year}
-                    onChange={handleChange('year')}
-                    error={errors.year}
-                    options={[{ value: '', label: 'Select year' }, ...YEAR_OPTIONS]}
+
+                  <Input
+                    label="Register / Roll Number"
+                    placeholder="e.g. 510423104001"
+                    value={form.registerNumber}
+                    onChange={handleChange('registerNumber')}
                   />
-                  <div className="sm:col-span-2">
-                    <Input
-                      label="Register Number"
-                      placeholder="If applicable"
-                      value={form.registerNumber}
-                      onChange={handleChange('registerNumber')}
-                    />
-                  </div>
                 </div>
               </div>
             )}
 
+            {/* 3. DOMAIN & MOTIVATION */}
             {currentStep.key === 'domain' && (
               <div className="space-y-4">
-                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#2DD4BF]">
-                  Domain & Skills
+                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-white border-b border-white/10 pb-2">
+                  3. Domain Track & Motivation
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Select
@@ -508,146 +534,191 @@ export const ApplicationForm = () => {
                     value={form.preferredDomain}
                     onChange={handleChange('preferredDomain')}
                     error={errors.preferredDomain}
-                    options={[{ value: '', label: 'Select a domain' }, ...DOMAIN_OPTIONS]}
+                    options={[{ value: '', label: 'Select a primary domain' }, ...DOMAIN_OPTIONS]}
                   />
                   <Select
-                    label="Secondary Domain"
+                    label="Secondary Domain (Optional)"
                     value={form.secondaryDomain}
                     onChange={handleChange('secondaryDomain')}
-                    options={[{ value: '', label: 'None' }, ...DOMAIN_OPTIONS]}
+                    options={[{ value: '', label: 'None / Only Primary' }, ...DOMAIN_OPTIONS]}
                   />
                 </div>
-                <Textarea
-                  label="Skills *"
-                  placeholder="e.g. React, Python, Figma, Public Speaking..."
-                  rows={2}
-                  value={form.skills}
-                  onChange={handleChange('skills')}
-                  error={errors.skills}
-                />
-                <Textarea
-                  label="Experience"
-                  placeholder="Any prior projects, internships, or club experience"
-                  rows={3}
-                  value={form.experience}
-                  onChange={handleChange('experience')}
-                />
+
                 <Textarea
                   label="Why do you want to join C3? *"
-                  placeholder="Tell us what draws you to Campus to Corporate"
+                  placeholder="Tell us why you want to become part of Campus to Corporate, what you hope to learn, and what motivates you..."
                   rows={4}
                   value={form.whyJoin}
                   onChange={handleChange('whyJoin')}
                   error={errors.whyJoin}
                 />
+
+                <Textarea
+                  label="Skills & Interests *"
+                  placeholder="e.g. Web Development, C/Java, Python, Graphic Design, Problem Solving..."
+                  rows={2}
+                  value={form.skills}
+                  onChange={handleChange('skills')}
+                  error={errors.skills}
+                />
               </div>
             )}
 
-            {currentStep.key === 'links' && (
-              <div className="space-y-4">
-                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#2DD4BF]">
-                  Links & Resume
+            {/* 4. ID CARD & LINKS */}
+            {currentStep.key === 'idcard' && (
+              <div className="space-y-6">
+                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-white border-b border-white/10 pb-2">
+                  4. College ID Card & Profiles
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+                {/* ID Card Photo Upload */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-300">
+                    College ID Card Photo (Image)
+                  </label>
+                  {idCardPreview ? (
+                    <div className="relative p-3 rounded-2xl bg-zinc-900 border border-white/15 flex items-center gap-4">
+                      <img
+                        src={idCardPreview}
+                        alt="ID Card Preview"
+                        className="w-24 h-16 object-cover rounded-xl border border-white/10"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-semibold text-white truncate">{idCardFile?.name || 'ID Card Attached'}</div>
+                        <div className="text-[11px] text-zinc-400">Ready for upload</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIdCardFile(null);
+                          setIdCardPreview('');
+                        }}
+                        className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center gap-2 p-6 rounded-2xl border border-dashed border-white/15 bg-zinc-900/60 text-center cursor-pointer hover:border-white/40 transition-colors">
+                      <UploadCloud className="w-6 h-6 text-zinc-400" />
+                      <span className="text-xs text-zinc-300 font-medium">
+                        Click to upload College ID Card Photo (JPG, PNG, WEBP)
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleIdCardChange}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {/* Optional Links */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                   <Input
-                    label="Portfolio URL"
-                    placeholder="https://..."
-                    value={form.portfolioUrl}
-                    onChange={handleChange('portfolioUrl')}
-                    error={errors.portfolioUrl}
-                  />
-                  <Input
-                    label="GitHub URL"
+                    label="GitHub Profile URL"
                     placeholder="https://github.com/..."
                     value={form.githubUrl}
                     onChange={handleChange('githubUrl')}
                     error={errors.githubUrl}
                   />
                   <Input
-                    label="LinkedIn URL"
+                    label="LinkedIn Profile URL"
                     placeholder="https://linkedin.com/in/..."
                     value={form.linkedinUrl}
                     onChange={handleChange('linkedinUrl')}
                     error={errors.linkedinUrl}
                   />
+                  <Input
+                    label="Portfolio / Projects Link"
+                    placeholder="https://..."
+                    value={form.portfolioUrl}
+                    onChange={handleChange('portfolioUrl')}
+                    error={errors.portfolioUrl}
+                  />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">
-                    Resume Upload
+                {/* Optional Resume Upload */}
+                <div className="space-y-2 pt-2">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    Resume / Document (Optional)
                   </label>
                   {resumeFile ? (
-                    <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-[#071A2B]/80 border border-white/10">
-                      <span className="flex items-center gap-2 text-sm text-[#F8FAFC] truncate">
-                        <FileText className="w-4 h-4 text-[#38BDF8] shrink-0" />
+                    <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-zinc-900 border border-white/10">
+                      <span className="flex items-center gap-2 text-xs text-white truncate">
+                        <FileText className="w-4 h-4 text-white shrink-0" />
                         <span className="truncate">{resumeFile.name}</span>
                       </span>
                       <button
                         type="button"
                         onClick={() => setResumeFile(null)}
-                        className="p-1 rounded-lg text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-white/5 shrink-0"
-                        aria-label="Remove resume"
+                        className="p-1 text-zinc-400 hover:text-white"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
-                    <label className="flex flex-col items-center justify-center gap-2 p-6 rounded-lg border border-dashed border-white/15 bg-[#071A2B]/60 text-center cursor-pointer hover:border-[#38BDF8]/40 transition-colors">
-                      <UploadCloud className="w-6 h-6 text-[#94A3B8]" />
-                      <span className="text-xs text-[#94A3B8]">
-                        Click to upload PDF or Word doc <span className="text-[#94A3B8]/70">(max 5MB)</span>
-                      </span>
+                    <label className="flex items-center gap-3 p-3.5 rounded-xl border border-dashed border-white/10 bg-zinc-900/40 text-xs text-zinc-400 cursor-pointer hover:border-white/20">
+                      <FileText className="w-4 h-4 text-zinc-400" />
+                      <span>Attach PDF or Word Resume (Optional)</span>
                       <input
                         type="file"
-                        accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                        onChange={handleFileChange}
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleResumeChange}
                         className="hidden"
                       />
                     </label>
                   )}
-                  {errors.resume && <p className="text-xs text-[#EF4444] mt-1">{errors.resume}</p>}
                 </div>
               </div>
             )}
 
+            {/* 5. REVIEW */}
             {currentStep.key === 'review' && (
               <div className="space-y-4">
-                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#2DD4BF]">
-                  Review Your Application
+                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-white border-b border-white/10 pb-2">
+                  5. Review Your Application
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   {[
                     ['Full Name', form.fullName],
                     ['Phone', form.phone],
                     ['College Email', form.collegeEmail],
-                    ['Personal Email', form.personalEmail || '-'],
-                    ['Department', form.department],
-                    ['Year', form.year ? YEAR_OPTIONS.find((y) => y.value === form.year)?.label : '-'],
+                    ['Section', form.section],
+                    ['Year', form.year ? `Year ${form.year}` : '-'],
                     ['Register Number', form.registerNumber || '-'],
                     ['Preferred Domain', DOMAIN_OPTIONS.find((d) => d.value === form.preferredDomain)?.label || '-'],
-                    ['Secondary Domain', DOMAIN_OPTIONS.find((d) => d.value === form.secondaryDomain)?.label || '-'],
+                    ['Secondary Domain', DOMAIN_OPTIONS.find((d) => d.value === form.secondaryDomain)?.label || 'None'],
+                    ['ID Card Photo', idCardFile ? 'Attached' : 'Not attached'],
                     ['Resume', resumeFile ? resumeFile.name : 'Not attached'],
                   ].map(([label, value]) => (
-                    <div key={label} className="p-3 rounded-lg bg-[#071A2B]/60 border border-white/5">
-                      <p className="text-[10px] font-mono uppercase tracking-wide text-[#94A3B8]">{label}</p>
-                      <p className="text-[#F8FAFC] font-medium truncate">{value}</p>
+                    <div key={label} className="p-3 rounded-xl bg-zinc-900/70 border border-white/5">
+                      <p className="text-[10px] font-mono uppercase tracking-wide text-zinc-400">{label}</p>
+                      <p className="text-white font-medium truncate mt-0.5">{value}</p>
                     </div>
                   ))}
                 </div>
-                <div className="p-3 rounded-lg bg-[#071A2B]/60 border border-white/5">
-                  <p className="text-[10px] font-mono uppercase tracking-wide text-[#94A3B8]">Why Join C3</p>
-                  <p className="text-[#F8FAFC] text-sm mt-1">{form.whyJoin}</p>
+
+                {idCardPreview && (
+                  <div className="p-3 rounded-xl bg-zinc-900/70 border border-white/5">
+                    <p className="text-[10px] font-mono uppercase tracking-wide text-zinc-400 mb-2">ID Card Preview</p>
+                    <img src={idCardPreview} alt="ID Card" className="w-32 h-20 object-cover rounded-lg border border-white/10" />
+                  </div>
+                )}
+
+                <div className="p-3.5 rounded-xl bg-zinc-900/70 border border-white/5 space-y-1">
+                  <p className="text-[10px] font-mono uppercase tracking-wide text-zinc-400">Why Join C3</p>
+                  <p className="text-white text-xs leading-relaxed">{form.whyJoin}</p>
                 </div>
-                <p className="text-xs text-[#94A3B8]">
-                  Go back to any step above to make changes before submitting.
-                </p>
               </div>
             )}
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation */}
-        <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/5">
+        {/* Navigation buttons */}
+        <div className="flex items-center justify-between gap-3 pt-4 border-t border-white/10">
           <div>
             {stepIndex > 0 && (
               <Button type="button" variant="ghost" size="md" onClick={goBack} leftIcon={<ArrowLeft className="w-4 h-4" />}>
@@ -663,20 +734,29 @@ export const ApplicationForm = () => {
               isLoading={savingDraft}
               onClick={handleSaveAndContinueLater}
               leftIcon={!savingDraft && <Save className="w-4 h-4" />}
+              className="text-xs"
             >
-              Save & Continue Later
+              Save Draft
             </Button>
             {stepIndex < STEPS.length - 1 ? (
-              <Button type="button" variant="accent" size="md" onClick={goNext} rightIcon={<ArrowRight className="w-4 h-4" />}>
+              <Button
+                type="button"
+                variant="primary"
+                size="md"
+                onClick={goNext}
+                rightIcon={<ArrowRight className="w-4 h-4" />}
+                className="bg-white text-black hover:bg-zinc-200 font-semibold"
+              >
                 Next
               </Button>
             ) : (
               <Button
                 type="submit"
-                variant="accent"
+                variant="primary"
                 size="md"
                 isLoading={submitting}
                 leftIcon={!submitting && <Send className="w-4 h-4" />}
+                className="bg-white text-black hover:bg-zinc-200 font-semibold"
               >
                 {submitting ? 'Submitting...' : 'Submit Application'}
               </Button>

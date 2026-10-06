@@ -17,24 +17,26 @@ const Home = lazy(() => import('./pages/public/Home'));
 const PublicSessions = lazy(() => import('./pages/public/PublicSessions'));
 const Gallery = lazy(() => import('./pages/public/Gallery'));
 const Apply = lazy(() => import('./pages/public/Apply'));
+const ApplyForm = lazy(() => import('./pages/public/ApplyForm'));
 const Login = lazy(() => import('./pages/public/Login'));
+const Register = lazy(() => import('./pages/public/Register'));
 const EventDetails = lazy(() => import('./pages/public/EventDetails'));
 
 // Admin Portal Pages - lazy loaded, only fetched for admins
-const AllAttendance = lazy(() => import('./pages/admin/AllAttendance'));
+const Members = lazy(() => import('./pages/admin/Members'));
 const SessionForm = lazy(() => import('./pages/admin/SessionForm'));
-const EventForm = lazy(() => import('./pages/admin/EventForm'));
+const AdminEvents = lazy(() => import('./pages/admin/AdminEvents'));
 const Applications = lazy(() => import('./pages/admin/Applications'));
 const GalleryManager = lazy(() => import('./pages/admin/GalleryManager'));
+const Announcements = lazy(() => import('./pages/admin/Announcements'));
 
 // Member Portal Pages - lazy loaded, only fetched when a logged-in member
-// actually navigates into the dashboard
 const Dashboard = lazy(() => import('./pages/member/Dashboard'));
 const MyAttendance = lazy(() => import('./pages/member/MyAttendance'));
 const Sessions = lazy(() => import('./pages/member/Sessions'));
 const SessionDetail = lazy(() => import('./pages/member/SessionDetail'));
 
-
+import { scrollToTarget } from './utils/smoothScroll';
 
 // Simple full-page fallback shown while a lazy route's chunk downloads
 const RouteLoading = () => (
@@ -50,16 +52,19 @@ const ScrollToHash = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (!location.hash) return;
-    const id = location.hash.slice(1);
+    if (!location.hash) {
+      scrollToTarget(0);
+      return;
+    }
+    const hash = location.hash;
     let attempts = 0;
     let frameId;
 
     const tryScroll = () => {
-      const el = document.getElementById(id);
+      const el = document.querySelector(hash);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else if (attempts < 30) {
+        scrollToTarget(el);
+      } else if (attempts < 40) {
         attempts += 1;
         frameId = requestAnimationFrame(tryScroll);
       }
@@ -80,53 +85,57 @@ function App() {
           <ScrollToHash />
           <ClickSpark sparkColor="#ffffff" sparkSize={10} sparkRadius={15} sparkCount={8} duration={400}>
             <Suspense fallback={<RouteLoading />}>
-            <Routes>
-{/* Public Layout Routes */}
-            <Route element={<PublicLayout />}>
-              <Route path="/" element={<Home />} />
-                <Route path="/events/:slug" element={<EventDetails />} />
-                <Route path="/sessions-archive" element={<PublicSessions />} />
-                <Route path="/gallery" element={<Gallery />} />
-                <Route path="/apply" element={<Apply />} />
-                <Route path="/login" element={<Login />} />
-              </Route>
+              <Routes>
+                {/* Public Layout Routes */}
+                <Route element={<PublicLayout />}>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/events/:slug" element={<EventDetails />} />
+                  <Route path="/sessions-archive" element={<PublicSessions />} />
+                  <Route path="/gallery" element={<Gallery />} />
+                  <Route path="/apply" element={<Apply />} />
+                  <Route path="/apply/form" element={<ApplyForm />} />
+                  <Route path="/apply-form" element={<ApplyForm />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                </Route>
 
-              {/* Member Portal Protected Routes */}
-              <Route
-                element={
-                  <ProtectedRoute>
-                    <DashboardLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/attendance" element={<MyAttendance />} />
-                <Route path="/sessions" element={<Sessions />} />
-                <Route path="/sessions/:id" element={<SessionDetail />} />
-              </Route>
+                {/* Member Portal Protected Routes */}
+                <Route
+                  element={
+                    <ProtectedRoute>
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/attendance" element={<MyAttendance />} />
+                  <Route path="/sessions" element={<Sessions />} />
+                  <Route path="/sessions/:id" element={<SessionDetail />} />
+                  <Route path="/applications" element={<Applications />} />
+                </Route>
 
-              {/* Admin Portal Protected Routes */}
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute allowedRoles={['admin']}>
-                    <DashboardLayout />
-                  </ProtectedRoute>
-                }
-              >
+                {/* Admin Portal Protected Routes */}
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }
+                >
                   <Route index element={<Dashboard />} />
-  <Route path="members" element={<AllAttendance />} />
-  <Route path="applications" element={<Applications />} />
-  <Route path="sessions" element={<Sessions />} />
-  <Route path="sessions/new" element={<SessionForm />} />
-  <Route path="events" element={<EventForm />} />
-  <Route path="resources" element={<GalleryManager />} />
-  <Route path="attendance" element={<AllAttendance />} />
-</Route>
+                  <Route path="announcements" element={<Announcements />} />
+                  <Route path="members" element={<Members />} />
+                  <Route path="applications" element={<Applications />} />
+                  <Route path="sessions" element={<Sessions />} />
+                  <Route path="sessions/new" element={<SessionForm />} />
+                  <Route path="events" element={<AdminEvents />} />
+                  <Route path="resources" element={<GalleryManager />} />
+                </Route>
 
-              {/* Catch-all Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+                {/* Catch-all Fallback */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
             </Suspense>
           </ClickSpark>
         </BrowserRouter>

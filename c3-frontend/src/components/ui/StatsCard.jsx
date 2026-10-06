@@ -13,20 +13,20 @@ export const StatsCard = ({
   className,
 }) => {
   const iconColors = {
-    primary: 'bg-[#38BDF8]/10 text-[#38BDF8] border-[#38BDF8]/20',
-    accent: 'bg-[#2DD4BF]/10 text-[#2DD4BF] border-[#2DD4BF]/20',
-    success: 'bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/20',
-    warning: 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20',
+    primary: 'bg-white/10 text-white border-white/15',
+    accent: 'bg-white/10 text-white border-white/15',
+    success: 'bg-white/10 text-white border-white/15',
+    warning: 'bg-white/10 text-white border-white/15',
   };
 
   return (
-    <Card className={cn('relative overflow-hidden', className)}>
+    <Card className={cn('relative overflow-hidden bg-zinc-950/90 border border-white/10', className)}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">
+          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
             {title}
           </p>
-          <h3 className="text-3xl font-bold font-heading text-[#F8FAFC] mt-1 tracking-tight">
+          <h3 className="text-3xl font-bold font-heading text-white mt-1 tracking-tight">
             {value}
           </h3>
         </div>
@@ -43,14 +43,14 @@ export const StatsCard = ({
             <span
               className={cn(
                 'font-mono font-medium px-1.5 py-0.5 rounded',
-                trend > 0 ? 'bg-[#22C55E]/10 text-[#22C55E]' : 'bg-[#EF4444]/10 text-[#EF4444]'
+                trend > 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
               )}
             >
               {trend > 0 ? `+${trend}%` : `${trend}%`}
             </span>
           )}
-          {trendLabel && <span className="text-[#94A3B8]">{trendLabel}</span>}
-          {description && <span className="text-[#94A3B8]">{description}</span>}
+          {trendLabel && <span className="text-zinc-400">{trendLabel}</span>}
+          {description && <span className="text-zinc-400">{description}</span>}
         </div>
       )}
     </Card>

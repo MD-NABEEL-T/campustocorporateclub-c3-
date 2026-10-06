@@ -19,12 +19,10 @@ const GalleryManager = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const authHeaders = { Authorization: `Bearer ${user.token}` };
-
   const loadImages = async () => {
     setLoadingList(true);
     try {
-      const res = await api.get('/gallery', { headers: authHeaders });
+      const res = await api.get('/gallery');
       setImages(res.data);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load gallery images');
@@ -35,7 +33,6 @@ const GalleryManager = () => {
 
   useEffect(() => {
     loadImages();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFileChange = e => {
@@ -58,7 +55,7 @@ const GalleryManager = () => {
       files.forEach(f => formData.append('images', f));
 
       await api.post('/gallery', formData, {
-        headers: { ...authHeaders, 'Content-Type': 'multipart/form-data' },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       setSuccess(`${files.length} image${files.length > 1 ? 's' : ''} uploaded`);
@@ -75,7 +72,7 @@ const GalleryManager = () => {
     setError('');
     setDeletingId(id);
     try {
-      await api.delete(`/gallery/${id}`, { headers: authHeaders });
+      await api.delete(`/gallery/${id}`);
       setImages(prev => prev.filter(img => img._id !== id));
     } catch (err) {
       setError(err.response?.data?.message || 'Delete failed');
@@ -92,24 +89,24 @@ const GalleryManager = () => {
         </Button>
       </Link>
 
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="text-2xl">Homepage Gallery (Masonry)</CardTitle>
+      <Card className="max-w-2xl mx-auto bg-zinc-950/80 border border-white/10 p-6 sm:p-8">
+        <CardHeader className="p-0 pb-4">
+          <CardTitle className="text-xl sm:text-2xl font-bold font-heading text-white">Homepage Gallery (Masonry)</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-xs text-[#94A3B8] mb-4">
+        <CardContent className="p-0">
+          <p className="text-xs text-zinc-400 mb-4 leading-relaxed">
             These images feed the "From past events" masonry grid on the homepage. They're
             separate from individual events - upload up to {MAX_IMAGES} at a time.
           </p>
 
           {error && (
-            <div className="p-3 mb-4 rounded-lg bg-[#EF4444]/10 border border-[#EF4444]/30 text-xs font-medium text-[#EF4444]">
+            <div className="p-3 mb-4 rounded-lg bg-red-500/10 border border-red-500/30 text-xs font-medium text-red-400">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="p-3 mb-4 rounded-lg bg-[#22C55E]/10 border border-[#22C55E]/30 text-xs font-medium text-[#22C55E] flex items-start gap-2">
+            <div className="p-3 mb-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-medium text-emerald-400 flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{success}</span>
             </div>
@@ -117,7 +114,7 @@ const GalleryManager = () => {
 
           <form onSubmit={handleUpload} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
                 Images (up to {MAX_IMAGES})
               </label>
               <input
@@ -125,10 +122,10 @@ const GalleryManager = () => {
                 accept="image/*"
                 multiple
                 onChange={handleFileChange}
-                className="w-full text-xs text-[#94A3B8] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#2DD4BF]/10 file:text-[#2DD4BF] hover:file:bg-[#2DD4BF]/20"
+                className="w-full text-xs text-zinc-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-white/10 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer"
               />
               {files.length > 0 && (
-                <p className="text-[11px] text-[#71717A]">{files.length} file(s) selected</p>
+                <p className="text-[11px] text-zinc-400">{files.length} file(s) selected</p>
               )}
             </div>
 
@@ -146,11 +143,11 @@ const GalleryManager = () => {
         </CardContent>
       </Card>
 
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="text-lg">Current Images ({images.length})</CardTitle>
+      <Card className="max-w-2xl mx-auto bg-zinc-950/80 border border-white/10 p-6 sm:p-8">
+        <CardHeader className="p-0 pb-4">
+          <CardTitle className="text-base sm:text-lg text-white">Current Images ({images.length})</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {loadingList && <p className="text-xs text-[#94A3B8]">Loading...</p>}
 
           {!loadingList && images.length === 0 && (
@@ -158,10 +155,10 @@ const GalleryManager = () => {
           )}
 
           {!loadingList && images.length > 0 && (
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {images.map(img => (
-                <div key={img._id} className="relative group rounded-lg overflow-hidden border border-white/10">
-                  <img src={img.imageUrl} alt="" className="w-full h-24 object-cover" />
+                <div key={img._id} className="relative group rounded-lg overflow-hidden border border-white/10 aspect-video sm:aspect-square">
+                  <img src={img.imageUrl} alt="" className="w-full h-full object-cover" />
                   <button
                     type="button"
                     onClick={() => handleDelete(img._id)}

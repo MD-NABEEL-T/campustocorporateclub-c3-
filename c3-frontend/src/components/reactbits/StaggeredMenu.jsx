@@ -450,10 +450,10 @@ export const StaggeredMenu = ({
                     aria-label={it.ariaLabel}
                     data-index={idx + 1}
                     onClick={e => {
+                      e.preventDefault();
+                      closeMenu();
                       if (onItemClick) {
-                        e.preventDefault();
                         onItemClick(it, idx);
-                        toggleMenu();
                       }
                     }}
                   >

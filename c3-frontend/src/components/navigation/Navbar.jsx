@@ -20,8 +20,12 @@ export const Navbar = () => {
           <div className="z-[99]">
             {user ? (
               <Link to="/dashboard">
-                <Button variant="white" size="sm" className="font-nav">
-                  Portal Dashboard
+                <Button
+                  variant="primary"
+                  size="md"
+                  className="font-nav tracking-wide shadow-[0_0_15px_rgba(56,189,248,0.3)]"
+                >
+                  Member Dashboard
                 </Button>
               </Link>
             ) : (
@@ -29,7 +33,7 @@ export const Navbar = () => {
                 <Button
                   variant="premiumBlue"
                   size="md"
-                  className="font-nav tracking-wide"
+                  className="font-nav tracking-wide shadow-[0_0_15px_rgba(56,189,248,0.4)]"
                   leftIcon={<LogIn className="w-4 h-4" />}
                 >
                   Member Login

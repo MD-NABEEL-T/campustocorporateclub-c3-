@@ -38,7 +38,7 @@ export const Modal = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-[#071A2B]/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md"
           />
 
           {/* Modal Container */}
@@ -48,7 +48,7 @@ export const Modal = ({
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className={cn(
-              'relative w-full bg-[#10273D] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-10',
+              'relative w-full bg-zinc-950 border border-white/15 rounded-3xl shadow-2xl overflow-hidden z-10 max-h-[90vh] overflow-y-auto',
               maxWidth,
               className
             )}

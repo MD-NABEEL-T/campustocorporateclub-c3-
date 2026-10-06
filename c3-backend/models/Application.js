@@ -6,7 +6,8 @@ const applicationSchema = new mongoose.Schema(
     collegeEmail: { type: String, trim: true, lowercase: true },
     personalEmail: { type: String, trim: true, lowercase: true },
     phone: { type: String, trim: true },
-    department: { type: String, trim: true },
+    department: { type: String, trim: true, default: 'CSE' },
+    section: { type: String, trim: true }, // e.g. 'CSE A', 'CSE B'
     year: { type: Number, min: 1, max: 5 },
     registerNumber: { type: String, trim: true },
     preferredDomain: { type: String, trim: true },
@@ -18,6 +19,7 @@ const applicationSchema = new mongoose.Schema(
     githubUrl: { type: String, trim: true },
     linkedinUrl: { type: String, trim: true },
     resumeUrl: { type: String, trim: true },
+    idCardUrl: { type: String, trim: true },
     // Required fields are intentionally NOT enforced at the schema level
     // (Mongoose `required: true`) because a `draft` document is allowed to
     // hold partial data. Full-field validation for real submissions happens

@@ -13,20 +13,23 @@ const MyAttendance = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let isMounted = true;
     const fetchAttendance = async () => {
+      if (!user?._id) return;
       try {
-        const res = await api.get(`/attendance/member/${user._id}`, {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
-        setData(res.data);
+        const res = await api.get(`/attendance/member/${user._id}`);
+        if (isMounted) setData(res.data);
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load attendance record');
+        if (isMounted) setError(err.response?.data?.message || 'Failed to load attendance record');
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchAttendance();
-  }, [user._id, user.token]);
+    return () => {
+      isMounted = false;
+    };
+  }, [user?._id]);
 
   if (loading) return <Loader fullScreen label="Fetching your attendance data..." />;
   if (error)
@@ -35,15 +38,16 @@ const MyAttendance = () => {
         {error}
       </div>
     );
+  if (!data) return null;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
         <h2 className="text-2xl font-bold font-heading text-[#F8FAFC]">My Attendance Record</h2>
-        <p className="text-sm text-[#94A3B8]">Personal attendance metrics for daily C3 peer sessions</p>
+        <p className="text-xs sm:text-sm text-[#94A3B8] mt-1">Personal attendance metrics for daily C3 peer sessions</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         <StatsCard
           title="Attendance Score"
           value={`${data.percentage}%`}
@@ -67,19 +71,19 @@ const MyAttendance = () => {
         />
       </div>
 
-      <Card>
+      <Card className="bg-zinc-950/80 border border-white/10">
         <CardHeader>
-          <CardTitle>Attendance Status Summary</CardTitle>
+          <CardTitle className="text-base sm:text-lg text-white">Attendance Status Summary</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-[#94A3B8]">Overall Turnout Progress</span>
-              <span className="font-mono font-bold text-[#38BDF8]">{data.percentage}%</span>
+            <div className="flex items-center justify-between text-xs sm:text-sm">
+              <span className="text-zinc-400">Overall Turnout Progress</span>
+              <span className="font-mono font-bold text-white">{data.percentage}%</span>
             </div>
-            <div className="w-full bg-[#071A2B] h-3 rounded-full overflow-hidden border border-white/10">
+            <div className="w-full bg-zinc-900 h-3 rounded-full overflow-hidden border border-white/10">
               <div
-                className="bg-gradient-to-r from-[#38BDF8] to-[#2DD4BF] h-full rounded-full transition-all duration-500"
+                className="bg-white h-full rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(100, Math.max(0, parseFloat(data.percentage)))}%` }}
               />
             </div>
@@ -91,3 +95,4 @@ const MyAttendance = () => {
 };
 
 export default MyAttendance;
+

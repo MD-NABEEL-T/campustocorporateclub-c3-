@@ -2,7 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Heart, Globe } from 'lucide-react';
 import { PUBLIC_NAV_LINKS } from '../../constants/navigation';
-import PointerHighlight from '../ui/PointerHighlight'
+import PointerHighlight from '../ui/PointerHighlight';
+import { scrollToTarget } from '../../utils/smoothScroll';
 export const Footer = () => {
   return (
     <footer className="border-t border-white/10 bg-black text-[#A1A1AA] pt-16 pb-12">
@@ -63,13 +64,26 @@ export const Footer = () => {
               Navigation
             </h4>
             <ul className="space-y-2 text-sm">
-              {PUBLIC_NAV_LINKS.map((link) => (
-                <li key={link.href}>
-                  <Link to={link.href} className="hover:text-white transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+              {PUBLIC_NAV_LINKS.map((link) => {
+                const targetPath = link.href.startsWith('#') ? '/' + link.href : link.href;
+                return (
+                  <li key={link.href}>
+                    <Link
+                      to={targetPath}
+                      onClick={(e) => {
+                        if (link.href.startsWith('#') && window.location.pathname === '/') {
+                          e.preventDefault();
+                          window.history.pushState(null, '', targetPath);
+                          scrollToTarget(link.href);
+                        }
+                      }}
+                      className="hover:text-white transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -83,7 +97,7 @@ export const Footer = () => {
                 <span className="w-1.5 h-1.5 rounded-full bg-white/40" /> Learn by Teaching
               </li>
               <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-white/40" /> Daily 15-Min Sessions
+                <span className="w-1.5 h-1.5 rounded-full bg-white/40" /> Daily 30-Min Sessions
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-white/40" /> Peer Accountability

@@ -38,8 +38,8 @@ export const Home = () => {
             {/* Directional scrim: deep black on left where text lives, soft transparent blend toward right photo */}
             <div
               className="absolute inset-0
-                bg-[linear-gradient(to_bottom,black_0%,rgba(0,0,0,0.85)_25%,rgba(0,0,0,0.45)_55%,rgba(0,0,0,0.92)_85%,black_100%)]
-                lg:bg-[linear-gradient(to_right,black_0%,black_38%,rgba(0,0,0,0.75)_52%,rgba(0,0,0,0.2)_72%,rgba(0,0,0,0.05)_100%)]"
+                bg-[linear-gradient(to_bottom,black_0%,rgba(0,0,0,0.85)_25%,rgba(0,0,0,0.5)_55%,rgba(0,0,0,0.92)_85%,black_100%)]
+                lg:bg-[linear-gradient(to_right,black_0%,black_40%,rgba(0,0,0,0.8)_54%,rgba(0,0,0,0.25)_75%,rgba(0,0,0,0.02)_100%)]"
             />
           </div>
         )}
