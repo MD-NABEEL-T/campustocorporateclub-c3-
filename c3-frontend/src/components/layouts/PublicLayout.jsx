@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Navbar } from '../navigation/Navbar';
 import { Footer } from '../navigation/Footer';
 import { initSmoothScroll } from '../../utils/smoothScroll';
+import FloatingEventBtn from '../../event-module/components/FloatingEventBtn';
 
 export const PublicLayout = () => {
   useEffect(() => {
@@ -14,11 +15,13 @@ export const PublicLayout = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-black text-white">      <Navbar />
+    <div className="min-h-screen flex flex-col bg-black text-white">
+      <Navbar />
       <main className="flex-grow">
         <Outlet />
       </main>
       <Footer />
+      <FloatingEventBtn />
     </div>
   );
 };
