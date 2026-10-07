@@ -11,8 +11,9 @@ import publicRoutes from './routes/publicRoutes.js';
 import applicationRoutes from './routes/applicationRoutes.js';
 import galleryRoutes from './routes/galleryRoutes.js';
 import announcementRoutes from './routes/announcementRoutes.js';
+import dns from 'node:dns';
 
-
+dns.setServers(['8.8.8.8', '1.1.1.1']);
 dotenv.config();
 connectDB();
 
@@ -32,6 +33,14 @@ app.use('/api/events', eventRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/announcements', announcementRoutes);
+
+// --- EVENT MODULE ---
+import * as eventConfig from './event-module/config.js';
+import eventModuleRoutes from './event-module/routes.js';
+if (eventConfig.EVENT_ENABLED) {
+    app.use('/api/event', eventModuleRoutes);
+}
+// --------------------
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

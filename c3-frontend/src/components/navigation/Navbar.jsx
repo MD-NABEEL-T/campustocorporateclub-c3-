@@ -5,6 +5,8 @@ import { Button } from '../ui/Button';
 import { useAuth } from '../../context/AuthContext';
 import { DesktopNav } from './DesktopNav';
 import { MobileNav } from './MobileNav';
+import { EVENT_ENABLED } from '../../event-module/config';
+
 export const Navbar = () => {
   const { user } = useAuth();
 
@@ -17,7 +19,15 @@ export const Navbar = () => {
         <div className="flex items-center justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <DesktopNav />
 
-          <div className="z-[99]">
+          <div className="z-[99] flex items-center gap-4">
+            {EVENT_ENABLED && (
+              <Link to="/event/register">
+                <Button variant="premiumBlue" size="md">
+                  Register for Event
+                </Button>
+              </Link>
+            )}
+
             {user ? (
               <Link to="/dashboard">
                 <Button
@@ -43,7 +53,7 @@ export const Navbar = () => {
           </div>
         </div>
       </header>
-{/* Mobile logo */}
+      {/* Mobile logo */}
       <Link to="/" className="lg:hidden fixed top-4 left-4 z-50">
         <img
           src="/assets/c3-logo.jpeg"
