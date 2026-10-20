@@ -81,6 +81,7 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
   };
 
   const todaySession = data?.todaySession || null;
+  const upcomingSession = data?.upcomingSession || null;
   const broadcasts = data?.broadcasts || [];
   const lowAttendanceMembers = data?.lowAttendanceMembers || [];
   const recentApplications = data?.recentApplications || [];
@@ -262,12 +263,16 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
           <Card className="bg-zinc-950/90 border border-white/10 p-5 sm:p-6 shadow-xl">
             <CardHeader className="p-0 pb-4 border-b border-white/10 flex flex-row items-center justify-between">
               <CardTitle className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
-                Today's Session Status
+                <Radio className={`w-4 h-4 ${todaySession ? 'text-emerald-400 animate-pulse' : 'text-zinc-400'}`} />
+                {todaySession ? "Today's Session Status" : (upcomingSession ? "Scheduled Session" : "Today's Session Status")}
               </CardTitle>
               {todaySession ? (
                 <Badge variant="success" icon={<span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />}>
                   Live
+                </Badge>
+              ) : upcomingSession ? (
+                <Badge variant="neutral">
+                  Scheduled &bull; {new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })}
                 </Badge>
               ) : (
                 <Badge variant="warning">Not Set</Badge>
@@ -275,56 +280,74 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
             </CardHeader>
 
             <CardContent className="p-0 pt-4 space-y-4">
-              {todaySession ? (
-                <div className="space-y-3.5">
-                  <div>
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Session Topic</span>
-                    <h3 className="text-lg font-bold text-white mt-0.5 leading-snug">
-                      {todaySession.topic}
-                    </h3>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-zinc-300">
-                    <div className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-900/60 border border-white/5">
-                      <User className="w-4 h-4 text-zinc-400 shrink-0" />
-                      <div className="truncate">
-                        <span className="text-[10px] font-mono text-zinc-500 block">Presenter</span>
-                        <strong className="text-white truncate block">{todaySession.handledBy}</strong>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-900/60 border border-white/5">
-                      <Clock className="w-4 h-4 text-zinc-400 shrink-0" />
-                      <div className="truncate">
-                        <span className="text-[10px] font-mono text-zinc-500 block">Scheduled Time</span>
-                        <span className="text-white font-medium truncate block">
-                          {todaySession.time || '4:30 PM - 5:00 PM (30 Mins)'}
+              {todaySession || upcomingSession ? (
+                (() => {
+                  const session = todaySession || upcomingSession;
+                  return (
+                    <div className="space-y-3.5">
+                      <div>
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">
+                          {todaySession ? 'Session Topic' : 'Upcoming Topic'}
                         </span>
+                        <h3 className="text-lg font-bold text-white mt-0.5 leading-snug">
+                          {session.topic}
+                        </h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-zinc-300">
+                        <div className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-900/60 border border-white/5">
+                          <User className="w-4 h-4 text-zinc-400 shrink-0" />
+                          <div className="truncate">
+                            <span className="text-[10px] font-mono text-zinc-500 block">Presenter</span>
+                            <strong className="text-white truncate block">{session.handledBy}</strong>
+                          </div>
+                        </div>
+
+                        {session.time && (
+                          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-900/60 border border-white/5">
+                            <Clock className="w-4 h-4 text-zinc-400 shrink-0" />
+                            <div className="truncate">
+                              <span className="text-[10px] font-mono text-zinc-500 block">Scheduled Time</span>
+                              <span className="text-white font-medium truncate block">
+                                {session.time}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {session.venue && (
+                        <div className="text-xs text-zinc-400 flex items-center gap-1.5 pt-1">
+                          <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <span>{session.venue}</span>
+                        </div>
+                      )}
+
+                      {session.message && (
+                        <div className="p-3 rounded-xl bg-zinc-900/70 border border-white/10 text-xs text-zinc-300 leading-relaxed">
+                          {session.message}
+                        </div>
+                      )}
+
+                      {todaySession && upcomingSession && (
+                        <div className="text-xs text-zinc-400 flex items-center justify-between pt-1 border-t border-white/5">
+                          <span className="text-[11px] font-mono text-zinc-500">Upcoming:</span>
+                          <span className="text-zinc-300 truncate max-w-[220px]">
+                            {upcomingSession.topic} ({new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })})
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="pt-2 flex items-center justify-end">
+                        <Link to="/admin/announcements">
+                          <Button variant="outline" size="sm" className="text-xs text-white border-white/20">
+                            Update in Session Manager <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                          </Button>
+                        </Link>
                       </div>
                     </div>
-                  </div>
-
-                  {todaySession.venue && (
-                    <div className="text-xs text-zinc-400 flex items-center gap-1.5 pt-1">
-                      <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      <span>{todaySession.venue}</span>
-                    </div>
-                  )}
-
-                  {todaySession.message && (
-                    <div className="p-3 rounded-xl bg-zinc-900/70 border border-white/10 text-xs text-zinc-300 leading-relaxed">
-                      {todaySession.message}
-                    </div>
-                  )}
-
-                  <div className="pt-2 flex items-center justify-end">
-                    <Link to="/admin/announcements">
-                      <Button variant="outline" size="sm" className="text-xs text-white border-white/20">
-                        Update in Session Manager <ChevronRight className="w-3.5 h-3.5 ml-1" />
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
+                  );
+                })()
               ) : (
                 <div className="py-8 text-center space-y-3">
                   <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 mx-auto flex items-center justify-center text-zinc-400">

@@ -62,6 +62,7 @@ export const Dashboard = () => {
 
   const attendance = dashboardData?.attendance;
   const todaySession = dashboardData?.todaySession;
+  const upcomingSession = dashboardData?.upcomingSession;
   const broadcasts = dashboardData?.broadcasts || [];
 
   return (
@@ -129,46 +130,66 @@ export const Dashboard = () => {
             <CardHeader className="p-0 pb-4 border-b border-white/10 flex flex-row items-center justify-between">
               <CardTitle className="text-base sm:text-lg text-white flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-white" />
-                Today's Peer Session
+                {todaySession ? "Today's Peer Session" : (upcomingSession ? "Upcoming Peer Session" : "Today's Peer Session")}
               </CardTitle>
               {todaySession ? (
                 <Badge variant="success">Active Today</Badge>
+              ) : upcomingSession ? (
+                <Badge variant="neutral">
+                  Upcoming &bull; {new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })}
+                </Badge>
               ) : (
                 <Badge variant="neutral">Upcoming</Badge>
               )}
             </CardHeader>
 
             <CardContent className="p-0 pt-4 space-y-3">
-              {todaySession ? (
-                <div className="space-y-3">
-                  <h3 className="text-lg font-bold text-white leading-snug">
-                    {todaySession.topic}
-                  </h3>
+              {todaySession || upcomingSession ? (
+                (() => {
+                  const session = todaySession || upcomingSession;
+                  return (
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-bold text-white leading-snug">
+                        {session.topic}
+                      </h3>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-zinc-300">
-                    <span className="flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-zinc-400" />
-                      <strong className="text-white">Presenter:</strong> {todaySession.handledBy}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                      {todaySession.time || '4:30 PM - 5:00 PM (30 Mins)'}
-                    </span>
-                  </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-zinc-300">
+                        <span className="flex items-center gap-1.5">
+                          <User className="w-3.5 h-3.5 text-zinc-400" />
+                          <strong className="text-white">Presenter:</strong> {session.handledBy}
+                        </span>
+                        {session.time && (
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                            <span>{session.time}</span>
+                          </span>
+                        )}
+                      </div>
 
-                  {todaySession.venue && (
-                    <div className="text-xs text-zinc-400 flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      <span>{todaySession.venue}</span>
+                      {session.venue && (
+                        <div className="text-xs text-zinc-400 flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <span>{session.venue}</span>
+                        </div>
+                      )}
+
+                      {session.message && (
+                        <div className="p-3 rounded-xl bg-zinc-900 border border-white/10 text-xs text-zinc-300 leading-relaxed">
+                          {session.message}
+                        </div>
+                      )}
+
+                      {todaySession && upcomingSession && (
+                        <div className="pt-2 text-xs text-zinc-400 flex items-center justify-between border-t border-white/5">
+                          <span className="text-[11px] font-mono text-zinc-500">Next Scheduled:</span>
+                          <span className="text-white font-medium truncate max-w-[200px] sm:max-w-[260px]">
+                            {upcomingSession.topic} ({new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })})
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  )}
-
-                  {todaySession.message && (
-                    <div className="p-3 rounded-xl bg-zinc-900 border border-white/10 text-xs text-zinc-300 leading-relaxed">
-                      {todaySession.message}
-                    </div>
-                  )}
-                </div>
+                  );
+                })()
               ) : (
                 <div className="py-6 text-center space-y-2">
                   <p className="text-sm font-semibold text-white">Daily 30-Minute Peer Session</p>

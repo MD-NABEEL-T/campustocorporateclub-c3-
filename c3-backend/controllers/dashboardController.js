@@ -2,20 +2,19 @@ import User from '../models/User.js';
 import Session from '../models/Session.js';
 import Event from '../models/Event.js';
 import Application from '../models/Application.js';
-import Announcement from '../models/Announcement.js';
 import {
   calculateMemberAttendance,
   LOW_ATTENDANCE_THRESHOLD,
   getStartOfDayUTC,
 } from '../utils/attendanceStats.js';
+import { getSessionAnnouncements } from '../utils/dateUtils.js';
 
 export const getDashboardData = async (req, res) => {
   try {
     const user = req.user;
 
-    // Shared announcements
-    const todaySession = await Announcement.findOne({ type: 'today_session', isActive: true }).sort({ createdAt: -1 });
-    const broadcasts = await Announcement.find({ type: 'broadcast' }).sort({ createdAt: -1 }).limit(10);
+    // Shared announcements (uses same helper as announcementController)
+    const { todaySession, upcomingSession, broadcasts } = await getSessionAnnouncements();
 
     // If Admin, build admin overview payload
     if (user.role === 'admin') {
@@ -93,6 +92,7 @@ export const getDashboardData = async (req, res) => {
           totalMembers,
         },
         todaySession: todaySession || null,
+        upcomingSession: upcomingSession || null,
         broadcasts: broadcasts || [],
         lowAttendanceMembers,
         recentApplications: recentApplications || [],
@@ -106,6 +106,7 @@ export const getDashboardData = async (req, res) => {
       role: 'member',
       attendance,
       todaySession: todaySession || null,
+      upcomingSession: upcomingSession || null,
       broadcasts: broadcasts || [],
     });
   } catch (err) {

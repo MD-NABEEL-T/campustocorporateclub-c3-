@@ -1,52 +1,54 @@
 import Announcement from '../models/Announcement.js';
+import {
+  getSessionAnnouncements,
+  getKolkataDayBounds,
+  parseSessionStorageDate,
+} from '../utils/dateUtils.js';
 
-// GET /api/announcements - Fetch active today's session and recent broadcasts
+// GET /api/announcements - Fetch active today's session, nearest upcoming session, and recent broadcasts
 export const getAnnouncements = async (req, res) => {
   try {
-    const todaySession = await Announcement.findOne({
-      type: 'today_session',
-      isActive: true,
-    }).sort({ updatedAt: -1 });
-
-    const broadcasts = await Announcement.find({
-      type: 'broadcast',
-    })
-      .sort({ createdAt: -1 })
-      .limit(10);
-
-    res.json({
-      todaySession: todaySession || null,
-      broadcasts: broadcasts || [],
-    });
+    const data = await getSessionAnnouncements();
+    res.json(data);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// POST /api/announcements/today-session - Admin set / update today's upcoming session details
+// POST /api/announcements/today-session - Admin set / update session details for today or a future date
 export const updateTodaySession = async (req, res) => {
   try {
-    const { topic, handledBy, time, venue, message } = req.body;
+    const { topic, handledBy, time, venue, message, date } = req.body;
 
     if (!topic || !handledBy) {
       return res.status(400).json({ message: 'Topic and Handled By are required' });
     }
 
-    // Deactivate previous today_session announcements
-    await Announcement.updateMany({ type: 'today_session' }, { isActive: false });
+    // Parse target date: if YYYY-MM-DD, stored as IST noon (12:00:00+05:30) so it never rolls over to previous day in UTC
+    const sessionStorageDate = parseSessionStorageDate(date);
+    const { startOfDay, endOfDay } = getKolkataDayBounds(sessionStorageDate);
 
-    // Create fresh active today session announcement
+    // Deactivate previous today_session announcements on this specific calendar day only
+    await Announcement.updateMany(
+      {
+        type: 'today_session',
+        date: { $gte: startOfDay, $lte: endOfDay },
+      },
+      { isActive: false }
+    );
+
+    // Create fresh active session announcement without hardcoded time/venue defaults
     const sessionAnnouncement = await Announcement.create({
       type: 'today_session',
       title: "Today's Peer Session",
       topic: topic.trim(),
       handledBy: handledBy.trim(),
-      time: time ? time.trim() : '4:30 PM - 5:00 PM (30 Mins)',
-      venue: venue ? venue.trim() : 'CSE Lab / Department Hall',
+      time: time ? time.trim() : '',
+      venue: venue ? venue.trim() : '',
       message: message ? message.trim() : '',
       isActive: true,
       createdBy: req.user._id,
-      date: new Date(),
+      date: sessionStorageDate,
     });
 
     res.status(201).json({
