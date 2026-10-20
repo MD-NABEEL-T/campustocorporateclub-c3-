@@ -85,12 +85,12 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
     );
   }
 
-  const counts = data?.counts || {
-    pendingApprovals: 0,
-    pendingApplications: 0,
-    totalSessions: 0,
-    totalEvents: 0,
-    totalMembers: 0,
+  const counts = {
+    pendingApprovals: data?.pending?.memberApprovals ?? data?.counts?.pendingApprovals ?? 0,
+    pendingApplications: data?.pending?.applications ?? data?.counts?.pendingApplications ?? 0,
+    totalSessions: data?.club?.totalSessions ?? data?.counts?.totalSessions ?? 0,
+    totalEvents: data?.club?.totalEvents ?? data?.counts?.totalEvents ?? 0,
+    totalMembers: data?.club?.totalMembers ?? data?.counts?.totalMembers ?? 0,
   };
 
   const todaySession = data?.todaySession || null;
@@ -113,7 +113,7 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
               Admin Overview
             </h1>
             <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-              Track pending registrations, junior applications, today's daily 30-min peer session, and club turnout.
+              Track pending registrations, junior applications, today's peer session, and club turnout.
             </p>
           </div>
 
@@ -227,7 +227,7 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
           {/* Pulse Card 1: Total Sessions */}
           <div className="p-5 rounded-2xl bg-zinc-950/80 border border-white/10 shadow-lg flex items-center justify-between">
             <div>
-              <span className="text-xs font-mono text-zinc-400">Daily Peer Sessions</span>
+              <span className="text-xs font-mono text-zinc-400">Sessions held</span>
               <div className="text-2xl sm:text-3xl font-extrabold font-heading text-white mt-1">
                 <CountUp to={counts.totalSessions || 0} duration={1.5} />
               </div>
@@ -405,7 +405,7 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
                     <Calendar className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-white">Daily 30-Minute Peer Session Not Set</h4>
+                    <h4 className="text-sm font-semibold text-white">Today's Peer Session Not Set</h4>
                     <p className="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
                       Today's session topic, timing, and presenter haven't been published yet for club members.
                     </p>
@@ -429,7 +429,7 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
                   Turnout Watchlist
                 </CardTitle>
                 <p className="text-[11px] text-zinc-400 mt-0.5">
-                  Members with lowest attendance across peer sessions (up to 5)
+                  Members flagged below {75}% attendance across peer sessions
                 </p>
               </div>
 

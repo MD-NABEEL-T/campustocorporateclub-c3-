@@ -50,7 +50,7 @@ export const parseSessionStorageDate = (date) => {
 /**
  * Shared announcement query helper used by both announcementController and dashboardController.
  */
-export const getSessionAnnouncements = async () => {
+export const getSessionAnnouncements = async (broadcastLimit = 10) => {
   const { startOfDay, endOfDay } = getKolkataDayBounds(new Date());
 
   const [todaySession, upcomingSession, broadcasts] = await Promise.all([
@@ -59,21 +59,26 @@ export const getSessionAnnouncements = async () => {
       type: 'today_session',
       isActive: true,
       date: { $gte: startOfDay, $lte: endOfDay },
-    }).sort({ updatedAt: -1 }),
+    })
+      .sort({ updatedAt: -1 })
+      .lean(),
 
     // Nearest active today_session whose date is strictly after today
     Announcement.findOne({
       type: 'today_session',
       isActive: true,
       date: { $gt: endOfDay },
-    }).sort({ date: 1 }),
+    })
+      .sort({ date: 1 })
+      .lean(),
 
-    // Latest 10 broadcasts
+    // Broadcasts
     Announcement.find({
       type: 'broadcast',
     })
       .sort({ createdAt: -1 })
-      .limit(10),
+      .limit(broadcastLimit)
+      .lean(),
   ]);
 
   return {

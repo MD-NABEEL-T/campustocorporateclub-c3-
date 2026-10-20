@@ -2,25 +2,18 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { StatsCard } from '../../components/ui/StatsCard';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
-import { Badge } from '../../components/ui/Badge';
-import { Loader } from '../../components/ui/Loader';
-import { AdminOverview } from '../../components/dashboard/AdminOverview';
-import { UserCheck, BookOpen, Calendar, Bell, User, Clock, MapPin } from 'lucide-react';
+import { Button } from '../../components/ui/Button';
+import { UserCheck, BookOpen, Calendar, Flame, AlertTriangle } from 'lucide-react';
 import axios from '../../api/axios';
 
-const getRelativeEditedTime = (editedAt) => {
-  if (!editedAt) return null;
-  const editedDate = new Date(editedAt);
-  const diffMs = Date.now() - editedDate.getTime();
-  const diffSec = Math.floor(diffMs / 1000);
-  if (diffSec < 0 || diffSec > 86400) return null;
-  if (diffSec < 60) return 'Updated just now';
-  const mins = Math.floor(diffSec / 60);
-  if (mins < 60) return `Updated ${mins} min ago`;
-  const hours = Math.floor(mins / 60);
-  return `Updated ${hours}h ago`;
-};
+import { AdminOverview } from '../../components/dashboard/AdminOverview';
+import { TodaySessionCard } from '../../components/dashboard/TodaySessionCard';
+import { AttendanceTrend } from '../../components/dashboard/AttendanceTrend';
+import { RecentSessions } from '../../components/dashboard/RecentSessions';
+import { EventsCard } from '../../components/dashboard/EventsCard';
+import { BroadcastsCard } from '../../components/dashboard/BroadcastsCard';
+import { ClubPulse } from '../../components/dashboard/ClubPulse';
+import { DashboardSkeleton } from '../../components/dashboard/DashboardSkeleton';
 
 export const Dashboard = () => {
   const { user } = useAuth();
@@ -64,230 +57,139 @@ export const Dashboard = () => {
     );
   }
 
-  // Regular Member View
+  // Regular Member Loading Skeleton
   if (loading) {
+    return <DashboardSkeleton />;
+  }
+
+  // Error State with Retry
+  if (error) {
     return (
-      <div className="py-24 flex items-center justify-center">
-        <Loader size="lg" label="Loading your member dashboard..." />
+      <div className="p-6 sm:p-8 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-300 space-y-4 shadow-xl">
+        <div className="flex items-center gap-3">
+          <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
+          <h3 className="font-semibold text-white text-base">Failed to load member dashboard</h3>
+        </div>
+        <p className="text-xs sm:text-sm text-red-300/80 leading-relaxed">{error}</p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={fetchDashboard}
+          className="text-xs text-white border-white/20 hover:bg-white/10"
+        >
+          Retry Connection
+        </Button>
       </div>
     );
   }
 
+  const name = dashboardData?.me?.name || user?.name || 'Member';
   const attendance = dashboardData?.attendance;
-  const todaySession = dashboardData?.todaySession;
-  const upcomingSession = dashboardData?.upcomingSession;
-  const broadcasts = dashboardData?.broadcasts || [];
+  const eventsCount = dashboardData?.events?.upcoming?.length ?? 0;
+
+  const subline =
+    attendance && attendance.totalSessions > 0
+      ? `You've attended ${attendance.presentCount} of ${attendance.totalSessions} sessions${
+          attendance.currentStreak > 0 ? ` · ${attendance.currentStreak}-session streak` : ''
+        }`
+      : null;
 
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Welcome Banner */}
-      <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-white/[0.06] via-white/[0.03] to-transparent border border-white/10 relative overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+      <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-white/[0.06] via-white/[0.03] to-transparent border border-white/10 relative overflow-hidden shadow-xl">
         <div className="relative z-10">
           <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-400">
-            Welcome Back
+            Member Overview
           </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-white mt-1">
-            Hello, {user?.name || 'Member'} 👋
-          </h2>
-          <p className="text-xs sm:text-sm text-zinc-400 mt-2 max-w-xl leading-relaxed">
-            Track your peer session attendance, access learning resources, and participate in upcoming C3 events.
-          </p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold font-heading text-white mt-1">
+            Hello, {name} 👋
+          </h1>
+          {subline && (
+            <p className="text-xs sm:text-sm text-zinc-400 mt-2 font-mono">
+              {subline}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Metrics Row */}
+      {/* Four Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatsCard
           title="Attendance Rate"
           value={
             attendance?.percentage !== null && attendance?.percentage !== undefined
               ? `${attendance.percentage}%`
-              : 'No sessions yet'
+              : '—'
           }
           description={
             attendance && attendance.totalSessions > 0
-              ? `${attendance.presentCount} of ${attendance.totalSessions} sessions attended`
-              : 'No sessions recorded since joining'
+              ? `${attendance.presentCount} of ${attendance.totalSessions} eligible sessions`
+              : 'No sessions recorded yet'
           }
           icon={UserCheck}
           color="primary"
         />
+
         <StatsCard
-          title="Daily Sessions"
-          value="30 Min"
-          description="Active learning sessions"
+          title="Sessions Attended"
+          value={
+            attendance && attendance.totalSessions > 0
+              ? `${attendance.presentCount} / ${attendance.totalSessions}`
+              : '0 / 0'
+          }
+          description={
+            attendance && attendance.totalSessions > 0
+              ? `${attendance.absentCount} missed sessions`
+              : 'Since joining club'
+          }
           icon={BookOpen}
           color="accent"
         />
+
         <StatsCard
-          title="Events Registered"
-          value="Active"
-          description="Upcoming club workshops"
+          title="Current Streak"
+          value={`${attendance?.currentStreak ?? 0} ${
+            (attendance?.currentStreak ?? 0) === 1 ? 'session' : 'sessions'
+          }`}
+          description={
+            (attendance?.currentStreak ?? 0) > 0
+              ? 'Consecutive attendances'
+              : 'Attend consecutive sessions'
+          }
+          icon={Flame}
+          color="warning"
+        />
+
+        <StatsCard
+          title="Upcoming Events"
+          value={`${eventsCount}`}
+          description={
+            eventsCount > 0 ? 'Upcoming club workshops' : 'No upcoming events'
+          }
           icon={Calendar}
           color="success"
         />
-        <StatsCard
-          title="Announcements"
-          value={broadcasts.length > 0 ? `${broadcasts.length} New` : 'Latest'}
-          description="Broadcast feed"
-          icon={Bell}
-          color="warning"
-        />
       </div>
 
-      {/* Overview Cards */}
+      {/* Row 1: Today's Peer Session & Attendance Trend */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Today's Peer Session Card */}
-        <Card className="bg-zinc-950/90 border border-white/10 flex flex-col justify-between p-5 sm:p-6 shadow-xl">
-          <div>
-            <CardHeader className="p-0 pb-4 border-b border-white/10 flex flex-row items-center justify-between">
-              <CardTitle className="text-base sm:text-lg text-white flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-white" />
-                {todaySession ? "Today's Peer Session" : (upcomingSession ? "Upcoming Peer Session" : "Today's Peer Session")}
-              </CardTitle>
-              {todaySession ? (
-                todaySession.status === 'cancelled' ? (
-                  <Badge variant="danger">Cancelled</Badge>
-                ) : (
-                  <Badge variant="success">Active Today</Badge>
-                )
-              ) : upcomingSession ? (
-                upcomingSession.status === 'cancelled' ? (
-                  <Badge variant="danger">Cancelled</Badge>
-                ) : (
-                  <Badge variant="neutral">
-                    Upcoming &bull; {new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })}
-                  </Badge>
-                )
-              ) : (
-                <Badge variant="neutral">Upcoming</Badge>
-              )}
-            </CardHeader>
-
-            <CardContent className="p-0 pt-4 space-y-3">
-              {todaySession || upcomingSession ? (
-                (() => {
-                  const session = todaySession || upcomingSession;
-                  const isCancelled = session.status === 'cancelled';
-                  const relativeTag = getRelativeEditedTime(session.editedAt);
-
-                  return (
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className={`text-lg font-bold text-white leading-snug ${isCancelled ? 'line-through opacity-75' : ''}`}>
-                          {session.topic}
-                        </h3>
-                        {relativeTag && (
-                          <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full shrink-0">
-                            {relativeTag}
-                          </span>
-                        )}
-                      </div>
-
-                      {isCancelled ? (
-                        <div className="p-3 rounded-xl bg-red-950/40 border border-red-500/30 text-xs text-red-300 leading-relaxed space-y-1">
-                          <span className="font-semibold text-red-200 block">Session Cancelled</span>
-                          <span>{session.cancelReason || 'Session cancelled by coordinator.'}</span>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-zinc-300">
-                            <span className="flex items-center gap-1.5">
-                              <User className="w-3.5 h-3.5 text-zinc-400" />
-                              <strong className="text-white">Presenter:</strong> {session.handledBy}
-                            </span>
-                            {session.time && (
-                              <span className="flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                                <span>{session.time}</span>
-                              </span>
-                            )}
-                          </div>
-
-                          {session.venue && (
-                            <div className="text-xs text-zinc-400 flex items-center gap-1.5">
-                              <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                              <span>{session.venue}</span>
-                            </div>
-                          )}
-
-                          {session.message && (
-                            <div className="p-3 rounded-xl bg-zinc-900 border border-white/10 text-xs text-zinc-300 leading-relaxed">
-                              {session.message}
-                            </div>
-                          )}
-                        </>
-                      )}
-
-                      {isCancelled && (
-                        <div className="text-xs text-zinc-400 flex items-center gap-1.5">
-                          <User className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                          <span><strong className="text-white">Presenter:</strong> {session.handledBy}</span>
-                        </div>
-                      )}
-
-                      {todaySession && upcomingSession && (
-                        <div className="pt-2 text-xs text-zinc-400 flex items-center justify-between border-t border-white/5">
-                          <span className="text-[11px] font-mono text-zinc-500">Next Scheduled:</span>
-                          <span className="text-white font-medium truncate max-w-[200px] sm:max-w-[260px]">
-                            {upcomingSession.topic} ({new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })})
-                            {upcomingSession.status === 'cancelled' && ' (Cancelled)'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()
-              ) : (
-                <div className="py-6 text-center space-y-2">
-                  <p className="text-sm font-semibold text-white">Daily 30-Minute Peer Session</p>
-                  <p className="text-xs text-zinc-400 leading-relaxed max-w-sm mx-auto">
-                    Today's presentation session topic and presenter will be updated by coordinators before the slot.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </div>
-        </Card>
-
-        {/* Recent Club Broadcasts Card */}
-        <Card className="bg-zinc-950/90 border border-white/10 flex flex-col justify-between p-5 sm:p-6 shadow-xl">
-          <div>
-            <CardHeader className="p-0 pb-4 border-b border-white/10 flex flex-row items-center justify-between">
-              <CardTitle className="text-base sm:text-lg text-white flex items-center gap-2">
-                <Bell className="w-4 h-4 text-white" />
-                Recent Club Broadcasts
-              </CardTitle>
-              <span className="text-xs font-mono text-zinc-500">{broadcasts.length} feeds</span>
-            </CardHeader>
-
-            <CardContent className="p-0 pt-3">
-              {broadcasts.length > 0 ? (
-                <div className="divide-y divide-white/5 max-h-60 overflow-y-auto pr-1">
-                  {broadcasts.map((b) => (
-                    <div key={b._id} className="py-2.5 space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-bold text-white truncate">{b.title}</p>
-                        <span className="text-[10px] font-mono text-zinc-500 shrink-0">
-                          {new Date(b.createdAt || b.date).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">{b.message}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-6 text-center space-y-2">
-                  <p className="text-sm font-semibold text-white">Broadcast Channel</p>
-                  <p className="text-xs text-zinc-400 leading-relaxed max-w-sm mx-auto">
-                    Official club announcements, event alerts, and schedule updates will appear here.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </div>
-        </Card>
+        <TodaySessionCard
+          todaySession={dashboardData?.todaySession}
+          upcomingSession={dashboardData?.upcomingSession}
+        />
+        <AttendanceTrend attendance={attendance} />
       </div>
+
+      {/* Row 2: Recent Sessions, Events, Broadcasts */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <RecentSessions recentSessions={dashboardData?.recentSessions || []} />
+        <EventsCard events={dashboardData?.events} />
+        <BroadcastsCard broadcasts={dashboardData?.broadcasts || []} />
+      </div>
+
+      {/* Row 3: Club Pulse Strip */}
+      <ClubPulse club={dashboardData?.club} />
     </div>
   );
 };
