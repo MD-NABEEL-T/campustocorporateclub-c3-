@@ -39,8 +39,11 @@ export const calculateMemberAttendance = async (user) => {
   const memberIdStr = user._id.toString();
   const cutoffDate = getStartOfDayUTC(user.createdAt || new Date());
 
-  // Find all sessions on or after member joined, newest first
-  const sessions = await Session.find({ date: { $gte: cutoffDate } })
+  // Find all sessions on or after member joined, newest first (excluding cancelled)
+  const sessions = await Session.find({
+    date: { $gte: cutoffDate },
+    status: { $ne: 'cancelled' },
+  })
     .sort({ date: -1 })
     .select('_id date topic absentees');
 

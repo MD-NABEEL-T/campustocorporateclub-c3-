@@ -57,12 +57,19 @@ export const getAllAttendance = async (req, res) => {
             pipeline: [
               {
                 $match: {
-                  $expr: {
-                    $gte: [
-                      '$date',
-                      { $dateTrunc: { date: '$$userCreatedAt', unit: 'day', timezone: 'UTC' } },
-                    ],
-                  },
+                  $and: [
+                    {
+                      $expr: {
+                        $gte: [
+                          '$date',
+                          { $dateTrunc: { date: '$$userCreatedAt', unit: 'day', timezone: 'UTC' } },
+                        ],
+                      },
+                    },
+                    {
+                      status: { $ne: 'cancelled' },
+                    },
+                  ],
                 },
               },
               {
@@ -130,7 +137,7 @@ export const getAllAttendance = async (req, res) => {
       const members = await User.find({ isApproved: true })
         .select('name email section year createdAt')
         .sort({ name: 1 });
-      const sessions = await Session.find().select('_id date absentees');
+      const sessions = await Session.find({ status: { $ne: 'cancelled' } }).select('_id date absentees');
 
       results = members.map((member) => {
         const cutoff = getStartOfDayUTC(member.createdAt);

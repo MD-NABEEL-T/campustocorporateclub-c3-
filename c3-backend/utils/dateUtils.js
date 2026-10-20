@@ -82,3 +82,39 @@ export const getSessionAnnouncements = async () => {
     broadcasts: broadcasts || [],
   };
 };
+
+/**
+ * Converts a 24-hour "HH:mm" time string into a 12-hour format string (e.g. "13:05" -> "1:05 PM").
+ */
+export const formatTimeDisplay = (time24) => {
+  if (!time24 || typeof time24 !== 'string') return '';
+  const trimmed = time24.trim();
+  const match = trimmed.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return trimmed;
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2];
+  if (isNaN(hours)) return trimmed;
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  return `${hours}:${minutes} ${ampm}`;
+};
+
+/**
+ * Generates a human-friendly display time string from startTime and optional endTime,
+ * falling back to custom time string if provided.
+ */
+export const generateDisplayTime = (time, startTime, endTime) => {
+  if (startTime && startTime.trim()) {
+    const startStr = formatTimeDisplay(startTime.trim());
+    if (endTime && endTime.trim()) {
+      const endStr = formatTimeDisplay(endTime.trim());
+      return `${startStr} - ${endStr}`;
+    }
+    return startStr;
+  }
+  if (time && time.trim()) {
+    return time.trim();
+  }
+  return '';
+};
+

@@ -11,12 +11,22 @@ const announcementSchema = new mongoose.Schema(
     title: { type: String, required: true },
     topic: { type: String }, // For today's session
     handledBy: { type: String }, // For today's session
-    time: { type: String }, // e.g. "4:30 PM - 5:00 PM"
+    time: { type: String }, // e.g. "1:05 PM - 1:35 PM"
+    startTime: { type: String }, // "HH:mm" 24h IST
+    endTime: { type: String }, // "HH:mm" 24h IST (optional)
+    status: {
+      type: String,
+      enum: ['scheduled', 'cancelled'],
+      default: 'scheduled',
+    },
+    cancelReason: { type: String, default: '' },
+    editedAt: { type: Date },
     venue: { type: String }, // e.g. "CSE Seminar Hall"
     message: { type: String }, // For broadcasts or session agenda
     isActive: { type: Boolean, default: true },
     date: { type: Date, default: Date.now },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }
 );

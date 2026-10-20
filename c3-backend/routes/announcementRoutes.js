@@ -5,6 +5,9 @@ import {
   updateTodaySession,
   createBroadcast,
   deleteAnnouncement,
+  quickEditAnnouncement,
+  cancelAnnouncement,
+  restoreAnnouncement,
 } from '../controllers/announcementController.js';
 
 const router = express.Router();
@@ -14,6 +17,15 @@ router.get('/', protect, getAnnouncements);
 
 // ADMIN ONLY - update today's upcoming session details
 router.post('/today-session', protect, adminOnly, updateTodaySession);
+
+// ADMIN ONLY - quick edit venue, time, or message
+router.patch('/:id/quick-edit', protect, adminOnly, quickEditAnnouncement);
+
+// ADMIN ONLY - cancel a session announcement
+router.patch('/:id/cancel', protect, adminOnly, cancelAnnouncement);
+
+// ADMIN ONLY - restore a cancelled session announcement
+router.patch('/:id/restore', protect, adminOnly, restoreAnnouncement);
 
 // ADMIN ONLY - post a general broadcast
 router.post('/broadcast', protect, adminOnly, createBroadcast);

@@ -30,7 +30,7 @@ export const getDashboardData = async (req, res) => {
       ] = await Promise.all([
         User.countDocuments({ isApproved: false }),
         Application.countDocuments({ status: 'pending' }),
-        Session.countDocuments(),
+        Session.countDocuments({ status: { $ne: 'cancelled' } }),
         Event.countDocuments(),
         User.countDocuments({ isApproved: true }),
         User.find({ isApproved: true }).select('name email section year createdAt'),
@@ -38,7 +38,7 @@ export const getDashboardData = async (req, res) => {
           .sort({ createdAt: -1 })
           .limit(5)
           .select('fullName preferredDomain year status createdAt section'),
-        Session.find().select('_id date absentees'),
+        Session.find({ status: { $ne: 'cancelled' } }).select('_id date absentees'),
       ]);
 
       // Calculate low-attendance members strictly below threshold (e.g. < 75%)

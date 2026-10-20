@@ -12,6 +12,8 @@ import {
   Radio,
   Edit3,
   RotateCcw,
+  AlertTriangle,
+  RotateCw,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
@@ -19,6 +21,7 @@ import { Textarea } from '../../components/ui/Textarea';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Loader } from '../../components/ui/Loader';
+import { Modal } from '../../components/ui/Modal';
 import { useToast } from '../../context/ToastContext';
 import api from '../../api/axios';
 
@@ -42,6 +45,43 @@ const formatKolkataDisplayDate = (dateVal) => {
   });
 };
 
+const formatTime12h = (time24) => {
+  if (!time24 || typeof time24 !== 'string') return '';
+  const trimmed = time24.trim();
+  const match = trimmed.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return trimmed;
+  let h = parseInt(match[1], 10);
+  const m = match[2];
+  if (isNaN(h)) return trimmed;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${m} ${ampm}`;
+};
+
+const formatDisplayTime = (time, startTime, endTime) => {
+  if (startTime) {
+    const s = formatTime12h(startTime);
+    if (endTime) {
+      return `${s} - ${formatTime12h(endTime)}`;
+    }
+    return s;
+  }
+  return time || '';
+};
+
+const getRelativeEditedTime = (editedAt) => {
+  if (!editedAt) return null;
+  const editedDate = new Date(editedAt);
+  const diffMs = Date.now() - editedDate.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 0 || diffSec > 86400) return null;
+  if (diffSec < 60) return 'Updated just now';
+  const mins = Math.floor(diffSec / 60);
+  if (mins < 60) return `Updated ${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  return `Updated ${hours}h ago`;
+};
+
 export const Announcements = () => {
   const { addToast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -50,11 +90,12 @@ export const Announcements = () => {
 
   const todayStr = getTodayKolkataDateString();
 
-  // Peer Session Form State (no fake defaults)
+  // Peer Session Form State
   const [sessionDate, setSessionDate] = useState(todayStr);
   const [topic, setTopic] = useState('');
   const [handledBy, setHandledBy] = useState('');
-  const [time, setTime] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
   const [venue, setVenue] = useState('');
   const [sessionNotes, setSessionNotes] = useState('');
 
@@ -62,6 +103,14 @@ export const Announcements = () => {
   const [todaySession, setTodaySession] = useState(null);
   const [upcomingSession, setUpcomingSession] = useState(null);
   const [broadcasts, setBroadcasts] = useState([]);
+
+  // Quick Action Modal State
+  const [activeModal, setActiveModal] = useState(null); // { type: 'venue'|'time'|'cancel', session }
+  const [modalVenue, setModalVenue] = useState('');
+  const [modalStartTime, setModalStartTime] = useState('');
+  const [modalEndTime, setModalEndTime] = useState('');
+  const [modalCancelReason, setModalCancelReason] = useState('');
+  const [modalLoading, setModalLoading] = useState(false);
 
   // New Broadcast Form
   const [broadcastTitle, setBroadcastTitle] = useState('');
@@ -97,7 +146,8 @@ export const Announcements = () => {
       await api.post('/announcements/today-session', {
         topic: topic.trim(),
         handledBy: handledBy.trim(),
-        time: time.trim(),
+        startTime: startTime ? startTime.trim() : '',
+        endTime: endTime ? endTime.trim() : '',
         venue: venue.trim(),
         message: sessionNotes.trim(),
         date: sessionDate || undefined,
@@ -121,7 +171,8 @@ export const Announcements = () => {
     if (!session) return;
     setTopic(session.topic || '');
     setHandledBy(session.handledBy || '');
-    setTime(session.time || '');
+    setStartTime(session.startTime || '');
+    setEndTime(session.endTime || '');
     setVenue(session.venue || '');
     setSessionNotes(session.message || '');
     if (session.date) {
@@ -140,7 +191,8 @@ export const Announcements = () => {
     setSessionDate(todayStr);
     setTopic('');
     setHandledBy('');
-    setTime('');
+    setStartTime('');
+    setEndTime('');
     setVenue('');
     setSessionNotes('');
   };
@@ -152,6 +204,89 @@ export const Announcements = () => {
       await fetchAnnouncements();
     } catch (err) {
       addToast(err.response?.data?.message || 'Failed to delete session announcement', 'error');
+    }
+  };
+
+  // Quick Action Handlers
+  const openVenueModal = (session) => {
+    setActiveModal({ type: 'venue', session });
+    setModalVenue(session.venue || '');
+  };
+
+  const openTimeModal = (session) => {
+    setActiveModal({ type: 'time', session });
+    setModalStartTime(session.startTime || '');
+    setModalEndTime(session.endTime || '');
+  };
+
+  const openCancelModal = (session) => {
+    setActiveModal({ type: 'cancel', session });
+    setModalCancelReason('');
+  };
+
+  const handleSaveVenue = async (e) => {
+    e.preventDefault();
+    if (!activeModal?.session?._id) return;
+    try {
+      setModalLoading(true);
+      await api.patch(`/announcements/${activeModal.session._id}/quick-edit`, {
+        venue: modalVenue.trim(),
+      });
+      addToast('Venue updated successfully!', 'success');
+      setActiveModal(null);
+      await fetchAnnouncements();
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Failed to update venue', 'error');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleSaveTime = async (e) => {
+    e.preventDefault();
+    if (!activeModal?.session?._id) return;
+    try {
+      setModalLoading(true);
+      await api.patch(`/announcements/${activeModal.session._id}/quick-edit`, {
+        startTime: modalStartTime.trim(),
+        endTime: modalEndTime.trim(),
+      });
+      addToast('Timing updated successfully!', 'success');
+      setActiveModal(null);
+      await fetchAnnouncements();
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Failed to update timing', 'error');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleConfirmCancel = async (e) => {
+    e.preventDefault();
+    if (!activeModal?.session?._id) return;
+    try {
+      setModalLoading(true);
+      await api.patch(`/announcements/${activeModal.session._id}/cancel`, {
+        reason: modalCancelReason.trim(),
+      });
+      addToast('Session marked as Cancelled', 'warning');
+      setActiveModal(null);
+      await fetchAnnouncements();
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Failed to cancel session', 'error');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleRestoreSession = async (session) => {
+    if (!session?._id) return;
+    try {
+      await api.patch(`/announcements/${session._id}/restore`);
+      addToast('Session restored to Scheduled!', 'success');
+      await fetchAnnouncements();
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Failed to restore session', 'error');
     }
   };
 
@@ -220,13 +355,17 @@ export const Announcements = () => {
           <div>
             <CardHeader className="p-0 pb-4 border-b border-white/10 flex flex-row items-center justify-between">
               <CardTitle className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                <Radio className={`w-4 h-4 ${todaySession ? 'text-emerald-400 animate-pulse' : 'text-zinc-500'}`} />
+                <Radio className={`w-4 h-4 ${todaySession?.status === 'cancelled' ? 'text-red-400' : todaySession ? 'text-emerald-400 animate-pulse' : 'text-zinc-500'}`} />
                 Live Today (Asia/Kolkata)
               </CardTitle>
               {todaySession ? (
-                <Badge variant="success" icon={<span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />}>
-                  Live Today
-                </Badge>
+                todaySession.status === 'cancelled' ? (
+                  <Badge variant="danger">Cancelled</Badge>
+                ) : (
+                  <Badge variant="success" icon={<span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />}>
+                    Live Today
+                  </Badge>
+                )
               ) : (
                 <Badge variant="warning">No Session Today</Badge>
               )}
@@ -235,33 +374,49 @@ export const Announcements = () => {
             <CardContent className="p-0 pt-4 space-y-3">
               {todaySession ? (
                 <div className="space-y-3">
-                  <div>
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Topic</span>
-                    <h3 className="text-base font-bold text-white leading-snug">{todaySession.topic}</h3>
-                  </div>
-
-                  <div className="space-y-1.5 text-xs text-zinc-300">
-                    <div className="flex items-center gap-2">
-                      <User className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      <span><strong>Presenter:</strong> {todaySession.handledBy}</span>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Topic</span>
+                      <h3 className={`text-base font-bold text-white leading-snug ${todaySession.status === 'cancelled' ? 'line-through opacity-75' : ''}`}>
+                        {todaySession.topic}
+                      </h3>
                     </div>
-
-                    {todaySession.time && (
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                        <span><strong>Time:</strong> {todaySession.time}</span>
-                      </div>
-                    )}
-
-                    {todaySession.venue && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                        <span><strong>Venue:</strong> {todaySession.venue}</span>
-                      </div>
+                    {getRelativeEditedTime(todaySession.editedAt) && (
+                      <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full shrink-0">
+                        {getRelativeEditedTime(todaySession.editedAt)}
+                      </span>
                     )}
                   </div>
 
-                  {todaySession.message && (
+                  {todaySession.status === 'cancelled' ? (
+                    <div className="p-3 rounded-xl bg-red-950/40 border border-red-500/30 text-xs text-red-300 leading-relaxed space-y-1">
+                      <span className="font-semibold text-red-200 block">Session Cancelled</span>
+                      <span>{todaySession.cancelReason || 'No specific cancellation reason provided.'}</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 text-xs text-zinc-300">
+                      <div className="flex items-center gap-2">
+                        <User className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                        <span><strong>Presenter:</strong> {todaySession.handledBy}</span>
+                      </div>
+
+                      {todaySession.time && (
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <span><strong>Time:</strong> {todaySession.time}</span>
+                        </div>
+                      )}
+
+                      {todaySession.venue && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <span><strong>Venue:</strong> {todaySession.venue}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {todaySession.message && todaySession.status !== 'cancelled' && (
                     <p className="text-xs text-zinc-400 bg-zinc-900/80 p-2.5 rounded-lg border border-white/5 leading-relaxed">
                       {todaySession.message}
                     </p>
@@ -276,25 +431,77 @@ export const Announcements = () => {
           </div>
 
           {todaySession && (
-            <div className="pt-4 border-t border-white/5 flex items-center justify-end gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => loadSessionIntoForm(todaySession)}
-                leftIcon={<Edit3 className="w-3.5 h-3.5" />}
-                className="text-xs"
-              >
-                Edit in form
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDeleteSession(todaySession._id, "Today's session")}
-                leftIcon={<Trash2 className="w-3.5 h-3.5" />}
-                className="text-xs text-red-400 hover:text-red-300 hover:border-red-400/40"
-              >
-                Delete
-              </Button>
+            <div className="pt-4 border-t border-white/5 flex flex-wrap items-center justify-end gap-2">
+              {todaySession.status === 'cancelled' ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRestoreSession(todaySession)}
+                    leftIcon={<RotateCw className="w-3.5 h-3.5" />}
+                    className="text-xs text-emerald-400 hover:text-emerald-300 hover:border-emerald-400/40"
+                  >
+                    Restore
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteSession(todaySession._id, "Today's session")}
+                    leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                    className="text-xs text-red-400 hover:text-red-300 hover:border-red-400/40"
+                  >
+                    Delete
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openVenueModal(todaySession)}
+                    leftIcon={<MapPin className="w-3.5 h-3.5" />}
+                    className="text-xs"
+                  >
+                    Change venue
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openTimeModal(todaySession)}
+                    leftIcon={<Clock className="w-3.5 h-3.5" />}
+                    className="text-xs"
+                  >
+                    Change time
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openCancelModal(todaySession)}
+                    leftIcon={<AlertTriangle className="w-3.5 h-3.5" />}
+                    className="text-xs text-amber-400 hover:text-amber-300 hover:border-amber-400/40"
+                  >
+                    Cancel session
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => loadSessionIntoForm(todaySession)}
+                    leftIcon={<Edit3 className="w-3.5 h-3.5" />}
+                    className="text-xs"
+                  >
+                    Edit in form
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteSession(todaySession._id, "Today's session")}
+                    leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                    className="text-xs text-red-400 hover:text-red-300 hover:border-red-400/40"
+                  >
+                    Delete
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </Card>
@@ -308,9 +515,13 @@ export const Announcements = () => {
                 Next Scheduled Session
               </CardTitle>
               {upcomingSession ? (
-                <Badge variant="neutral">
-                  Scheduled &bull; {new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })}
-                </Badge>
+                upcomingSession.status === 'cancelled' ? (
+                  <Badge variant="danger">Cancelled</Badge>
+                ) : (
+                  <Badge variant="neutral">
+                    Scheduled &bull; {new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })}
+                  </Badge>
+                )
               ) : (
                 <Badge variant="neutral">None Scheduled</Badge>
               )}
@@ -319,35 +530,51 @@ export const Announcements = () => {
             <CardContent className="p-0 pt-4 space-y-3">
               {upcomingSession ? (
                 <div className="space-y-3">
-                  <div>
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400">
-                      Date: {formatKolkataDisplayDate(upcomingSession.date)}
-                    </span>
-                    <h3 className="text-base font-bold text-white leading-snug mt-0.5">{upcomingSession.topic}</h3>
-                  </div>
-
-                  <div className="space-y-1.5 text-xs text-zinc-300">
-                    <div className="flex items-center gap-2">
-                      <User className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      <span><strong>Presenter:</strong> {upcomingSession.handledBy}</span>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400">
+                        Date: {formatKolkataDisplayDate(upcomingSession.date)}
+                      </span>
+                      <h3 className={`text-base font-bold text-white leading-snug mt-0.5 ${upcomingSession.status === 'cancelled' ? 'line-through opacity-75' : ''}`}>
+                        {upcomingSession.topic}
+                      </h3>
                     </div>
-
-                    {upcomingSession.time && (
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                        <span><strong>Time:</strong> {upcomingSession.time}</span>
-                      </div>
-                    )}
-
-                    {upcomingSession.venue && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                        <span><strong>Venue:</strong> {upcomingSession.venue}</span>
-                      </div>
+                    {getRelativeEditedTime(upcomingSession.editedAt) && (
+                      <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full shrink-0">
+                        {getRelativeEditedTime(upcomingSession.editedAt)}
+                      </span>
                     )}
                   </div>
 
-                  {upcomingSession.message && (
+                  {upcomingSession.status === 'cancelled' ? (
+                    <div className="p-3 rounded-xl bg-red-950/40 border border-red-500/30 text-xs text-red-300 leading-relaxed space-y-1">
+                      <span className="font-semibold text-red-200 block">Session Cancelled</span>
+                      <span>{upcomingSession.cancelReason || 'No specific cancellation reason provided.'}</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 text-xs text-zinc-300">
+                      <div className="flex items-center gap-2">
+                        <User className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                        <span><strong>Presenter:</strong> {upcomingSession.handledBy}</span>
+                      </div>
+
+                      {upcomingSession.time && (
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <span><strong>Time:</strong> {upcomingSession.time}</span>
+                        </div>
+                      )}
+
+                      {upcomingSession.venue && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <span><strong>Venue:</strong> {upcomingSession.venue}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {upcomingSession.message && upcomingSession.status !== 'cancelled' && (
                     <p className="text-xs text-zinc-400 bg-zinc-900/80 p-2.5 rounded-lg border border-white/5 leading-relaxed">
                       {upcomingSession.message}
                     </p>
@@ -362,25 +589,77 @@ export const Announcements = () => {
           </div>
 
           {upcomingSession && (
-            <div className="pt-4 border-t border-white/5 flex items-center justify-end gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => loadSessionIntoForm(upcomingSession)}
-                leftIcon={<Edit3 className="w-3.5 h-3.5" />}
-                className="text-xs"
-              >
-                Edit in form
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDeleteSession(upcomingSession._id, 'Upcoming session')}
-                leftIcon={<Trash2 className="w-3.5 h-3.5" />}
-                className="text-xs text-red-400 hover:text-red-300 hover:border-red-400/40"
-              >
-                Delete
-              </Button>
+            <div className="pt-4 border-t border-white/5 flex flex-wrap items-center justify-end gap-2">
+              {upcomingSession.status === 'cancelled' ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRestoreSession(upcomingSession)}
+                    leftIcon={<RotateCw className="w-3.5 h-3.5" />}
+                    className="text-xs text-emerald-400 hover:text-emerald-300 hover:border-emerald-400/40"
+                  >
+                    Restore
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteSession(upcomingSession._id, 'Upcoming session')}
+                    leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                    className="text-xs text-red-400 hover:text-red-300 hover:border-red-400/40"
+                  >
+                    Delete
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openVenueModal(upcomingSession)}
+                    leftIcon={<MapPin className="w-3.5 h-3.5" />}
+                    className="text-xs"
+                  >
+                    Change venue
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openTimeModal(upcomingSession)}
+                    leftIcon={<Clock className="w-3.5 h-3.5" />}
+                    className="text-xs"
+                  >
+                    Change time
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openCancelModal(upcomingSession)}
+                    leftIcon={<AlertTriangle className="w-3.5 h-3.5" />}
+                    className="text-xs text-amber-400 hover:text-amber-300 hover:border-amber-400/40"
+                  >
+                    Cancel session
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => loadSessionIntoForm(upcomingSession)}
+                    leftIcon={<Edit3 className="w-3.5 h-3.5" />}
+                    className="text-xs"
+                  >
+                    Edit in form
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteSession(upcomingSession._id, 'Upcoming session')}
+                    leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                    className="text-xs text-red-400 hover:text-red-300 hover:border-red-400/40"
+                  >
+                    Delete
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </Card>
@@ -455,14 +734,30 @@ export const Announcements = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Input
-                  label="Timing (Optional)"
-                  type="text"
-                  placeholder="e.g. 4:30 PM - 5:00 PM"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                />
+              {/* Start & End Time Pickers (Requirement 1 & 2) */}
+              <div className="space-y-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Input
+                    label="Start Time (Optional)"
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                  />
+                  <Input
+                    label="End Time (Optional)"
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                  />
+                </div>
+                {startTime && (
+                  <p className="text-[11px] font-mono text-zinc-400">
+                    Display: <span className="text-white font-medium">{formatDisplayTime('', startTime, endTime)}</span>
+                  </p>
+                )}
+              </div>
+
+              <div>
                 <Input
                   label="Venue / Platform (Optional)"
                   type="text"
@@ -583,6 +878,134 @@ export const Announcements = () => {
           </Card>
         </div>
       </div>
+
+      {/* Quick Edit Modals (Mobile Friendly) */}
+      {/* Change Venue Modal */}
+      <Modal
+        isOpen={activeModal?.type === 'venue'}
+        onClose={() => setActiveModal(null)}
+        title="Change Venue / Platform"
+        description={`Update location for "${activeModal?.session?.topic}"`}
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleSaveVenue} className="space-y-4">
+          <Input
+            label="Venue / Platform"
+            type="text"
+            placeholder="e.g. CSE Seminar Hall / Room 204"
+            value={modalVenue}
+            onChange={(e) => setModalVenue(e.target.value)}
+            autoFocus
+          />
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setActiveModal(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              isLoading={modalLoading}
+            >
+              Save Venue
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Change Time Modal */}
+      <Modal
+        isOpen={activeModal?.type === 'time'}
+        onClose={() => setActiveModal(null)}
+        title="Change Session Timing"
+        description={`Update scheduled start & end time for "${activeModal?.session?.topic}"`}
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleSaveTime} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Start Time"
+              type="time"
+              value={modalStartTime}
+              onChange={(e) => setModalStartTime(e.target.value)}
+              autoFocus
+            />
+            <Input
+              label="End Time"
+              type="time"
+              value={modalEndTime}
+              onChange={(e) => setModalEndTime(e.target.value)}
+            />
+          </div>
+          {modalStartTime && (
+            <p className="text-xs font-mono text-zinc-400">
+              Display preview: <strong className="text-white">{formatDisplayTime('', modalStartTime, modalEndTime)}</strong>
+            </p>
+          )}
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setActiveModal(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              isLoading={modalLoading}
+            >
+              Save Time
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Cancel Session Modal */}
+      <Modal
+        isOpen={activeModal?.type === 'cancel'}
+        onClose={() => setActiveModal(null)}
+        title="Cancel Session Announcement"
+        description={`Are you sure you want to cancel "${activeModal?.session?.topic}"? Members will be notified that the session is cancelled.`}
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleConfirmCancel} className="space-y-4">
+          <Input
+            label="Cancellation Reason (Optional)"
+            type="text"
+            placeholder="e.g. Presenter unwell / CSE Lab unavailable"
+            value={modalCancelReason}
+            onChange={(e) => setModalCancelReason(e.target.value)}
+            autoFocus
+          />
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setActiveModal(null)}
+            >
+              Back
+            </Button>
+            <Button
+              type="submit"
+              variant="outline"
+              size="sm"
+              isLoading={modalLoading}
+              className="bg-red-500/20 text-red-300 border-red-500/40 hover:bg-red-500/30"
+            >
+              Confirm Cancellation
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

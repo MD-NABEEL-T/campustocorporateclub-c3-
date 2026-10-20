@@ -9,6 +9,19 @@ import { AdminOverview } from '../../components/dashboard/AdminOverview';
 import { UserCheck, BookOpen, Calendar, Bell, User, Clock, MapPin } from 'lucide-react';
 import axios from '../../api/axios';
 
+const getRelativeEditedTime = (editedAt) => {
+  if (!editedAt) return null;
+  const editedDate = new Date(editedAt);
+  const diffMs = Date.now() - editedDate.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 0 || diffSec > 86400) return null;
+  if (diffSec < 60) return 'Updated just now';
+  const mins = Math.floor(diffSec / 60);
+  if (mins < 60) return `Updated ${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  return `Updated ${hours}h ago`;
+};
+
 export const Dashboard = () => {
   const { user } = useAuth();
   const location = useLocation();
@@ -133,11 +146,19 @@ export const Dashboard = () => {
                 {todaySession ? "Today's Peer Session" : (upcomingSession ? "Upcoming Peer Session" : "Today's Peer Session")}
               </CardTitle>
               {todaySession ? (
-                <Badge variant="success">Active Today</Badge>
+                todaySession.status === 'cancelled' ? (
+                  <Badge variant="danger">Cancelled</Badge>
+                ) : (
+                  <Badge variant="success">Active Today</Badge>
+                )
               ) : upcomingSession ? (
-                <Badge variant="neutral">
-                  Upcoming &bull; {new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })}
-                </Badge>
+                upcomingSession.status === 'cancelled' ? (
+                  <Badge variant="danger">Cancelled</Badge>
+                ) : (
+                  <Badge variant="neutral">
+                    Upcoming &bull; {new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })}
+                  </Badge>
+                )
               ) : (
                 <Badge variant="neutral">Upcoming</Badge>
               )}
@@ -147,35 +168,61 @@ export const Dashboard = () => {
               {todaySession || upcomingSession ? (
                 (() => {
                   const session = todaySession || upcomingSession;
+                  const isCancelled = session.status === 'cancelled';
+                  const relativeTag = getRelativeEditedTime(session.editedAt);
+
                   return (
                     <div className="space-y-3">
-                      <h3 className="text-lg font-bold text-white leading-snug">
-                        {session.topic}
-                      </h3>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-zinc-300">
-                        <span className="flex items-center gap-1.5">
-                          <User className="w-3.5 h-3.5 text-zinc-400" />
-                          <strong className="text-white">Presenter:</strong> {session.handledBy}
-                        </span>
-                        {session.time && (
-                          <span className="flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                            <span>{session.time}</span>
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className={`text-lg font-bold text-white leading-snug ${isCancelled ? 'line-through opacity-75' : ''}`}>
+                          {session.topic}
+                        </h3>
+                        {relativeTag && (
+                          <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full shrink-0">
+                            {relativeTag}
                           </span>
                         )}
                       </div>
 
-                      {session.venue && (
-                        <div className="text-xs text-zinc-400 flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                          <span>{session.venue}</span>
+                      {isCancelled ? (
+                        <div className="p-3 rounded-xl bg-red-950/40 border border-red-500/30 text-xs text-red-300 leading-relaxed space-y-1">
+                          <span className="font-semibold text-red-200 block">Session Cancelled</span>
+                          <span>{session.cancelReason || 'Session cancelled by coordinator.'}</span>
                         </div>
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-zinc-300">
+                            <span className="flex items-center gap-1.5">
+                              <User className="w-3.5 h-3.5 text-zinc-400" />
+                              <strong className="text-white">Presenter:</strong> {session.handledBy}
+                            </span>
+                            {session.time && (
+                              <span className="flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                                <span>{session.time}</span>
+                              </span>
+                            )}
+                          </div>
+
+                          {session.venue && (
+                            <div className="text-xs text-zinc-400 flex items-center gap-1.5">
+                              <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                              <span>{session.venue}</span>
+                            </div>
+                          )}
+
+                          {session.message && (
+                            <div className="p-3 rounded-xl bg-zinc-900 border border-white/10 text-xs text-zinc-300 leading-relaxed">
+                              {session.message}
+                            </div>
+                          )}
+                        </>
                       )}
 
-                      {session.message && (
-                        <div className="p-3 rounded-xl bg-zinc-900 border border-white/10 text-xs text-zinc-300 leading-relaxed">
-                          {session.message}
+                      {isCancelled && (
+                        <div className="text-xs text-zinc-400 flex items-center gap-1.5">
+                          <User className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <span><strong className="text-white">Presenter:</strong> {session.handledBy}</span>
                         </div>
                       )}
 
@@ -184,6 +231,7 @@ export const Dashboard = () => {
                           <span className="text-[11px] font-mono text-zinc-500">Next Scheduled:</span>
                           <span className="text-white font-medium truncate max-w-[200px] sm:max-w-[260px]">
                             {upcomingSession.topic} ({new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })})
+                            {upcomingSession.status === 'cancelled' && ' (Cancelled)'}
                           </span>
                         </div>
                       )}
