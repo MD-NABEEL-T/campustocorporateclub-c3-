@@ -18,6 +18,7 @@ import {
   ExternalLink,
   ChevronRight,
   Radio,
+  UserCheck,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -98,6 +99,7 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
   const broadcasts = data?.broadcasts || [];
   const lowAttendanceMembers = data?.lowAttendanceMembers || [];
   const recentApplications = data?.recentApplications || [];
+  const latestHeldSession = data?.recentSessions?.[0] || null;
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -117,10 +119,21 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {latestHeldSession && (
+              <Link to={`/admin/sessions/${latestHeldSession._id}/attendance`}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="min-h-[48px] px-4 text-xs bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-lg shadow-emerald-500/10"
+                >
+                  <UserCheck className="w-4 h-4 mr-1.5" /> Mark attendance
+                </Button>
+              </Link>
+            )}
             <Link to="/admin/announcements">
-              <Button variant="primary" size="sm" className="text-xs bg-white text-black font-semibold hover:bg-zinc-200">
-                <Bell className="w-3.5 h-3.5" /> Manage Live Broadcasts
+              <Button variant="outline" size="sm" className="min-h-[48px] px-4 text-xs text-white border-white/20 hover:bg-white/5">
+                <Bell className="w-3.5 h-3.5 mr-1.5" /> Manage Live Broadcasts
               </Button>
             </Link>
           </div>

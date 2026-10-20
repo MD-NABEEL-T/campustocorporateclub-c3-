@@ -2,28 +2,12 @@ import React, { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { User, LogOut, Shield, ChevronDown, Bell, Menu } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { getPageTitle } from '../../constants/navigation';
 
 export const Header = ({ collapsed, setMobileOpen, mobileOpen }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-
-  // Helper to generate readable breadcrumbs
-  const getPageTitle = (path) => {
-    if (path === '/dashboard' || path === '/admin') return 'Dashboard Overview';
-    if (path.startsWith('/admin/members')) return 'Member Roster & Onboarding';
-    if (path.startsWith('/admin/applications')) return 'Junior Applications Desk';
-    if (path.startsWith('/admin/sessions')) return 'Sessions Operations Desk';
-    if (path.startsWith('/admin/events')) return 'Events Operations Desk';
-    if (path.startsWith('/admin/attendance')) return 'Global Attendance Matrix';
-    if (path.startsWith('/sessions')) return 'Daily Sessions Archive';
-    if (path.startsWith('/attendance')) return 'Personal Attendance Record';
-    if (path.startsWith('/events')) return 'Events & Post-Event Reports';
-    if (path.startsWith('/resources')) return 'Learning Resources Hub';
-    if (path.startsWith('/announcements')) return 'Official Announcements';
-    if (path.startsWith('/profile')) return 'My Profile & Settings';
-    return 'Portal';
-  };
 
   return (
     <header
@@ -44,7 +28,7 @@ export const Header = ({ collapsed, setMobileOpen, mobileOpen }) => {
 
         <div>
           <h1 className="text-base sm:text-lg font-bold font-heading text-[#F8FAFC] leading-tight">
-            {getPageTitle(location.pathname)}
+            {getPageTitle(location.pathname, user?.role)}
           </h1>
           <p className="text-[11px] text-[#94A3B8] font-mono hidden sm:block">
             Campus to Corporate Club • Official Platform

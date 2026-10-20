@@ -31,7 +31,7 @@ export const DashboardLayout = () => {
         }`}
       >
         <div className="max-w-7xl mx-auto w-full">
-          <Outlet />
+          <Outlet context={{ collapsed, setCollapsed }} />
         </div>
       </main>
     </div>

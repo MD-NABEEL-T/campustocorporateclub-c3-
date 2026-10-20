@@ -6,7 +6,7 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Loader } from '../../components/ui/Loader';
-import { ArrowLeft, Calendar, User } from 'lucide-react';
+import { ArrowLeft, Calendar, User, UserCheck } from 'lucide-react';
 
 const SessionDetail = () => {
   const { id } = useParams();
@@ -44,11 +44,26 @@ const SessionDetail = () => {
 
   return (
     <div className="space-y-6">
-      <Link to="/sessions">
-        <Button variant="ghost" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
-          Back to Sessions
-        </Button>
-      </Link>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <Link to="/sessions">
+          <Button variant="ghost" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
+            Back to Sessions
+          </Button>
+        </Link>
+
+        {user?.role === 'admin' && (
+          <Link to={`/admin/sessions/${session._id}/attendance`}>
+            <Button
+              variant="primary"
+              size="sm"
+              className="bg-white text-black hover:bg-zinc-200 text-xs font-semibold"
+              leftIcon={<UserCheck className="w-4 h-4" />}
+            >
+              Mark Attendance
+            </Button>
+          </Link>
+        )}
+      </div>
 
       <Card className="overflow-hidden p-0 bg-zinc-950/80 border border-white/10">
         <div className="relative h-60 sm:h-72 w-full bg-zinc-900">

@@ -4,6 +4,7 @@ import { Terminal, Lock, Mail, ArrowRight, Clock, UserPlus, Sparkles } from 'luc
 import { useAuth } from '../../context/AuthContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
+import { PasswordInput } from '../../components/ui/PasswordInput';
 import { Button } from '../../components/ui/Button';
 
 const Login = () => {
@@ -84,13 +85,13 @@ const Login = () => {
                 required
               />
 
-              <Input
+              <PasswordInput
                 label="Password"
-                type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 leftIcon={<Lock className="w-4 h-4" />}
+                autoComplete="current-password"
                 required
               />
 

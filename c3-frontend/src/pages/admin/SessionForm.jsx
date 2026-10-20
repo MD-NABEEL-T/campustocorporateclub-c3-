@@ -49,7 +49,7 @@ const SessionForm = () => {
         },
       });
 
-      navigate(`/sessions/${res.data._id}`);
+      navigate(`/admin/sessions/${res.data._id}/attendance`);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create session');
     } finally {

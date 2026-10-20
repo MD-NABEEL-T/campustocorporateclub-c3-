@@ -1,4 +1,6 @@
+import mongoose from 'mongoose';
 import Session from '../models/Session.js';
+import User from '../models/User.js';
 
 // Create a session - admin only
 export const createSession = async (req, res) => {
@@ -42,7 +44,8 @@ export const getSessions = async (req, res) => {
 // Get single session by ID
 export const getSessionById = async (req, res) => {
   try {
-    const session = await Session.findById(req.params.id);
+    const session = await Session.findById(req.params.id)
+      .populate('attendanceMarkedBy', 'name email');
     if (!session) return res.status(404).json({ message: 'Session not found' });
     res.json(session);
   } catch (err) {
@@ -55,12 +58,41 @@ export const markAbsentees = async (req, res) => {
   try {
     const { absentees } = req.body;
 
+    if (!Array.isArray(absentees)) {
+      return res.status(400).json({ message: 'Absentees must be an array of member IDs' });
+    }
+
     const session = await Session.findById(req.params.id);
     if (!session) return res.status(404).json({ message: 'Session not found' });
 
-    session.absentees = absentees;
-    await session.save();
+    // Validate that every id is a valid ObjectId and corresponds to an approved member
+    if (absentees.length > 0) {
+      const invalidId = absentees.some(id => !mongoose.isValidObjectId(id));
+      if (invalidId) {
+        return res.status(400).json({ message: 'Invalid member ID format in absentees list' });
+      }
 
+      const uniqueAbsentees = [...new Set(absentees.map(id => id.toString()))];
+
+      const approvedCount = await User.countDocuments({
+        _id: { $in: uniqueAbsentees },
+        isApproved: true,
+      });
+
+      if (approvedCount !== uniqueAbsentees.length) {
+        return res.status(400).json({ message: 'One or more absentee IDs are unknown or not approved members' });
+      }
+
+      session.absentees = uniqueAbsentees;
+    } else {
+      session.absentees = [];
+    }
+
+    session.attendanceMarkedBy = req.user._id;
+    session.attendanceMarkedAt = new Date();
+
+    await session.save();
+    await session.populate('attendanceMarkedBy', 'name email');
     res.json(session);
   } catch (err) {
     res.status(500).json({ message: err.message });

@@ -11,6 +11,8 @@ const sessionSchema = new mongoose.Schema({
   absentees: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   status: { type: String, enum: ['held', 'cancelled'], default: 'held' },
+  attendanceMarkedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  attendanceMarkedAt: { type: Date },
 }, { timestamps: true });
 
 export default mongoose.model('Session', sessionSchema);

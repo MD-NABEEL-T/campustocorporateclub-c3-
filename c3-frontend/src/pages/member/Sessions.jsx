@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 import { Card } from '../../components/ui/Card';
@@ -7,10 +7,11 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Loader } from '../../components/ui/Loader';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { Plus, BookOpen, Calendar, User } from 'lucide-react';
+import { Plus, BookOpen, Calendar, User, UserCheck } from 'lucide-react';
 
 const Sessions = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -97,6 +98,24 @@ const Sessions = () => {
                       </span>
                     </div>
                   </div>
+
+                  {user?.role === 'admin' && (
+                    <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-2 border-t border-white/5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs text-white border-white/20 hover:bg-white/10 font-semibold"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          navigate(`/admin/sessions/${session._id}/attendance`);
+                        }}
+                        leftIcon={<UserCheck className="w-3.5 h-3.5 text-emerald-400" />}
+                      >
+                        Mark Attendance
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </Card>
             </Link>

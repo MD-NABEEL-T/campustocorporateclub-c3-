@@ -34,6 +34,7 @@ const Applications = lazy(() => import('./pages/admin/Applications'));
 const GalleryManager = lazy(() => import('./pages/admin/GalleryManager'));
 const Announcements = lazy(() => import('./pages/admin/Announcements'));
 const AllAttendance = lazy(() => import('./pages/admin/AllAttendance'));
+const SessionAttendance = lazy(() => import('./pages/admin/SessionAttendance'));
 
 // Member Portal Pages - lazy loaded, only fetched when a logged-in member
 const Dashboard = lazy(() => import('./pages/member/Dashboard'));
@@ -136,6 +137,7 @@ function App() {
                   <Route path="applications" element={<Applications />} />
                   <Route path="sessions" element={<Sessions />} />
                   <Route path="sessions/new" element={<SessionForm />} />
+                  <Route path="sessions/:id/attendance" element={<SessionAttendance />} />
                   <Route path="events" element={<AdminEvents />} />
                   <Route path="resources" element={<GalleryManager />} />
                   <Route path="attendance" element={<AllAttendance />} />

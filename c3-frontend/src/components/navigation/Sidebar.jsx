@@ -110,7 +110,11 @@ export const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) 
           <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-220px)]">
             {links.map((link) => {
               const Icon = link.icon;
-              const isActive = location.pathname === link.href;
+              const isActive =
+                link.href === '/admin' || link.href === '/dashboard'
+                  ? location.pathname === link.href
+                  : location.pathname === link.href ||
+                    location.pathname.startsWith(`${link.href}/`);
 
               return (
                 <Link
