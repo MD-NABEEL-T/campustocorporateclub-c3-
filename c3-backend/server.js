@@ -11,6 +11,7 @@ import publicRoutes from './routes/publicRoutes.js';
 import applicationRoutes from './routes/applicationRoutes.js';
 import galleryRoutes from './routes/galleryRoutes.js';
 import announcementRoutes from './routes/announcementRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 import dns from 'node:dns';
 
 dns.setServers(['8.8.8.8', '1.1.1.1']);
@@ -24,6 +25,7 @@ app.use(cors());
 app.use(express.json());
 
 
+app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

@@ -249,17 +249,21 @@ export const Members = () => {
                     <td className="py-3.5 px-4 sm:px-6 font-mono text-emerald-400">{m.presentCount}</td>
                     <td className="py-3.5 px-4 sm:px-6 font-mono text-red-400">{m.absentCount}</td>
                     <td className="py-3.5 px-4 sm:px-6">
-                      <Badge
-                        variant={
-                          parseFloat(m.percentage) >= 75
-                            ? 'success'
-                            : parseFloat(m.percentage) >= 50
-                            ? 'warning'
-                            : 'danger'
-                        }
-                      >
-                        {m.percentage}%
-                      </Badge>
+                      {m.percentage !== null && m.percentage !== undefined ? (
+                        <Badge
+                          variant={
+                            m.percentage >= 75
+                              ? 'success'
+                              : m.percentage >= 50
+                              ? 'warning'
+                              : 'danger'
+                          }
+                        >
+                          {m.percentage}%
+                        </Badge>
+                      ) : (
+                        <Badge variant="neutral">No sessions yet</Badge>
+                      )}
                     </td>
                   </tr>
                 ))}

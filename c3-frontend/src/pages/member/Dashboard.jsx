@@ -1,50 +1,68 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { StatsCard } from '../../components/ui/StatsCard';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
-import { UserCheck, BookOpen, Calendar, Bell, User, Clock, MapPin, Sparkles } from 'lucide-react';
+import { Loader } from '../../components/ui/Loader';
+import { AdminOverview } from '../../components/dashboard/AdminOverview';
+import { UserCheck, BookOpen, Calendar, Bell, User, Clock, MapPin } from 'lucide-react';
 import axios from '../../api/axios';
 
 export const Dashboard = () => {
   const { user } = useAuth();
-  const [attendance, setAttendance] = useState(null);
-  const [announcements, setAnnouncements] = useState({ todaySession: null, broadcasts: [] });
-  const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
+  const location = useLocation();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchDashboard = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await axios.get('/dashboard');
+      setDashboardData(res.data);
+    } catch (err) {
+      console.error('Failed to load dashboard:', err);
+      setError(err.response?.data?.message || 'Failed to connect to dashboard service');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
-    if (user?._id) {
-      axios
-        .get(`/attendance/member/${user._id}`)
-        .then((res) => {
-          if (isMounted) setAttendance(res.data);
-        })
-        .catch((err) => console.error(err));
-    }
+    fetchDashboard();
+  }, [fetchDashboard]);
 
-    axios
-      .get('/announcements')
-      .then((res) => {
-        if (isMounted) {
-          setAnnouncements({
-            todaySession: res.data.todaySession || null,
-            broadcasts: res.data.broadcasts || [],
-          });
-        }
-      })
-      .catch((err) => console.error(err))
-      .finally(() => {
-        if (isMounted) setLoadingAnnouncements(false);
-      });
+  // Keep admin strictly on /admin - if admin accesses /dashboard, redirect to /admin
+  if (user?.role === 'admin' && location.pathname === '/dashboard') {
+    return <Navigate to="/admin" replace />;
+  }
 
-    return () => {
-      isMounted = false;
-    };
-  }, [user]);
+  // Render Admin Overview desk if admin
+  if (user?.role === 'admin') {
+    return (
+      <AdminOverview
+        data={dashboardData}
+        loading={loading}
+        error={error}
+        onRetry={fetchDashboard}
+      />
+    );
+  }
 
-  const todaySession = announcements.todaySession;
-  const broadcasts = announcements.broadcasts;
+  // Regular Member View
+  if (loading) {
+    return (
+      <div className="py-24 flex items-center justify-center">
+        <Loader size="lg" label="Loading your member dashboard..." />
+      </div>
+    );
+  }
+
+  const attendance = dashboardData?.attendance;
+  const todaySession = dashboardData?.todaySession;
+  const broadcasts = dashboardData?.broadcasts || [];
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -67,8 +85,16 @@ export const Dashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatsCard
           title="Attendance Rate"
-          value={attendance ? `${attendance.percentage}%` : '100%'}
-          description={attendance ? `${attendance.presentCount} of ${attendance.totalSessions} sessions attended` : 'Loading turnout...'}
+          value={
+            attendance?.percentage !== null && attendance?.percentage !== undefined
+              ? `${attendance.percentage}%`
+              : 'No sessions yet'
+          }
+          description={
+            attendance && attendance.totalSessions > 0
+              ? `${attendance.presentCount} of ${attendance.totalSessions} sessions attended`
+              : 'No sessions recorded since joining'
+          }
           icon={UserCheck}
           color="primary"
         />

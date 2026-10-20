@@ -1,7 +1,7 @@
 it should feel like i can scroll and all the pages should be there no need to hide any pages like about us pages leads to another list of pages that is not good and 
 about us page should be simple for now keep right side an image carousel by using the component named carousel which has photos of our c3 members session or any photos that should be added to it i will addd do the carousel and left side add some details that is text ok 
 
-in domains section try to mention like our c3 club members are familiar with and you will get to know about it or else like they will get to explore 
+in domains section try to mention like our c3 club membersdevel are familiar with and you will get to know about it or else like they will get to explore 
 so now there are 5 domains now that is 1 full stack or design and development, 2 aiml ,3 cloud and devops , 4 cybersecurity and networks add another domains that our club that is 5 data analyst 
 
 25 minute daily knowledge sharing sessions ,events should be highlighted and before we start doing this lets first add the real images of the sessions and events ok now i really am concerned about the intro pages ok 
