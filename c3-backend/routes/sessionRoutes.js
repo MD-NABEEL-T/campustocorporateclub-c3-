@@ -7,6 +7,7 @@ import {
   getSessionById,
   markAbsentees,
   updateSession,
+  deleteSession,
 } from '../controllers/sessionController.js';
 
 const router = express.Router();
@@ -21,5 +22,6 @@ router.get('/', protect, getSessions);
 router.get('/:id', protect, getSessionById);
 router.put('/:id/absentees', protect, adminOnly, markAbsentees);
 router.put('/:id', protect, adminOnly, sessionUpload, updateSession);
+router.delete('/:id', protect, adminOnly, deleteSession);
 
 export default router;

@@ -123,11 +123,12 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
             {latestHeldSession && (
               <Link to={`/admin/sessions/${latestHeldSession._id}/attendance`}>
                 <Button
-                  variant="primary"
+                  variant="emerald"
                   size="sm"
-                  className="min-h-[48px] px-4 text-xs bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-lg shadow-emerald-500/10"
+                  className="min-h-[48px] px-4 text-xs font-semibold"
+                  leftIcon={<UserCheck className="w-4 h-4 shrink-0 text-white" />}
                 >
-                  <UserCheck className="w-4 h-4 mr-1.5" /> Mark attendance
+                  Mark attendance
                 </Button>
               </Link>
             )}
@@ -469,6 +470,11 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="text-xs font-semibold text-white truncate">{m.name}</p>
+                          {m.role && m.role !== 'member' && (
+                            <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold uppercase bg-white/10 text-zinc-300 border border-white/20 shrink-0">
+                              {m.role === 'admin' ? 'Admin' : m.role === 'coordinator' ? 'Coordinator' : m.role}
+                            </span>
+                          )}
                           {m.section && (
                             <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-white/5 text-zinc-400 border border-white/10">
                               {m.section}

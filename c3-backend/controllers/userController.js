@@ -21,6 +21,20 @@ export const getApprovedUsers = async (req, res) => {
   }
 };
 
+// Get all attendees for session attendance (approved accounts regardless of role) - admin only
+export const getAttendees = async (req, res) => {
+  try {
+    const attendees = await User.find({
+      $or: [{ isApproved: true }, { role: 'admin' }],
+    })
+      .select('_id name email registerNumber year section role')
+      .sort({ name: 1 });
+    res.json(attendees);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // Approve a user - admin only
 export const approveUser = async (req, res) => {
   try {

@@ -137,6 +137,7 @@ function App() {
                   <Route path="applications" element={<Applications />} />
                   <Route path="sessions" element={<Sessions />} />
                   <Route path="sessions/new" element={<SessionForm />} />
+                  <Route path="sessions/:id/edit" element={<SessionForm />} />
                   <Route path="sessions/:id/attendance" element={<SessionAttendance />} />
                   <Route path="events" element={<AdminEvents />} />
                   <Route path="resources" element={<GalleryManager />} />

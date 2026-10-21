@@ -54,7 +54,7 @@ export const calculateMemberAttendance = async (user) => {
 
   const history = sessions.slice(0, 10).map((session) => {
     const isAbsent = session.absentees?.some(
-      (absenteeId) => absenteeId.toString() === memberIdStr
+      (absenteeId) => String(absenteeId?._id ?? absenteeId) === memberIdStr
     );
     return {
       _id: session._id,
@@ -66,7 +66,7 @@ export const calculateMemberAttendance = async (user) => {
 
   for (let i = 0; i < sessions.length; i++) {
     const isAbsent = sessions[i].absentees?.some(
-      (absenteeId) => absenteeId.toString() === memberIdStr
+      (absenteeId) => String(absenteeId?._id ?? absenteeId) === memberIdStr
     );
 
     if (isAbsent) {

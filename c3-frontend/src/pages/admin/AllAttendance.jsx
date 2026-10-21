@@ -66,7 +66,16 @@ const AllAttendance = () => {
             <tbody className="divide-y divide-white/5 text-sm">
               {members.map((m) => (
                 <tr key={m._id} className="hover:bg-white/5 transition-colors">
-                  <td className="py-3.5 px-4 sm:px-6 font-semibold text-[#F8FAFC]">{m.name}</td>
+                  <td className="py-3.5 px-4 sm:px-6 font-semibold text-[#F8FAFC]">
+                    <div className="flex items-center gap-2">
+                      <span>{m.name}</span>
+                      {m.role && m.role !== 'member' && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-white/10 text-zinc-300 border border-white/20">
+                          {m.role === 'admin' ? 'Admin' : m.role === 'coordinator' ? 'Coordinator' : m.role}
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="py-3.5 px-4 sm:px-6 text-[#94A3B8] font-mono text-xs">{m.email}</td>
                   <td className="py-3.5 px-4 sm:px-6 font-mono text-[#22C55E]">{m.presentCount}</td>
                   <td className="py-3.5 px-4 sm:px-6 font-mono text-[#EF4444]">{m.absentCount}</td>

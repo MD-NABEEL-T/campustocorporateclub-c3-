@@ -46,7 +46,7 @@ export const getAllAttendance = async (req, res) => {
     try {
       // Primary attempt: Single MongoDB aggregation using $dateTrunc with timezone "UTC"
       results = await User.aggregate([
-        { $match: { isApproved: true } },
+        { $match: { $or: [{ isApproved: true }, { role: 'admin' }] } },
         {
           $lookup: {
             from: 'sessions',
@@ -91,6 +91,7 @@ export const getAllAttendance = async (req, res) => {
             email: 1,
             section: 1,
             year: 1,
+            role: 1,
             totalSessions: { $size: '$eligibleSessions' },
             absentCount: {
               $size: {
@@ -134,8 +135,10 @@ export const getAllAttendance = async (req, res) => {
       ]);
     } catch (aggErr) {
       // Fallback: If $dateTrunc is not supported in MongoDB version, compute cutoff in JS
-      const members = await User.find({ isApproved: true })
-        .select('name email section year createdAt')
+      const members = await User.find({
+        $or: [{ isApproved: true }, { role: 'admin' }],
+      })
+        .select('name email section year role createdAt')
         .sort({ name: 1 });
       const sessions = await Session.find({ status: { $ne: 'cancelled' } }).select('_id date absentees');
 
@@ -144,7 +147,7 @@ export const getAllAttendance = async (req, res) => {
         const eligible = sessions.filter((s) => new Date(s.date) >= cutoff);
         const totalSessions = eligible.length;
         const absentCount = eligible.filter((s) =>
-          s.absentees?.some((id) => id.toString() === member._id.toString())
+          s.absentees?.some((id) => String(id?._id ?? id) === String(member._id))
         ).length;
         const presentCount = totalSessions - absentCount;
         const percentage =
@@ -158,6 +161,7 @@ export const getAllAttendance = async (req, res) => {
           email: member.email,
           section: member.section,
           year: member.year,
+          role: member.role || 'member',
           totalSessions,
           presentCount,
           absentCount,

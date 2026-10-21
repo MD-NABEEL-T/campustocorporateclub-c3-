@@ -34,6 +34,8 @@ const formatIST12Hour = (dateStr) => {
     .toUpperCase();
 };
 
+const toIdString = (x) => String(x?._id ?? x ?? '').trim();
+
 const SessionAttendance = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -44,7 +46,8 @@ const SessionAttendance = () => {
   const [session, setSession] = useState(null);
   const [members, setMembers] = useState([]);
   const [absenteeIds, setAbsenteeIds] = useState(new Set());
-  const [savedAbsenteeIds, setSavedAbsenteeIds] = useState(new Set());
+  const [initialAbsenteeIds, setInitialAbsenteeIds] = useState(new Set());
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,7 +58,7 @@ const SessionAttendance = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch session and approved members
+  // Fetch session and approved members - build absent set only after BOTH have loaded
   useEffect(() => {
     let isMounted = true;
     const fetchData = async () => {
@@ -64,20 +67,25 @@ const SessionAttendance = () => {
       try {
         const [sessionRes, usersRes] = await Promise.all([
           api.get(`/sessions/${id}`),
-          api.get('/users/approved'),
+          api.get('/users/attendees'),
         ]);
 
         if (isMounted) {
-          setSession(sessionRes.data);
-          setMembers(usersRes.data || []);
+          const sessionData = sessionRes.data;
+          const rosterData = usersRes.data || [];
 
-          const preloaded = new Set(
-            (sessionRes.data?.absentees || []).map((abs) =>
-              typeof abs === 'object' ? abs._id?.toString() : abs.toString()
-            )
+          setSession(sessionData);
+          setMembers(rosterData);
+
+          // Normalize every absentee id to a string
+          const rawAbsentees = sessionData?.absentees || [];
+          const normalizedAbsent = new Set(
+            rawAbsentees.map(toIdString).filter(Boolean)
           );
-          setAbsenteeIds(preloaded);
-          setSavedAbsenteeIds(preloaded);
+
+          setAbsenteeIds(normalizedAbsent);
+          setInitialAbsenteeIds(new Set(normalizedAbsent));
+          setHasLoaded(true);
         }
       } catch (err) {
         if (isMounted) {
@@ -94,14 +102,15 @@ const SessionAttendance = () => {
     };
   }, [id]);
 
-  // Track unsaved changes
+  // Track unsaved changes against originally loaded absentees
   const hasUnsavedChanges = useMemo(() => {
-    if (savedAbsenteeIds.size !== absenteeIds.size) return true;
+    if (!hasLoaded) return false;
+    if (initialAbsenteeIds.size !== absenteeIds.size) return true;
     for (const item of absenteeIds) {
-      if (!savedAbsenteeIds.has(item)) return true;
+      if (!initialAbsenteeIds.has(item)) return true;
     }
     return false;
-  }, [absenteeIds, savedAbsenteeIds]);
+  }, [hasLoaded, absenteeIds, initialAbsenteeIds]);
 
   // Warn on browser unload if unsaved changes exist
   useEffect(() => {
@@ -131,10 +140,11 @@ const SessionAttendance = () => {
     }
   };
 
-  const toggleAbsentee = (memberId) => {
+  const toggleAbsentee = (memberRef) => {
+    const strId = toIdString(memberRef);
+    if (!strId) return;
     setAbsenteeIds((prev) => {
       const next = new Set(prev);
-      const strId = memberId.toString();
       if (next.has(strId)) {
         next.delete(strId);
       } else {
@@ -151,6 +161,13 @@ const SessionAttendance = () => {
   };
 
   const handleSave = async () => {
+    if (!hasLoaded || !hasUnsavedChanges || saving) return;
+
+    // Safety guard: Save must never send an empty absentees list unless the admin actually un-marked people
+    if (absenteeIds.size === 0 && initialAbsenteeIds.size === 0) {
+      return;
+    }
+
     setSaving(true);
     setError('');
     try {
@@ -159,7 +176,13 @@ const SessionAttendance = () => {
       };
       const res = await api.put(`/sessions/${id}/absentees`, payload);
       setSession(res.data);
-      setSavedAbsenteeIds(new Set(absenteeIds));
+
+      const updatedAbsent = new Set(
+        (res.data?.absentees || []).map(toIdString).filter(Boolean)
+      );
+      setAbsenteeIds(updatedAbsent);
+      setInitialAbsenteeIds(new Set(updatedAbsent));
+
       addToast(
         `Attendance saved successfully (${presentCount} present, ${absentCount} absent).`,
         'success'
@@ -191,7 +214,13 @@ const SessionAttendance = () => {
   }, [members]);
 
   const totalMembers = members.length;
-  const absentCount = absenteeIds.size;
+  // Header counts and row statuses derived from the same single piece of state (absenteeIds)
+  const absentCount = useMemo(() => {
+    return members.reduce((acc, m) => {
+      const mId = toIdString(m);
+      return acc + (absenteeIds.has(mId) ? 1 : 0);
+    }, 0);
+  }, [members, absenteeIds]);
   const presentCount = Math.max(0, totalMembers - absentCount);
 
   // Filter members by search, year, section
@@ -223,8 +252,10 @@ const SessionAttendance = () => {
   // Absent members pinned to top, remaining sorted alphabetically below
   const sortedMembers = useMemo(() => {
     return [...filteredMembers].sort((a, b) => {
-      const aAbsent = absenteeIds.has(a._id.toString());
-      const bAbsent = absenteeIds.has(b._id.toString());
+      const aId = toIdString(a);
+      const bId = toIdString(b);
+      const aAbsent = absenteeIds.has(aId);
+      const bAbsent = absenteeIds.has(bId);
       if (aAbsent && !bAbsent) return -1;
       if (!aAbsent && bAbsent) return 1;
       return (a.name || '').localeCompare(b.name || '');
@@ -460,17 +491,18 @@ const SessionAttendance = () => {
             </div>
           ) : (
             sortedMembers.map((member) => {
-              const isAbsent = absenteeIds.has(member._id.toString());
+              const memberId = toIdString(member);
+              const isAbsent = absenteeIds.has(memberId);
               return (
                 <div
-                  key={member._id}
-                  onClick={() => toggleAbsentee(member._id)}
+                  key={memberId}
+                  onClick={() => toggleAbsentee(member)}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      toggleAbsentee(member._id);
+                      toggleAbsentee(member);
                     }
                   }}
                   className={`min-h-[56px] p-3 sm:p-3.5 rounded-xl border transition-all duration-200 cursor-pointer select-none flex items-center justify-between gap-3 ${
@@ -480,7 +512,7 @@ const SessionAttendance = () => {
                   }`}
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <p
                         className={`text-xs sm:text-sm font-semibold truncate ${
                           isAbsent ? 'text-red-200 line-through opacity-85' : 'text-white'
@@ -488,6 +520,15 @@ const SessionAttendance = () => {
                       >
                         {member.name}
                       </p>
+                      {member.role && member.role !== 'member' && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-white/10 text-zinc-200 border border-white/20 shrink-0">
+                          {member.role === 'admin'
+                            ? 'Admin'
+                            : member.role === 'coordinator'
+                            ? 'Coordinator'
+                            : member.role}
+                        </span>
+                      )}
                       {member.section && (
                         <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-white/5 text-zinc-400 border border-white/10 shrink-0">
                           {member.section}
@@ -549,8 +590,8 @@ const SessionAttendance = () => {
             size="md"
             onClick={handleSave}
             isLoading={saving}
-            disabled={saving}
-            className="min-h-[48px] h-12 px-5 sm:px-7 text-xs sm:text-sm font-bold bg-white text-black hover:bg-zinc-200 justify-center shadow-lg shrink-0 rounded-xl"
+            disabled={saving || !hasUnsavedChanges || !hasLoaded}
+            className="min-h-[48px] h-12 px-5 sm:px-7 text-xs sm:text-sm font-bold bg-white text-black hover:bg-zinc-200 justify-center shadow-lg shrink-0 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
             leftIcon={<Save className="w-4 h-4" />}
           >
             Save Attendance

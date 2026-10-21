@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import api from '../../api/axios';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Loader } from '../../components/ui/Loader';
-import { ArrowLeft, Calendar, User, UserCheck } from 'lucide-react';
+import { ArrowLeft, Calendar, User, UserCheck, Edit, Trash2 } from 'lucide-react';
 
 const SessionDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { addToast } = useToast();
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,26 +45,65 @@ const SessionDetail = () => {
     );
   if (!session) return null;
 
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this session? This action cannot be undone and will recalculate everyone\'s attendance totals.'
+    );
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/sessions/${id}`);
+      addToast('Session deleted successfully', 'success');
+      navigate('/sessions');
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Failed to delete session', 'error');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <Link to="/sessions">
-          <Button variant="ghost" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
+          <Button variant="ghost" size="sm" className="min-h-[44px] h-11 px-3 text-xs" leftIcon={<ArrowLeft className="w-4 h-4" />}>
             Back to Sessions
           </Button>
         </Link>
 
         {user?.role === 'admin' && (
-          <Link to={`/admin/sessions/${session._id}/attendance`}>
-            <Button
-              variant="primary"
-              size="sm"
-              className="bg-white text-black hover:bg-zinc-200 text-xs font-semibold"
-              leftIcon={<UserCheck className="w-4 h-4" />}
-            >
-              Mark Attendance
-            </Button>
-          </Link>
+          <div className="flex flex-col gap-2 w-full sm:w-auto sm:items-end">
+            <Link to={`/admin/sessions/${session._id}/attendance`} className="w-full sm:w-auto">
+              <Button
+                variant="emerald"
+                size="md"
+                className="w-full sm:w-auto min-h-[44px] h-11 px-5 text-xs font-semibold rounded-xl whitespace-nowrap justify-center shadow-md shadow-emerald-500/10"
+                leftIcon={<UserCheck className="w-4 h-4 shrink-0 text-white" />}
+              >
+                Mark attendance
+              </Button>
+            </Link>
+
+            <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
+              <Link to={`/admin/sessions/${session._id}/edit`} className="w-full sm:w-auto">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="w-full sm:w-auto h-9 px-3.5 text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border border-white/10 rounded-xl whitespace-nowrap justify-center"
+                  leftIcon={<Edit className="w-3.5 h-3.5 shrink-0 text-zinc-400" />}
+                >
+                  Edit
+                </Button>
+              </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto h-9 px-3.5 text-xs font-semibold text-red-400 hover:text-red-300 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 hover:border-red-500/40 rounded-xl whitespace-nowrap justify-center"
+                onClick={handleDelete}
+                leftIcon={<Trash2 className="w-3.5 h-3.5 shrink-0 text-red-400" />}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 
@@ -72,10 +114,13 @@ const SessionDetail = () => {
             alt={session.topic}
             className="w-full h-full object-cover"
           />
-          <div className="absolute top-4 left-4">
+          <div className="absolute top-4 left-4 flex items-center gap-2">
             <Badge variant={session.type === 'technical' ? 'primary' : 'accent'}>
               {session.type}
             </Badge>
+            {session.status === 'cancelled' && (
+              <Badge variant="danger">Cancelled</Badge>
+            )}
           </div>
         </div>
 

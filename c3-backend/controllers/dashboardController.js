@@ -74,14 +74,14 @@ export const getDashboardData = async (req, res) => {
       Event.countDocuments(),
 
       // 7: total approved members
-      User.countDocuments({ isApproved: true }),
+      User.countDocuments({ $or: [{ isApproved: true }, { role: 'admin' }] }),
     ];
 
     // If Admin, append admin queries to execute concurrently
     if (user.role === 'admin') {
       baseQueries.push(
-        // 8: pending approvals count
-        User.countDocuments({ isApproved: false }),
+        // 8: pending approvals count (excluding admins)
+        User.countDocuments({ isApproved: false, role: { $ne: 'admin' } }),
         // 9: pending applications count (never drafts)
         Application.countDocuments({ status: 'pending' }),
         // 10: recent applications (latest 5 non-draft)
@@ -91,8 +91,8 @@ export const getDashboardData = async (req, res) => {
           .select('fullName preferredDomain year status createdAt')
           .lean(),
         // 11: approved members for attendance calculation
-        User.find({ isApproved: true })
-          .select('_id name email section year createdAt')
+        User.find({ $or: [{ isApproved: true }, { role: 'admin' }] })
+          .select('_id name email section year role createdAt')
           .lean(),
         // 12: all held sessions for attendance calculation
         Session.find({ status: { $ne: 'cancelled' } })
@@ -124,7 +124,7 @@ export const getDashboardData = async (req, res) => {
       let myStatus = null;
       if (!isBeforeAccount) {
         const isAbsent = s.absentees?.some(
-          (absId) => absId.toString() === user._id.toString()
+          (absId) => String(absId?._id ?? absId) === String(user._id)
         );
         myStatus = isAbsent ? 'absent' : 'present';
       }
@@ -171,7 +171,7 @@ export const getDashboardData = async (req, res) => {
             if (total === 0) return null; // Skip members with null percentage (0 sessions)
 
             const absent = eligible.filter((s) =>
-              s.absentees?.some((id) => id.toString() === member._id.toString())
+              s.absentees?.some((id) => String(id?._id ?? id) === String(member._id))
             ).length;
             const present = total - absent;
             const percentage = Number(((present / total) * 100).toFixed(1));
@@ -182,6 +182,7 @@ export const getDashboardData = async (req, res) => {
               email: member.email,
               section: member.section || 'CSE',
               year: member.year,
+              role: member.role || 'member',
               totalSessions: total,
               presentCount: present,
               absentCount: absent,

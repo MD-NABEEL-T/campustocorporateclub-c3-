@@ -36,6 +36,7 @@ export const MEMBER_NAV_LINKS = [
 
 export const ADMIN_NAV_LINKS = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard },
+  { label: 'My Attendance', href: '/attendance', icon: UserCheck },
   { label: 'Announcements', href: '/admin/announcements', icon: Bell },
   { label: 'Member Approvals', href: '/admin/members', icon: Users },
   { label: 'Attendance', href: '/admin/attendance', icon: FileSpreadsheet },
@@ -51,9 +52,15 @@ export const getPageTitle = (pathname, role = 'member') => {
       ? pathname.slice(0, -1)
       : pathname || '';
 
-  // Specific nested routes
+  // Specific routes
+  if (path === '/attendance') {
+    return 'My Attendance';
+  }
   if (/^\/admin\/sessions\/[^/]+\/attendance$/.test(path)) {
     return 'Session Attendance';
+  }
+  if (/^\/admin\/sessions\/[^/]+\/edit$/.test(path)) {
+    return 'Edit Session';
   }
   if (/^\/admin\/sessions\/new$/.test(path)) {
     return 'Create Session';
