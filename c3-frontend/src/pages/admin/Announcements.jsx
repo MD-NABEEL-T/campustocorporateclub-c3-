@@ -95,10 +95,18 @@ export const Announcements = () => {
     setTestPushLoading(true);
     try {
       const res = await api.post('/notifications/test');
-      addToast(
-        `Test notification sent! Delivered to ${res.data.result?.sent || 0} registered device(s). Check your phone.`,
-        'success'
-      );
+      const sentCount = res.data.result?.sent || 0;
+      if (sentCount === 0) {
+        addToast(
+          'No devices subscribed yet! Click "Enable Notifications" first so your phone/browser can receive alerts.',
+          'warning'
+        );
+      } else {
+        addToast(
+          `Test notification sent! Delivered to ${sentCount} registered device(s). Check your phone.`,
+          'success'
+        );
+      }
     } catch (err) {
       addToast(err.response?.data?.message || 'Failed to send test push notification', 'error');
     } finally {
