@@ -124,7 +124,8 @@ const SessionForm = () => {
           },
         });
         addToast('Session created successfully', 'success');
-        navigate(`/admin/sessions/${res.data._id}/attendance`);
+        const basePath = user?.role === 'admin' ? '/admin' : '/staff';
+        navigate(`${basePath}/sessions/${res.data._id}/attendance`);
       }
     } catch (err) {
       setError(err.response?.data?.message || `Failed to ${isEdit ? 'update' : 'create'} session`);
@@ -137,9 +138,11 @@ const SessionForm = () => {
     return <Loader fullScreen label="Loading session data for editing..." />;
   }
 
+  const basePath = user?.role === 'admin' ? '/admin' : '/staff';
+
   return (
     <div className="space-y-6 max-w-2xl mx-auto pb-12">
-      <Link to={isEdit ? `/sessions/${id}` : '/admin/sessions'}>
+      <Link to={isEdit ? `/sessions/${id}` : `${basePath}/sessions`}>
         <Button variant="ghost" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
           {isEdit ? 'Back to Session Details' : 'Back to Sessions'}
         </Button>

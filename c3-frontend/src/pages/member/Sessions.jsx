@@ -18,6 +18,10 @@ const Sessions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const isStaff = user?.role === 'admin' || user?.role === 'coordinator';
+  const isAdmin = user?.role === 'admin';
+  const staffBasePath = isAdmin ? '/admin' : '/staff';
+
   useEffect(() => {
     let isMounted = true;
     const fetchSessions = async () => {
@@ -64,8 +68,8 @@ const Sessions = () => {
           <p className="text-xs sm:text-sm text-[#94A3B8] mt-1">List of all technical and non-technical peer learning sessions</p>
         </div>
 
-        {user?.role === 'admin' && (
-          <Link to="/admin/sessions/new">
+        {isStaff && (
+          <Link to={`${staffBasePath}/sessions/new`}>
             <Button variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />}>
               Create Session
             </Button>
@@ -122,7 +126,7 @@ const Sessions = () => {
                     </div>
                   </div>
 
-                  {user?.role === 'admin' && (
+                  {isStaff && (
                     <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-3 border-t border-white/5 space-y-2">
                       <Button
                         variant="emerald"
@@ -131,14 +135,14 @@ const Sessions = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          navigate(`/admin/sessions/${session._id}/attendance`);
+                          navigate(`${staffBasePath}/sessions/${session._id}/attendance`);
                         }}
                         leftIcon={<UserCheck className="w-4 h-4 shrink-0 text-white" />}
                       >
                         Mark attendance
                       </Button>
 
-                      <div className="grid grid-cols-2 gap-2 w-full">
+                      <div className={isAdmin ? 'grid grid-cols-2 gap-2 w-full' : 'w-full'}>
                         <Button
                           variant="secondary"
                           size="sm"
@@ -146,21 +150,23 @@ const Sessions = () => {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            navigate(`/admin/sessions/${session._id}/edit`);
+                            navigate(`${staffBasePath}/sessions/${session._id}/edit`);
                           }}
                           leftIcon={<Edit className="w-3.5 h-3.5 shrink-0 text-zinc-400" />}
                         >
                           Edit
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full h-9 px-3 text-xs font-semibold text-red-400 hover:text-red-300 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 hover:border-red-500/40 rounded-xl whitespace-nowrap justify-center"
-                          onClick={(e) => handleDelete(e, session._id)}
-                          leftIcon={<Trash2 className="w-3.5 h-3.5 shrink-0 text-red-400" />}
-                        >
-                          Delete
-                        </Button>
+                        {isAdmin && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full h-9 px-3 text-xs font-semibold text-red-400 hover:text-red-300 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 hover:border-red-500/40 rounded-xl whitespace-nowrap justify-center"
+                            onClick={(e) => handleDelete(e, session._id)}
+                            leftIcon={<Trash2 className="w-3.5 h-3.5 shrink-0 text-red-400" />}
+                          >
+                            Delete
+                          </Button>
+                        )}
                       </div>
                     </div>
                   )}

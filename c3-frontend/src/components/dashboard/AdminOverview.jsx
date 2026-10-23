@@ -26,6 +26,7 @@ import { Button } from '../ui/Button';
 import { Loader } from '../ui/Loader';
 import CountUp from '../reactbits/CountUp';
 import { DOMAIN_OPTIONS } from '../../constants/domains';
+import { CoordinatorsCard } from './CoordinatorsCard';
 
 const domainLabel = (value) => DOMAIN_OPTIONS.find((d) => d.value === value)?.label || value || 'General';
 
@@ -605,6 +606,9 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
               )}
             </CardContent>
           </Card>
+
+          {/* Coordinators Card */}
+          <CoordinatorsCard coordinators={data?.coordinators || []} />
         </div>
       </div>
     </div>

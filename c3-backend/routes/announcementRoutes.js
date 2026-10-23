@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect, adminOnly } from '../middleware/authMiddleware.js';
+import { protect, staffOnly } from '../middleware/authMiddleware.js';
 import {
   getAnnouncements,
   updateTodaySession,
@@ -15,22 +15,22 @@ const router = express.Router();
 // GET /api/announcements (Accessible by all logged-in C3 members)
 router.get('/', protect, getAnnouncements);
 
-// ADMIN ONLY - update today's upcoming session details
-router.post('/today-session', protect, adminOnly, updateTodaySession);
+// Staff - update today's upcoming session details
+router.post('/today-session', protect, staffOnly, updateTodaySession);
 
-// ADMIN ONLY - quick edit venue, time, or message
-router.patch('/:id/quick-edit', protect, adminOnly, quickEditAnnouncement);
+// Staff - quick edit venue, time, or message
+router.patch('/:id/quick-edit', protect, staffOnly, quickEditAnnouncement);
 
-// ADMIN ONLY - cancel a session announcement
-router.patch('/:id/cancel', protect, adminOnly, cancelAnnouncement);
+// Staff - cancel a session announcement
+router.patch('/:id/cancel', protect, staffOnly, cancelAnnouncement);
 
-// ADMIN ONLY - restore a cancelled session announcement
-router.patch('/:id/restore', protect, adminOnly, restoreAnnouncement);
+// Staff - restore a cancelled session announcement
+router.patch('/:id/restore', protect, staffOnly, restoreAnnouncement);
 
-// ADMIN ONLY - post a general broadcast
-router.post('/broadcast', protect, adminOnly, createBroadcast);
+// Staff - post a general broadcast
+router.post('/broadcast', protect, staffOnly, createBroadcast);
 
-// ADMIN ONLY - delete announcement
-router.delete('/:id', protect, adminOnly, deleteAnnouncement);
+// Staff - delete announcement (admin or creator)
+router.delete('/:id', protect, staffOnly, deleteAnnouncement);
 
 export default router;

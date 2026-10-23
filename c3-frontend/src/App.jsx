@@ -144,6 +144,23 @@ function App() {
                   <Route path="attendance" element={<AllAttendance />} />
                 </Route>
 
+                {/* Staff Portal Protected Routes (Admin or Coordinator) */}
+                <Route
+                  path="/staff"
+                  element={
+                    <ProtectedRoute allowedRoles={['admin', 'coordinator']}>
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="announcements" element={<Announcements />} />
+                  <Route path="sessions" element={<Sessions />} />
+                  <Route path="sessions/new" element={<SessionForm />} />
+                  <Route path="sessions/:id/edit" element={<SessionForm />} />
+                  <Route path="sessions/:id/attendance" element={<SessionAttendance />} />
+                  <Route path="attendance" element={<AllAttendance />} />
+                </Route>
+
                 {/* Catch-all Fallback */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

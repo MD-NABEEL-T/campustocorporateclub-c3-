@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Terminal, Lock, Mail, ArrowRight, Clock, UserPlus, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
@@ -15,13 +15,19 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { user, login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // If already logged in, redirect directly to dashboard
+  const destination =
+    location.state?.from?.pathname && location.state.from.pathname !== '/login'
+      ? `${location.state.from.pathname}${location.state.from.search || ''}${location.state.from.hash || ''}`
+      : '/dashboard';
+
+  // If already logged in, redirect directly to intended destination
   useEffect(() => {
     if (user) {
-      navigate('/dashboard', { replace: true });
+      navigate(destination, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, destination]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +36,7 @@ const Login = () => {
     setIsLoading(true);
     try {
       await login(email, password);
-      navigate('/dashboard');
+      navigate(destination, { replace: true });
     } catch (err) {
       if (err.response?.status === 403 || err.response?.data?.isPendingApproval) {
         setIsPending(true);

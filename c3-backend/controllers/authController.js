@@ -2,9 +2,12 @@ import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { sendEmail } from '../utils/sendEmail.js';
+import { isOwnerUser } from '../middleware/authMiddleware.js';
 
 const generateToken = (id, role) => {
-  return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '1095d' }); // ~3 years
+  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '30d',
+  });
 };
 
 // REGISTER
@@ -112,7 +115,34 @@ export const loginUser = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      isApproved: user.isApproved,
+      isOwner: isOwnerUser(user),
+      year: user.year,
+      section: user.section,
       token: generateToken(user._id, user.role),
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// GET CURRENT USER (/api/auth/me)
+export const getMe = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: 'User not found or deactivated' });
+    }
+
+    res.status(200).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isApproved: user.isApproved,
+      isOwner: isOwnerUser(user),
+      year: user.year,
+      section: user.section,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

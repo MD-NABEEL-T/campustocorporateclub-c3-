@@ -9,7 +9,7 @@ import {
   User as UserIcon,
   X,
 } from 'lucide-react';
-import { MEMBER_NAV_LINKS, ADMIN_NAV_LINKS } from '../../constants/navigation';
+import { MEMBER_NAV_LINKS, ADMIN_NAV_LINKS, COORDINATOR_NAV_LINKS } from '../../constants/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { Badge } from '../ui/Badge';
 
@@ -18,7 +18,8 @@ export const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) 
   const { user, logout } = useAuth();
 
   const isAdmin = user?.role === 'admin';
-  const links = isAdmin ? ADMIN_NAV_LINKS : MEMBER_NAV_LINKS;
+  const isCoordinator = user?.role === 'coordinator';
+  const links = isAdmin ? ADMIN_NAV_LINKS : isCoordinator ? COORDINATOR_NAV_LINKS : MEMBER_NAV_LINKS;
 
   // Auto-close mobile drawer on route change
   useEffect(() => {
@@ -61,10 +62,10 @@ export const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) 
               {(!collapsed || mobileOpen) && (
                 <div className="flex flex-col">
                   <span className="font-heading font-bold text-sm text-white tracking-tight">
-                    C3 PORTAL
+                     C3 PORTAL
                   </span>
                   <span className="text-[10px] font-mono text-zinc-400 uppercase">
-                    {isAdmin ? 'Admin Console' : 'Member Workspace'}
+                    {isAdmin ? 'Admin Console' : isCoordinator ? 'Staff Workspace' : 'Member Workspace'}
                   </span>
                 </div>
               )}
@@ -92,10 +93,14 @@ export const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) 
           {/* Role Badge Indicator */}
           {(!collapsed || mobileOpen) && (
             <div className="px-4 py-3 border-b border-white/5 bg-zinc-950">
-              <Badge variant={isAdmin ? 'accent' : 'primary'} className="w-full justify-center">
+              <Badge variant={isAdmin ? 'accent' : isCoordinator ? 'warning' : 'primary'} className="w-full justify-center">
                 {isAdmin ? (
                   <>
                     <ShieldCheck className="w-3.5 h-3.5" /> Admin Console
+                  </>
+                ) : isCoordinator ? (
+                  <>
+                    <ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> Coordinator
                   </>
                 ) : (
                   <>

@@ -1,9 +1,19 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useLocation, Navigate } from 'react-router-dom';
+import { useLocation, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { StatsCard } from '../../components/ui/StatsCard';
 import { Button } from '../../components/ui/Button';
-import { UserCheck, BookOpen, Calendar, Flame, AlertTriangle } from 'lucide-react';
+import {
+  UserCheck,
+  BookOpen,
+  Calendar,
+  Flame,
+  AlertTriangle,
+  ShieldCheck,
+  ArrowRight,
+  Plus,
+  Bell,
+} from 'lucide-react';
 import axios from '../../api/axios';
 
 import { AdminOverview } from '../../components/dashboard/AdminOverview';
@@ -13,6 +23,7 @@ import { RecentSessions } from '../../components/dashboard/RecentSessions';
 import { EventsCard } from '../../components/dashboard/EventsCard';
 import { BroadcastsCard } from '../../components/dashboard/BroadcastsCard';
 import { ClubPulse } from '../../components/dashboard/ClubPulse';
+import { CoordinatorsCard } from '../../components/dashboard/CoordinatorsCard';
 import { DashboardSkeleton } from '../../components/dashboard/DashboardSkeleton';
 
 export const Dashboard = () => {
@@ -100,7 +111,7 @@ export const Dashboard = () => {
       <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-white/[0.06] via-white/[0.03] to-transparent border border-white/10 relative overflow-hidden shadow-xl">
         <div className="relative z-10">
           <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-400">
-            Member Overview
+            {user?.role === 'coordinator' ? 'Staff Workspace' : 'Member Overview'}
           </span>
           <h1 className="text-2xl sm:text-3xl font-extrabold font-heading text-white mt-1">
             Hello, {name} 👋
@@ -112,6 +123,98 @@ export const Dashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Staff Tools Card (Coordinators) */}
+      {user?.role === 'coordinator' && (
+        <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 shadow-xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-bold text-white">Staff Operational Tools</h2>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    Coordinator
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Quick operational shortcuts to run day-to-day club sessions, attendance, and announcements.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            <Link
+              to={
+                dashboardData?.recentSessions?.[0]?._id
+                  ? `/staff/sessions/${dashboardData.recentSessions[0]._id}/attendance`
+                  : '/staff/sessions'
+              }
+              className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-900/80 border border-white/10 hover:border-amber-500/40 hover:bg-zinc-900 transition-all group"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 text-emerald-400">
+                  <UserCheck className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-white group-hover:text-amber-300 transition-colors truncate">
+                    Mark Attendance
+                  </p>
+                  <p className="text-[10px] font-mono text-zinc-400 truncate">
+                    {dashboardData?.recentSessions?.[0]?.topic
+                      ? `Latest: ${dashboardData.recentSessions[0].topic}`
+                      : 'Latest held session'}
+                  </p>
+                </div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-amber-300 group-hover:translate-x-0.5 transition-all shrink-0" />
+            </Link>
+
+            <Link
+              to="/staff/announcements"
+              className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-900/80 border border-white/10 hover:border-amber-500/40 hover:bg-zinc-900 transition-all group"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0 text-sky-400">
+                  <Bell className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-white group-hover:text-amber-300 transition-colors truncate">
+                    Post Announcement
+                  </p>
+                  <p className="text-[10px] font-mono text-zinc-400 truncate">
+                    Today / upcoming sessions & broadcasts
+                  </p>
+                </div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-amber-300 group-hover:translate-x-0.5 transition-all shrink-0" />
+            </Link>
+
+            <Link
+              to="/staff/sessions/new"
+              className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-900/80 border border-white/10 hover:border-amber-500/40 hover:bg-zinc-900 transition-all group"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0 text-purple-400">
+                  <Plus className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-white group-hover:text-amber-300 transition-colors truncate">
+                    Add Session
+                  </p>
+                  <p className="text-[10px] font-mono text-zinc-400 truncate">
+                    Log new peer learning session
+                  </p>
+                </div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-amber-300 group-hover:translate-x-0.5 transition-all shrink-0" />
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Four Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -188,8 +291,15 @@ export const Dashboard = () => {
         <BroadcastsCard broadcasts={dashboardData?.broadcasts || []} />
       </div>
 
-      {/* Row 3: Club Pulse Strip */}
-      <ClubPulse club={dashboardData?.club} />
+      {/* Row 3: Coordinators & Club Pulse */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="lg:col-span-1">
+          <CoordinatorsCard coordinators={dashboardData?.coordinators || []} />
+        </div>
+        <div className="lg:col-span-2">
+          <ClubPulse club={dashboardData?.club} />
+        </div>
+      </div>
     </div>
   );
 };

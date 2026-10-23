@@ -75,26 +75,32 @@ export const getDashboardData = async (req, res) => {
 
       // 7: total approved members
       User.countDocuments({ $or: [{ isApproved: true }, { role: 'admin' }] }),
+
+      // 8: active coordinators list (names only, id and year) for everyone
+      User.find({ role: 'coordinator', isApproved: true })
+        .sort({ name: 1 })
+        .select('_id name year section')
+        .lean(),
     ];
 
     // If Admin, append admin queries to execute concurrently
     if (user.role === 'admin') {
       baseQueries.push(
-        // 8: pending approvals count (excluding admins)
+        // 9: pending approvals count (excluding admins)
         User.countDocuments({ isApproved: false, role: { $ne: 'admin' } }),
-        // 9: pending applications count (never drafts)
+        // 10: pending applications count (never drafts)
         Application.countDocuments({ status: 'pending' }),
-        // 10: recent applications (latest 5 non-draft)
+        // 11: recent applications (latest 5 non-draft)
         Application.find({ status: { $ne: 'draft' } })
           .sort({ createdAt: -1 })
           .limit(5)
           .select('fullName preferredDomain year status createdAt')
           .lean(),
-        // 11: approved members for attendance calculation
+        // 12: approved members for attendance calculation
         User.find({ $or: [{ isApproved: true }, { role: 'admin' }] })
           .select('_id name email section year role createdAt')
           .lean(),
-        // 12: all held sessions for attendance calculation
+        // 13: all held sessions for attendance calculation
         Session.find({ status: { $ne: 'cancelled' } })
           .select('_id date absentees')
           .lean()
@@ -111,6 +117,7 @@ export const getDashboardData = async (req, res) => {
     const totalSessions = results[5];
     const totalEvents = results[6];
     const totalMembers = results[7];
+    const coordinators = results[8] || [];
 
     const me = {
       name: user.name || '',
@@ -155,11 +162,11 @@ export const getDashboardData = async (req, res) => {
 
     // Admin Payload
     if (user.role === 'admin') {
-      const pendingApprovalsCount = results[8];
-      const pendingApplicationsCount = results[9];
-      const recentApplications = results[10];
-      const approvedMembers = results[11];
-      const allHeldSessions = results[12];
+      const pendingApprovalsCount = results[9];
+      const pendingApplicationsCount = results[10];
+      const recentApplications = results[11];
+      const approvedMembers = results[12];
+      const allHeldSessions = results[13];
 
       let lowAttendanceMembers = [];
       if (allHeldSessions.length > 0 && approvedMembers.length > 0) {
@@ -209,6 +216,7 @@ export const getDashboardData = async (req, res) => {
         recentSessions,
         events,
         club,
+        coordinators,
         pending: {
           memberApprovals: pendingApprovalsCount,
           applications: pendingApplicationsCount,
@@ -225,9 +233,9 @@ export const getDashboardData = async (req, res) => {
       });
     }
 
-    // Member Payload (strictly no pending, recentApplications, or lowAttendanceMembers)
+    // Member / Staff Payload (strictly no pending, recentApplications, or lowAttendanceMembers)
     return res.json({
-      role: 'member',
+      role: user.role || 'member',
       me,
       attendance,
       todaySession,
@@ -236,6 +244,7 @@ export const getDashboardData = async (req, res) => {
       recentSessions,
       events,
       club,
+      coordinators,
     });
   } catch (err) {
     console.error('getDashboardData error:', err);

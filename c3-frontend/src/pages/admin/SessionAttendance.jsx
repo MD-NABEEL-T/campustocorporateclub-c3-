@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import api from '../../api/axios';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -39,9 +40,11 @@ const toIdString = (x) => String(x?._id ?? x ?? '').trim();
 const SessionAttendance = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { addToast } = useToast();
   const outletCtx = useOutletContext();
   const collapsed = outletCtx?.collapsed ?? false;
+  const basePath = user?.role === 'admin' ? '/admin' : '/staff';
 
   const [session, setSession] = useState(null);
   const [members, setMembers] = useState([]);
@@ -306,7 +309,7 @@ const SessionAttendance = () => {
 
         <button
           type="button"
-          onClick={() => handleNavigateAway('/admin/sessions')}
+          onClick={() => handleNavigateAway(`${basePath}/sessions`)}
           className="min-h-[48px] px-2 py-2 inline-flex items-center text-xs font-mono text-zinc-400 hover:text-white transition-colors"
         >
           All Sessions

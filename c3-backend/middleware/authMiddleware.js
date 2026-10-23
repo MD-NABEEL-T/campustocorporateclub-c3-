@@ -12,6 +12,14 @@ export const protect = async (req, res, next) => {
       if (!req.user) {
         return res.status(401).json({ message: 'User not found or deactivated' });
       }
+
+      if (req.user.role !== 'admin' && !req.user.isApproved) {
+        return res.status(403).json({
+          message: 'Account pending admin approval or approval has been revoked',
+          isPendingApproval: true,
+        });
+      }
+
       next();
     } catch (err) {
       res.status(401).json({ message: 'Not authorized, token failed' });
@@ -28,3 +36,29 @@ export const adminOnly = (req, res, next) => {
     res.status(403).json({ message: 'Admin access only' });
   }
 };
+
+export const staffOnly = (req, res, next) => {
+  if (req.user && (req.user.role === 'admin' || req.user.role === 'coordinator')) {
+    next();
+  } else {
+    res.status(403).json({ message: 'Staff access only (Admin or Coordinator)' });
+  }
+};
+
+export const isOwnerUser = (user) => {
+  const ownerEmail = (process.env.OWNER_EMAIL || '').trim().toLowerCase();
+  if (!ownerEmail || !user) return false;
+  return user.role === 'admin' && (user.email || '').trim().toLowerCase() === ownerEmail;
+};
+
+export const ownerOnly = (req, res, next) => {
+  const ownerEmail = (process.env.OWNER_EMAIL || '').trim().toLowerCase();
+  if (!ownerEmail) {
+    return res.status(403).json({ message: 'Owner action forbidden: OWNER_EMAIL is not configured' });
+  }
+  if (req.user && isOwnerUser(req.user)) {
+    next();
+  } else {
+    res.status(403).json({ message: 'Owner access only' });
+  }
+};

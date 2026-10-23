@@ -21,7 +21,38 @@ connectDB();
 const app = express();
 
 
-app.use(cors());
+const getAllowedOrigins = () => {
+  const rawClientUrl = process.env.CLIENT_URL || '';
+  const origins = rawClientUrl
+    .split(',')
+    .map((o) => o.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+
+  if (process.env.NODE_ENV !== 'production') {
+    if (!origins.includes('http://localhost:5173')) {
+      origins.push('http://localhost:5173');
+    }
+  }
+  return origins;
+};
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Requests with no origin (curl, Postman, etc.) stay allowed
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = getAllowedOrigins();
+    const normalizedOrigin = origin.trim().replace(/\/$/, '');
+
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 
@@ -44,5 +75,18 @@ if (eventConfig.EVENT_ENABLED) {
 }
 // --------------------
 
+// Global error handler
+app.use((err, req, res, next) => {
+  if (err && err.message && err.message.startsWith('CORS blocked')) {
+    return res.status(403).json({ message: err.message });
+  }
+  return res.status(500).json({ message: err.message || 'Internal server error' });
+});
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  if (!process.env.OWNER_EMAIL || !process.env.OWNER_EMAIL.trim()) {
+    console.warn('[WARNING] OWNER_EMAIL is not set. Owner-only admin promotion/revocation endpoints are disabled.');
+  }
+});

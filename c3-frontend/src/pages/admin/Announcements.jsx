@@ -22,6 +22,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Loader } from '../../components/ui/Loader';
 import { Modal } from '../../components/ui/Modal';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import api from '../../api/axios';
 
@@ -83,10 +84,18 @@ const getRelativeEditedTime = (editedAt) => {
 };
 
 export const Announcements = () => {
+  const { user } = useAuth();
   const { addToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [updatingSession, setUpdatingSession] = useState(false);
   const [postingBroadcast, setPostingBroadcast] = useState(false);
+
+  const canDeleteAnnouncement = (item) => {
+    if (!item) return false;
+    if (user?.role === 'admin') return true;
+    const creatorId = item.createdBy?._id || item.createdBy;
+    return Boolean(creatorId && String(creatorId) === String(user?._id));
+  };
 
   const todayStr = getTodayKolkataDateString();
 
@@ -443,15 +452,17 @@ export const Announcements = () => {
                   >
                     Restore
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteSession(todaySession._id, "Today's session")}
-                    leftIcon={<Trash2 className="w-3.5 h-3.5" />}
-                    className="text-xs text-red-400 hover:text-red-300 hover:border-red-400/40"
-                  >
-                    Delete
-                  </Button>
+                  {canDeleteAnnouncement(todaySession) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteSession(todaySession._id, "Today's session")}
+                      leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                      className="text-xs text-red-400 hover:text-red-300 hover:border-red-400/40"
+                    >
+                      Delete
+                    </Button>
+                  )}
                 </>
               ) : (
                 <>
@@ -491,15 +502,17 @@ export const Announcements = () => {
                   >
                     Edit in form
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteSession(todaySession._id, "Today's session")}
-                    leftIcon={<Trash2 className="w-3.5 h-3.5" />}
-                    className="text-xs text-red-400 hover:text-red-300 hover:border-red-400/40"
-                  >
-                    Delete
-                  </Button>
+                  {canDeleteAnnouncement(todaySession) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteSession(todaySession._id, "Today's session")}
+                      leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                      className="text-xs text-red-400 hover:text-red-300 hover:border-red-400/40"
+                    >
+                      Delete
+                    </Button>
+                  )}
                 </>
               )}
             </div>
@@ -601,15 +614,17 @@ export const Announcements = () => {
                   >
                     Restore
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteSession(upcomingSession._id, 'Upcoming session')}
-                    leftIcon={<Trash2 className="w-3.5 h-3.5" />}
-                    className="text-xs text-red-400 hover:text-red-300 hover:border-red-400/40"
-                  >
-                    Delete
-                  </Button>
+                  {canDeleteAnnouncement(upcomingSession) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteSession(upcomingSession._id, 'Upcoming session')}
+                      leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                      className="text-xs text-red-400 hover:text-red-300 hover:border-red-400/40"
+                    >
+                      Delete
+                    </Button>
+                  )}
                 </>
               ) : (
                 <>
@@ -649,15 +664,17 @@ export const Announcements = () => {
                   >
                     Edit in form
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteSession(upcomingSession._id, 'Upcoming session')}
-                    leftIcon={<Trash2 className="w-3.5 h-3.5" />}
-                    className="text-xs text-red-400 hover:text-red-300 hover:border-red-400/40"
-                  >
-                    Delete
-                  </Button>
+                  {canDeleteAnnouncement(upcomingSession) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteSession(upcomingSession._id, 'Upcoming session')}
+                      leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                      className="text-xs text-red-400 hover:text-red-300 hover:border-red-400/40"
+                    >
+                      Delete
+                    </Button>
+                  )}
                 </>
               )}
             </div>
@@ -863,14 +880,16 @@ export const Announcements = () => {
                         {new Date(b.createdAt || b.date).toLocaleDateString()}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteBroadcast(b._id)}
-                      className="p-1.5 rounded-lg bg-zinc-900 text-zinc-400 hover:text-red-400 hover:bg-zinc-800 transition-colors shrink-0"
-                      title="Delete broadcast"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {canDeleteAnnouncement(b) && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteBroadcast(b._id)}
+                        className="p-1.5 rounded-lg bg-zinc-900 text-zinc-400 hover:text-red-400 hover:bg-zinc-800 transition-colors shrink-0"
+                        title="Delete broadcast"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 ))
               )}

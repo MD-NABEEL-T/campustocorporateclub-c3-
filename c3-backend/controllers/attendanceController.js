@@ -18,10 +18,10 @@ export const getMemberAttendance = async (req, res) => {
   try {
     const targetId = req.params.memberId;
     const isSelf = targetId === req.user._id.toString();
-    const isAdmin = req.user.role === 'admin';
+    const isStaff = req.user.role === 'admin' || req.user.role === 'coordinator';
 
     // Strict ownership & role check
-    if (!isSelf && !isAdmin) {
+    if (!isSelf && !isStaff) {
       return res.status(403).json({ message: 'Forbidden: Access denied' });
     }
 
@@ -42,6 +42,7 @@ export const getMemberAttendance = async (req, res) => {
 export const getAllAttendance = async (req, res) => {
   try {
     let results;
+    const ownerEmail = (process.env.OWNER_EMAIL || '').trim().toLowerCase();
 
     try {
       // Primary attempt: Single MongoDB aggregation using $dateTrunc with timezone "UTC"
@@ -91,7 +92,14 @@ export const getAllAttendance = async (req, res) => {
             email: 1,
             section: 1,
             year: 1,
-            role: 1,
+            role: { $ifNull: ['$role', 'member'] },
+            isOwner: {
+              $and: [
+                { $ne: [ownerEmail, ''] },
+                { $eq: [{ $toLower: '$email' }, ownerEmail] },
+                { $eq: ['$role', 'admin'] },
+              ],
+            },
             totalSessions: { $size: '$eligibleSessions' },
             absentCount: {
               $size: {
@@ -162,6 +170,11 @@ export const getAllAttendance = async (req, res) => {
           section: member.section,
           year: member.year,
           role: member.role || 'member',
+          isOwner: Boolean(
+            ownerEmail &&
+            member.role === 'admin' &&
+            (member.email || '').trim().toLowerCase() === ownerEmail
+          ),
           totalSessions,
           presentCount,
           absentCount,

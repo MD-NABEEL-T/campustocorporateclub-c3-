@@ -187,12 +187,19 @@ export const createBroadcast = async (req, res) => {
   }
 };
 
-// DELETE /api/announcements/:id - Admin delete an announcement
+// DELETE /api/announcements/:id - Delete an announcement (Admin or creator staff)
 export const deleteAnnouncement = async (req, res) => {
   try {
     const announcement = await Announcement.findById(req.params.id);
     if (!announcement) {
       return res.status(404).json({ message: 'Announcement not found' });
+    }
+
+    const isAdmin = req.user.role === 'admin';
+    const isCreator = announcement.createdBy && announcement.createdBy.toString() === req.user._id.toString();
+
+    if (!isAdmin && !isCreator) {
+      return res.status(403).json({ message: 'Forbidden: You can only delete announcements you created' });
     }
 
     await announcement.deleteOne();
