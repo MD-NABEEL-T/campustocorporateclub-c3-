@@ -89,6 +89,22 @@ export const Announcements = () => {
   const [loading, setLoading] = useState(true);
   const [updatingSession, setUpdatingSession] = useState(false);
   const [postingBroadcast, setPostingBroadcast] = useState(false);
+  const [testPushLoading, setTestPushLoading] = useState(false);
+
+  const handleSendTestPush = async () => {
+    setTestPushLoading(true);
+    try {
+      const res = await api.post('/notifications/test');
+      addToast(
+        `Test notification sent! Delivered to ${res.data.result?.sent || 0} registered device(s). Check your phone.`,
+        'success'
+      );
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Failed to send test push notification', 'error');
+    } finally {
+      setTestPushLoading(false);
+    }
+  };
 
   const canDeleteAnnouncement = (item) => {
     if (!item) return false;
@@ -344,17 +360,29 @@ export const Announcements = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-medium text-white bg-white/10 border border-white/15 mb-2">
-          <Sparkles className="w-3.5 h-3.5" />
-          Live Dashboard Sync
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-medium text-white bg-white/10 border border-white/15 mb-2">
+            <Sparkles className="w-3.5 h-3.5" />
+            Live Dashboard Sync
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold font-heading text-white">
+            Announcement & Session Manager
+          </h1>
+          <p className="text-xs sm:text-sm text-zinc-400 mt-1">
+            Manage today's active peer session, schedule upcoming sessions by date, and broadcast club announcements in real-time.
+          </p>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold font-heading text-white">
-          Announcement & Session Manager
-        </h1>
-        <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-          Manage today's active peer session, schedule upcoming sessions by date, and broadcast club announcements in real-time.
-        </p>
+
+        <button
+          onClick={handleSendTestPush}
+          disabled={testPushLoading}
+          className="self-start sm:self-auto px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-zinc-900 border border-sky-500/30 text-sky-300 hover:bg-sky-500/10 transition-all flex items-center gap-2 shadow-lg shadow-sky-950/30 active:scale-95 disabled:opacity-50"
+          title="Send a test push notification to all your registered devices"
+        >
+          <Bell className="w-4 h-4 text-sky-400" />
+          <span>{testPushLoading ? 'Sending Alert...' : 'Test Phone Alert'}</span>
+        </button>
       </div>
 
       {/* Live Today vs Upcoming Scheduled Session Overview Cards */}

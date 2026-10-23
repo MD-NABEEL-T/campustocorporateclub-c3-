@@ -25,6 +25,7 @@ const announcementSchema = new mongoose.Schema(
     message: { type: String }, // For broadcasts or session agenda
     isActive: { type: Boolean, default: true },
     date: { type: Date, default: Date.now },
+    reminderSentAt: { type: Date },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },

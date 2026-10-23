@@ -5,11 +5,18 @@ import { useToast } from '../context/ToastContext';
 import { Loader } from '../components/ui/Loader';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
   const location = useLocation();
   const { addToast } = useToast();
 
   const isRoleForbidden = Boolean(user && allowedRoles && !allowedRoles.includes(user.role));
+
+  useEffect(() => {
+    // If accessing a privileged route (admin/staff), verify permissions in the background
+    if (user && allowedRoles && (allowedRoles.includes('admin') || allowedRoles.includes('coordinator'))) {
+      refreshUser();
+    }
+  }, [location.pathname, allowedRoles, refreshUser]);
 
   useEffect(() => {
     if (isRoleForbidden) {

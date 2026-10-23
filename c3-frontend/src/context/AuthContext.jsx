@@ -106,19 +106,41 @@ export const AuthProvider = ({ children }) => {
       refreshUser();
     }
 
-    // Re-check /auth/me when the tab becomes visible again, at most once every 60 seconds
-    const handleVisibilityChange = () => {
+    // Re-check /auth/me when the tab becomes visible or focused (4-second debounce for fast switching)
+    const handleVisibilityOrFocus = () => {
       if (document.visibilityState === 'visible') {
         const now = Date.now();
-        if (now - lastCheckedRef.current >= 60000) {
+        if (now - lastCheckedRef.current >= 4000) {
           refreshUser();
         }
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    const handleAuthRefreshEvent = () => {
+      refreshUser();
+    };
+
+    const handleStorageChange = (e) => {
+      if (e.key === 'c3user') {
+        try {
+          const newUser = e.newValue ? JSON.parse(e.newValue) : null;
+          setUser(newUser);
+        } catch {
+          // ignore parse error
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    window.addEventListener('c3:auth-refresh', handleAuthRefreshEvent);
+    window.addEventListener('storage', handleStorageChange);
+
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      window.removeEventListener('c3:auth-refresh', handleAuthRefreshEvent);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, [refreshUser]);
 

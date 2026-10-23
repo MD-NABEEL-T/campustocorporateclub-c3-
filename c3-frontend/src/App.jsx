@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './routes/ProtectedRoute';
 import ClickSpark from './components/reactbits/ClickSpark';
+import NotificationPrompt from './components/notifications/NotificationPrompt';
 
 // Layouts (kept eager - needed on every route, small)
 import { PublicLayout } from './components/layouts/PublicLayout';
@@ -88,6 +89,7 @@ function App() {
     <AuthProvider>
       <ToastProvider>
         <BrowserRouter>
+          <NotificationPrompt />
           <ScrollToHash />
           <ClickSpark sparkColor="#ffffff" sparkSize={10} sparkRadius={15} sparkCount={8} duration={400}>
             <Suspense fallback={<RouteLoading />}>

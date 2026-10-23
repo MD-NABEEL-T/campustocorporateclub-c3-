@@ -137,6 +137,9 @@ export const Members = () => {
           ? `Successfully granted Admin privileges to ${roleModalTarget.member.name}.`
           : `Successfully revoked Admin privileges from ${roleModalTarget.member.name}.`
       );
+      if (roleModalTarget.member._id === user?._id) {
+        updateUser({ role: roleModalTarget.makeAdmin ? 'admin' : 'member' });
+      }
       setRoleModalTarget(null);
       setOwnerPassword('');
       setUnderstood(false);
@@ -216,6 +219,9 @@ export const Members = () => {
           ? `Successfully appointed ${coordinatorModalTarget.member.name} as Coordinator.`
           : `Successfully removed ${coordinatorModalTarget.member.name} from Coordinator role.`
       );
+      if (coordinatorModalTarget.member._id === user?._id) {
+        updateUser({ role: coordinatorModalTarget.newRole });
+      }
       setCoordinatorModalTarget(null);
       fetchData();
       if (isAuditLogOpen) {
