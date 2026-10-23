@@ -5,6 +5,7 @@ import {
   parseSessionStorageDate,
   generateDisplayTime,
 } from '../utils/dateUtils.js';
+import { broadcastPushNotification } from '../utils/pushNotificationService.js';
 
 // GET /api/announcements - Fetch active today's session, nearest upcoming session, and recent broadcasts
 export const getAnnouncements = async (req, res) => {
@@ -57,6 +58,13 @@ export const updateTodaySession = async (req, res) => {
       createdBy: req.user._id,
       date: sessionStorageDate,
     });
+
+    // Send instant push notification to all members' devices
+    broadcastPushNotification({
+      title: `📢 New Session: ${topic.trim()}`,
+      body: `${displayTime ? displayTime + ' • ' : ''}${venue ? 'Venue: ' + venue.trim() + ' • ' : ''}Handled by ${handledBy.trim()}`,
+      data: { url: '/dashboard' },
+    }).catch((err) => console.error('[Push] Failed to broadcast session notification:', err.message));
 
     res.status(201).json({
       message: "Today's session announcement updated successfully",
@@ -128,6 +136,13 @@ export const cancelAnnouncement = async (req, res) => {
 
     await announcement.save();
 
+    // Notify members that session was cancelled
+    broadcastPushNotification({
+      title: '⚠️ Session Cancelled',
+      body: `Today's session "${announcement.topic || 'Club Session'}" has been cancelled. Reason: ${announcement.cancelReason}`,
+      data: { url: '/dashboard' },
+    }).catch((err) => console.error('[Push] Cancel notification error:', err.message));
+
     res.json({
       message: 'Session announcement cancelled',
       announcement,
@@ -177,6 +192,13 @@ export const createBroadcast = async (req, res) => {
       createdBy: req.user._id,
       date: new Date(),
     });
+
+    // Send push notification for club broadcast
+    broadcastPushNotification({
+      title: `📢 Club Announcement: ${title.trim()}`,
+      body: message.trim(),
+      data: { url: '/dashboard' },
+    }).catch((err) => console.error('[Push] Broadcast notification error:', err.message));
 
     res.status(201).json({
       message: 'Broadcast published successfully',

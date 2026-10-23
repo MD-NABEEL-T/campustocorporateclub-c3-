@@ -55,18 +55,22 @@ const LEADERSHIP = [
     socials: { email: 'mailto:hariniradha2727@gmail.com', github: 'https://github.com/hariniradha2727-hue.git', linkedin: 'https://www.linkedin.com/in/r-harini-274fa06h' }
   },
   {
-    name: 'Aamir',
+    name: 'Aamir T',
     role: 'Event Manager',
     domain: 'Events & Operations',
     accent: '#E4E4E7',
     quote: 'Bringing vision into reality through high-energy department events and student workshops.',
-    photo: null,
+    photo: '/assets/team/aamir.jpg',
     photoPosition: 'center top',
-    socials: { email: 'mailto:aamir@gmail.com', github: null, linkedin: null }
+    socials: {
+      email: 'mailto:aamirfahad789@gmail.com',
+      github: null,
+      linkedin: 'https://www.linkedin.com/in/md-aamir-t-543a60383?utm_source=share_via&utm_content=profile&utm_medium=member_android'
+    }
   }
 ];
 
-// 9 core members, split into two rows for the marquee
+// 10 core members, split into two rows for the marquee
 const CORE_MEMBERS = [
   {
     name: 'Shareen Begum.Z',
@@ -157,6 +161,20 @@ const CORE_MEMBERS = [
     photo: '/assets/team/mohammed-owais-ansari.png',
     photoPosition: 'center 20%',
     socials: { email: 'mailto:owaisansari1626@gmail.com', github: 'https://github.com/owaisansari1626', linkedin: 'https://www.linkedin.com/in/owaisansari1626' }
+  },
+  {
+    name: 'Akramullah',
+    tier: 'Core Member',
+    domain: 'Data Analytics',
+    accent: '#F59E0B',
+    quote: null,
+    photo: '/assets/team/Akramullah.jpg',
+    photoPosition: 'center 20%',
+    socials: {
+      email: 'mailto:akramullahtech@gmail.com',
+      github: 'https://github.com/Akramullah7',
+      linkedin: 'https://www.linkedin.com/in/akramullah-'
+    }
   }
 ];
 const CORE_ROW_1 = CORE_MEMBERS.slice(0, 5);

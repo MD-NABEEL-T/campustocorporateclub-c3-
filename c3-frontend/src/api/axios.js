@@ -58,6 +58,14 @@ api.interceptors.response.use(
           }
         }
       }
+    } else if (error.response?.status === 403) {
+      const requestUrl = error.config?.url || '';
+      // If 403 Forbidden received on non-auth endpoint, refresh permissions immediately
+      if (!requestUrl.includes('/auth/me')) {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('c3:auth-refresh'));
+        }
+      }
     }
     return Promise.reject(error);
   }
