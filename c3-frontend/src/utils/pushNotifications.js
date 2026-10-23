@@ -41,8 +41,15 @@ export const subscribeToPush = async (api) => {
   }
 
   // 2. Fetch VAPID public key from backend
-  const { data } = await api.get('/notifications/vapid-key');
-  if (!data?.publicKey) {
+  let vapidKeyData;
+  try {
+    const res = await api.get('/notifications/vapid-key');
+    vapidKeyData = res.data;
+  } catch (err) {
+    throw new Error(err.response?.data?.message || 'Server VAPID notification keys not configured yet');
+  }
+
+  if (!vapidKeyData?.publicKey) {
     throw new Error('VAPID public key not found on server');
   }
 
@@ -53,7 +60,7 @@ export const subscribeToPush = async (api) => {
   // 4. Create or retrieve existing push subscription
   let subscription = await registration.pushManager.getSubscription();
   if (!subscription) {
-    const convertedKey = urlBase64ToUint8Array(data.publicKey);
+    const convertedKey = urlBase64ToUint8Array(vapidKeyData.publicKey);
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: convertedKey,
@@ -61,11 +68,15 @@ export const subscribeToPush = async (api) => {
   }
 
   // 5. Send subscription to backend
-  const subJSON = subscription.toJSON();
-  await api.post('/notifications/subscribe', {
-    endpoint: subJSON.endpoint,
-    keys: subJSON.keys,
-  });
+  try {
+    const subJSON = subscription.toJSON();
+    await api.post('/notifications/subscribe', {
+      endpoint: subJSON.endpoint,
+      keys: subJSON.keys,
+    });
+  } catch (err) {
+    throw new Error(err.response?.data?.message || 'Failed to save device subscription on server');
+  }
 
   localStorage.setItem('c3_notifications_enabled', 'true');
   return subscription;
