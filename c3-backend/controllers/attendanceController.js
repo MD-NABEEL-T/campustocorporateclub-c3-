@@ -1,55 +1,167 @@
-import Session from '../models/Session.js';
 import User from '../models/User.js';
+import Session from '../models/Session.js';
+import { calculateMemberAttendance, getStartOfDayUTC } from '../utils/attendanceStats.js';
 
-// Get attendance % for one member
-export const getMemberAttendance = async (req, res) => {
+// GET /api/attendance/me - Authenticated member's own attendance stats
+export const getMyAttendance = async (req, res) => {
   try {
-    const memberId = req.params.memberId;
-
-    const totalSessions = await Session.countDocuments();
-    const absentCount = await Session.countDocuments({ absentees: memberId });
-
-    const presentCount = totalSessions - absentCount;
-    const percentage = totalSessions === 0 ? 0 : ((presentCount / totalSessions) * 100).toFixed(1);
-
-    res.json({
-      memberId,
-      totalSessions,
-      presentCount,
-      absentCount,
-      percentage,
-    });
+    const stats = await calculateMemberAttendance(req.user);
+    res.json(stats);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('getMyAttendance error:', err);
+    res.status(500).json({ message: err.message || 'Failed to calculate attendance' });
   }
 };
 
-// Get attendance % for ALL approved members - admin view
+// GET /api/attendance/:memberId - Single member attendance stats (Admin or self only)
+export const getMemberAttendance = async (req, res) => {
+  try {
+    const targetId = req.params.memberId;
+    const isSelf = targetId === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    // Strict ownership & role check
+    if (!isSelf && !isAdmin) {
+      return res.status(403).json({ message: 'Forbidden: Access denied' });
+    }
+
+    const targetUser = isSelf ? req.user : await User.findById(targetId);
+    if (!targetUser) {
+      return res.status(404).json({ message: 'Member not found' });
+    }
+
+    const stats = await calculateMemberAttendance(targetUser);
+    res.json(stats);
+  } catch (err) {
+    console.error('getMemberAttendance error:', err);
+    res.status(500).json({ message: err.message || 'Failed to calculate attendance' });
+  }
+};
+
+// GET /api/attendance/all - Admin only attendance overview for all approved members
 export const getAllAttendance = async (req, res) => {
   try {
-    const members = await User.find({ isApproved: true }).select('-password');
-    const totalSessions = await Session.countDocuments();
+    let results;
 
-    const results = await Promise.all(
-      members.map(async (member) => {
-        const absentCount = await Session.countDocuments({ absentees: member._id });
+    try {
+      // Primary attempt: Single MongoDB aggregation using $dateTrunc with timezone "UTC"
+      results = await User.aggregate([
+        { $match: { isApproved: true } },
+        {
+          $lookup: {
+            from: 'sessions',
+            let: {
+              userId: '$_id',
+              userCreatedAt: '$createdAt',
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $gte: [
+                      '$date',
+                      { $dateTrunc: { date: '$$userCreatedAt', unit: 'day', timezone: 'UTC' } },
+                    ],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  isAbsent: {
+                    $in: ['$$userId', { $ifNull: ['$absentees', []] }],
+                  },
+                },
+              },
+            ],
+            as: 'eligibleSessions',
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            email: 1,
+            section: 1,
+            year: 1,
+            totalSessions: { $size: '$eligibleSessions' },
+            absentCount: {
+              $size: {
+                $filter: {
+                  input: '$eligibleSessions',
+                  as: 's',
+                  cond: { $eq: ['$$s.isAbsent', true] },
+                },
+              },
+            },
+          },
+        },
+        {
+          $addFields: {
+            presentCount: { $subtract: ['$totalSessions', '$absentCount'] },
+            percentage: {
+              $cond: {
+                if: { $eq: ['$totalSessions', 0] },
+                then: null,
+                else: {
+                  $round: [
+                    {
+                      $multiply: [
+                        {
+                          $divide: [
+                            { $subtract: ['$totalSessions', '$absentCount'] },
+                            '$totalSessions',
+                          ],
+                        },
+                        100,
+                      ],
+                    },
+                    1,
+                  ],
+                },
+              },
+            },
+          },
+        },
+        { $sort: { name: 1 } },
+      ]);
+    } catch (aggErr) {
+      // Fallback: If $dateTrunc is not supported in MongoDB version, compute cutoff in JS
+      const members = await User.find({ isApproved: true })
+        .select('name email section year createdAt')
+        .sort({ name: 1 });
+      const sessions = await Session.find().select('_id date absentees');
+
+      results = members.map((member) => {
+        const cutoff = getStartOfDayUTC(member.createdAt);
+        const eligible = sessions.filter((s) => new Date(s.date) >= cutoff);
+        const totalSessions = eligible.length;
+        const absentCount = eligible.filter((s) =>
+          s.absentees?.some((id) => id.toString() === member._id.toString())
+        ).length;
         const presentCount = totalSessions - absentCount;
-        const percentage = totalSessions === 0 ? 0 : ((presentCount / totalSessions) * 100).toFixed(1);
+        const percentage =
+          totalSessions === 0
+            ? null
+            : Number(((presentCount / totalSessions) * 100).toFixed(1));
 
         return {
           _id: member._id,
           name: member.name,
           email: member.email,
+          section: member.section,
+          year: member.year,
           totalSessions,
           presentCount,
           absentCount,
           percentage,
         };
-      })
-    );
+      });
+    }
 
     res.json(results);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('getAllAttendance error:', err);
+    res.status(500).json({ message: err.message || 'Failed to retrieve attendance overview' });
   }
 };

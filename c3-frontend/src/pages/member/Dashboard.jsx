@@ -1,50 +1,69 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { StatsCard } from '../../components/ui/StatsCard';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
-import { UserCheck, BookOpen, Calendar, Bell, User, Clock, MapPin, Sparkles } from 'lucide-react';
+import { Loader } from '../../components/ui/Loader';
+import { AdminOverview } from '../../components/dashboard/AdminOverview';
+import { UserCheck, BookOpen, Calendar, Bell, User, Clock, MapPin } from 'lucide-react';
 import axios from '../../api/axios';
 
 export const Dashboard = () => {
   const { user } = useAuth();
-  const [attendance, setAttendance] = useState(null);
-  const [announcements, setAnnouncements] = useState({ todaySession: null, broadcasts: [] });
-  const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
+  const location = useLocation();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchDashboard = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await axios.get('/dashboard');
+      setDashboardData(res.data);
+    } catch (err) {
+      console.error('Failed to load dashboard:', err);
+      setError(err.response?.data?.message || 'Failed to connect to dashboard service');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
-    if (user?._id) {
-      axios
-        .get(`/attendance/member/${user._id}`)
-        .then((res) => {
-          if (isMounted) setAttendance(res.data);
-        })
-        .catch((err) => console.error(err));
-    }
+    fetchDashboard();
+  }, [fetchDashboard]);
 
-    axios
-      .get('/announcements')
-      .then((res) => {
-        if (isMounted) {
-          setAnnouncements({
-            todaySession: res.data.todaySession || null,
-            broadcasts: res.data.broadcasts || [],
-          });
-        }
-      })
-      .catch((err) => console.error(err))
-      .finally(() => {
-        if (isMounted) setLoadingAnnouncements(false);
-      });
+  // Keep admin strictly on /admin - if admin accesses /dashboard, redirect to /admin
+  if (user?.role === 'admin' && location.pathname === '/dashboard') {
+    return <Navigate to="/admin" replace />;
+  }
 
-    return () => {
-      isMounted = false;
-    };
-  }, [user]);
+  // Render Admin Overview desk if admin
+  if (user?.role === 'admin') {
+    return (
+      <AdminOverview
+        data={dashboardData}
+        loading={loading}
+        error={error}
+        onRetry={fetchDashboard}
+      />
+    );
+  }
 
-  const todaySession = announcements.todaySession;
-  const broadcasts = announcements.broadcasts;
+  // Regular Member View
+  if (loading) {
+    return (
+      <div className="py-24 flex items-center justify-center">
+        <Loader size="lg" label="Loading your member dashboard..." />
+      </div>
+    );
+  }
+
+  const attendance = dashboardData?.attendance;
+  const todaySession = dashboardData?.todaySession;
+  const upcomingSession = dashboardData?.upcomingSession;
+  const broadcasts = dashboardData?.broadcasts || [];
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -67,8 +86,16 @@ export const Dashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatsCard
           title="Attendance Rate"
-          value={attendance ? `${attendance.percentage}%` : '100%'}
-          description={attendance ? `${attendance.presentCount} of ${attendance.totalSessions} sessions attended` : 'Loading turnout...'}
+          value={
+            attendance?.percentage !== null && attendance?.percentage !== undefined
+              ? `${attendance.percentage}%`
+              : 'No sessions yet'
+          }
+          description={
+            attendance && attendance.totalSessions > 0
+              ? `${attendance.presentCount} of ${attendance.totalSessions} sessions attended`
+              : 'No sessions recorded since joining'
+          }
           icon={UserCheck}
           color="primary"
         />
@@ -103,46 +130,66 @@ export const Dashboard = () => {
             <CardHeader className="p-0 pb-4 border-b border-white/10 flex flex-row items-center justify-between">
               <CardTitle className="text-base sm:text-lg text-white flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-white" />
-                Today's Peer Session
+                {todaySession ? "Today's Peer Session" : (upcomingSession ? "Upcoming Peer Session" : "Today's Peer Session")}
               </CardTitle>
               {todaySession ? (
                 <Badge variant="success">Active Today</Badge>
+              ) : upcomingSession ? (
+                <Badge variant="neutral">
+                  Upcoming &bull; {new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })}
+                </Badge>
               ) : (
                 <Badge variant="neutral">Upcoming</Badge>
               )}
             </CardHeader>
 
             <CardContent className="p-0 pt-4 space-y-3">
-              {todaySession ? (
-                <div className="space-y-3">
-                  <h3 className="text-lg font-bold text-white leading-snug">
-                    {todaySession.topic}
-                  </h3>
+              {todaySession || upcomingSession ? (
+                (() => {
+                  const session = todaySession || upcomingSession;
+                  return (
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-bold text-white leading-snug">
+                        {session.topic}
+                      </h3>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-zinc-300">
-                    <span className="flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-zinc-400" />
-                      <strong className="text-white">Presenter:</strong> {todaySession.handledBy}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                      {todaySession.time || '4:30 PM - 5:00 PM (30 Mins)'}
-                    </span>
-                  </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-zinc-300">
+                        <span className="flex items-center gap-1.5">
+                          <User className="w-3.5 h-3.5 text-zinc-400" />
+                          <strong className="text-white">Presenter:</strong> {session.handledBy}
+                        </span>
+                        {session.time && (
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                            <span>{session.time}</span>
+                          </span>
+                        )}
+                      </div>
 
-                  {todaySession.venue && (
-                    <div className="text-xs text-zinc-400 flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      <span>{todaySession.venue}</span>
+                      {session.venue && (
+                        <div className="text-xs text-zinc-400 flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <span>{session.venue}</span>
+                        </div>
+                      )}
+
+                      {session.message && (
+                        <div className="p-3 rounded-xl bg-zinc-900 border border-white/10 text-xs text-zinc-300 leading-relaxed">
+                          {session.message}
+                        </div>
+                      )}
+
+                      {todaySession && upcomingSession && (
+                        <div className="pt-2 text-xs text-zinc-400 flex items-center justify-between border-t border-white/5">
+                          <span className="text-[11px] font-mono text-zinc-500">Next Scheduled:</span>
+                          <span className="text-white font-medium truncate max-w-[200px] sm:max-w-[260px]">
+                            {upcomingSession.topic} ({new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })})
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  )}
-
-                  {todaySession.message && (
-                    <div className="p-3 rounded-xl bg-zinc-900 border border-white/10 text-xs text-zinc-300 leading-relaxed">
-                      {todaySession.message}
-                    </div>
-                  )}
-                </div>
+                  );
+                })()
               ) : (
                 <div className="py-6 text-center space-y-2">
                   <p className="text-sm font-semibold text-white">Daily 30-Minute Peer Session</p>

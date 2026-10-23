@@ -51,7 +51,7 @@ export const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) 
         <div>
           <div className="h-20 flex items-center justify-between px-4 border-b border-white/10">
             <Link
-              to="/dashboard"
+              to={isAdmin ? '/admin' : '/dashboard'}
               className="flex items-center gap-3 overflow-hidden"
               onClick={() => setMobileOpen && setMobileOpen(false)}
             >
