@@ -144,8 +144,16 @@ const extractUploadedFiles = (req, target) => {
   }
 };
 
+export const RECRUITMENT_OPEN = false;
+
 // PUBLIC - submit a recruitment application in one shot (no draft step).
 export const createApplication = async (req, res) => {
+  if (!RECRUITMENT_OPEN) {
+    return res.status(403).json({
+      message: 'Recruitment is currently closed for this academic session. Updates for next year will be announced soon.',
+    });
+  }
+
   try {
     const body = req.body || {};
 
@@ -188,6 +196,12 @@ export const createApplication = async (req, res) => {
 
 // PUBLIC - start a new draft application.
 export const createDraft = async (req, res) => {
+  if (!RECRUITMENT_OPEN) {
+    return res.status(403).json({
+      message: 'Recruitment is currently closed for this academic session. Updates for next year will be announced soon.',
+    });
+  }
+
   try {
     const body = req.body || {};
     const validationError = validatePartial(body);

@@ -10,7 +10,9 @@ import {
   AlertCircle,
   Clock,
   Code2,
-  Users
+  Users,
+  Calendar,
+  ArrowRight
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
@@ -21,12 +23,94 @@ import { Badge } from '../../components/ui/Badge';
 import { useToast } from '../../context/ToastContext';
 import api from '../../api/axios';
 
+// Toggle to control recruitment form vs closed announcement
+const RECRUITMENT_OPEN = false;
+
 const SECTION_OPTIONS = [
   { value: 'CSE A', label: 'CSE - Section A (2nd Year)' },
   { value: 'CSE B', label: 'CSE - Section B (2nd Year)' },
 ];
 
 export const Apply = () => {
+  if (!RECRUITMENT_OPEN) {
+    return (
+      <div className="min-h-[85vh] bg-black text-white px-4 py-16 sm:py-24 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-2xl"
+        >
+          <Card className="bg-zinc-950/90 border border-white/10 p-6 sm:p-10 md:p-12 shadow-2xl backdrop-blur-xl text-center space-y-6">
+            {/* Status Pill Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-mono font-medium text-amber-300 bg-amber-500/10 border border-amber-500/25 mx-auto">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              RECRUITMENT STATUS • CURRENTLY CLOSED
+            </div>
+
+            {/* Main Title */}
+            <div className="space-y-3">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold font-heading text-white tracking-tight">
+                Recruitment is Closed
+              </h1>
+              <p className="text-base sm:text-lg text-zinc-300 leading-relaxed max-w-xl mx-auto">
+                Applications for the current academic session of <span className="text-white font-semibold">Campus to Corporate Club (C3)</span> are currently closed.
+              </p>
+            </div>
+
+            {/* Future update box */}
+            <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 text-left space-y-2.5">
+              <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                <Calendar className="w-4 h-4 text-[#38BDF8]" />
+                Next Year Recruitment Notice
+              </div>
+              <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
+                Thank you for your overwhelming interest in joining C3! We will inform and announce the next recruitment drive for the upcoming academic year. Stay tuned to our announcements and department channels!
+              </p>
+            </div>
+
+            {/* In the meantime perks */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-left">
+              <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5 space-y-1">
+                <div className="flex items-center gap-2 text-xs font-bold text-white">
+                  <Clock className="w-4 h-4 text-[#38BDF8]" />
+                  Open Daily Sessions
+                </div>
+                <p className="text-xs text-zinc-400">
+                  Daily 30-min peer sessions in the CSE department are open for students to attend and learn.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5 space-y-1">
+                <div className="flex items-center gap-2 text-xs font-bold text-white">
+                  <Sparkles className="w-4 h-4 text-[#2DD4BF]" />
+                  Events & Hackathons
+                </div>
+                <p className="text-xs text-zinc-400">
+                  Participate in our open competitions, tech symposiums, and departmental workshops.
+                </p>
+              </div>
+            </div>
+
+            {/* Navigation buttons */}
+            <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link to="/" className="w-full sm:w-auto">
+                <Button variant="primary" className="w-full sm:w-auto px-6 py-3">
+                  Return to Homepage
+                </Button>
+              </Link>
+              <Link to="/sessions-archive" className="w-full sm:w-auto">
+                <Button variant="secondary" className="w-full sm:w-auto px-6 py-3">
+                  View Sessions Archive
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
+
   const [fullName, setFullName] = useState('');
   const [section, setSection] = useState('CSE A');
   const [whyJoin, setWhyJoin] = useState('');

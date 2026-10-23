@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './routes/ProtectedRoute';
-import ClickSpark from './components/reactbits/ClickSpark';
 import NotificationPrompt from './components/notifications/NotificationPrompt';
 
 // Layouts (kept eager - needed on every route, small)
@@ -91,83 +90,81 @@ function App() {
         <BrowserRouter>
           <NotificationPrompt />
           <ScrollToHash />
-          <ClickSpark sparkColor="#ffffff" sparkSize={10} sparkRadius={15} sparkCount={8} duration={400}>
-            <Suspense fallback={<RouteLoading />}>
-              <Routes>
-                {/* Public Layout Routes */}
-                <Route element={<PublicLayout />}>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/events/:slug" element={<EventDetails />} />
-                  <Route path="/sessions-archive" element={<PublicSessions />} />
-                  <Route path="/gallery" element={<Gallery />} />
-                  <Route path="/apply" element={<Apply />} />
-                  <Route path="/apply/form" element={<ApplyForm />} />
-                  <Route path="/apply-form" element={<ApplyForm />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
+          <Suspense fallback={<RouteLoading />}>
+            <Routes>
+              {/* Public Layout Routes */}
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/events/:slug" element={<EventDetails />} />
+                <Route path="/sessions-archive" element={<PublicSessions />} />
+                <Route path="/gallery" element={<Gallery />} />
+                <Route path="/apply" element={<Apply />} />
+                <Route path="/apply/form" element={<ApplyForm />} />
+                <Route path="/apply-form" element={<ApplyForm />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
 
-                  {EVENT_ENABLED && <Route path="/event/*" element={<EventApp />} />}
-                </Route>
+                {EVENT_ENABLED && <Route path="/event/*" element={<EventApp />} />}
+              </Route>
 
-                {/* Member Portal Protected Routes */}
-                <Route
-                  element={
-                    <ProtectedRoute>
-                      <DashboardLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/attendance" element={<MyAttendance />} />
-                  <Route path="/sessions" element={<Sessions />} />
-                  <Route path="/sessions/:id" element={<SessionDetail />} />
-                  <Route path="/applications" element={<Applications />} />
-                </Route>
+              {/* Member Portal Protected Routes */}
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/attendance" element={<MyAttendance />} />
+                <Route path="/sessions" element={<Sessions />} />
+                <Route path="/sessions/:id" element={<SessionDetail />} />
+                <Route path="/applications" element={<Applications />} />
+              </Route>
 
-                {/* Admin Portal Protected Routes */}
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute allowedRoles={['admin']}>
-                      <DashboardLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route index element={<Dashboard />} />
-                  <Route path="announcements" element={<Announcements />} />
-                  <Route path="members" element={<Members />} />
-                  <Route path="applications" element={<Applications />} />
-                  <Route path="sessions" element={<Sessions />} />
-                  <Route path="sessions/new" element={<SessionForm />} />
-                  <Route path="sessions/:id/edit" element={<SessionForm />} />
-                  <Route path="sessions/:id/attendance" element={<SessionAttendance />} />
-                  <Route path="events" element={<AdminEvents />} />
-                  <Route path="resources" element={<GalleryManager />} />
-                  <Route path="attendance" element={<AllAttendance />} />
-                </Route>
+              {/* Admin Portal Protected Routes */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="announcements" element={<Announcements />} />
+                <Route path="members" element={<Members />} />
+                <Route path="applications" element={<Applications />} />
+                <Route path="sessions" element={<Sessions />} />
+                <Route path="sessions/new" element={<SessionForm />} />
+                <Route path="sessions/:id/edit" element={<SessionForm />} />
+                <Route path="sessions/:id/attendance" element={<SessionAttendance />} />
+                <Route path="events" element={<AdminEvents />} />
+                <Route path="resources" element={<GalleryManager />} />
+                <Route path="attendance" element={<AllAttendance />} />
+              </Route>
 
-                {/* Staff Portal Protected Routes (Admin or Coordinator) */}
-                <Route
-                  path="/staff"
-                  element={
-                    <ProtectedRoute allowedRoles={['admin', 'coordinator']}>
-                      <DashboardLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route path="announcements" element={<Announcements />} />
-                  <Route path="sessions" element={<Sessions />} />
-                  <Route path="sessions/new" element={<SessionForm />} />
-                  <Route path="sessions/:id/edit" element={<SessionForm />} />
-                  <Route path="sessions/:id/attendance" element={<SessionAttendance />} />
-                  <Route path="attendance" element={<AllAttendance />} />
-                </Route>
+              {/* Staff Portal Protected Routes (Admin or Coordinator) */}
+              <Route
+                path="/staff"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'coordinator']}>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="announcements" element={<Announcements />} />
+                <Route path="sessions" element={<Sessions />} />
+                <Route path="sessions/new" element={<SessionForm />} />
+                <Route path="sessions/:id/edit" element={<SessionForm />} />
+                <Route path="sessions/:id/attendance" element={<SessionAttendance />} />
+                <Route path="attendance" element={<AllAttendance />} />
+              </Route>
 
-                {/* Catch-all Fallback */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
-          </ClickSpark>
+              {/* Catch-all Fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </ToastProvider>
     </AuthProvider>

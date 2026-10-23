@@ -24,6 +24,7 @@
   animation-name: marquee-scroll;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
+  will-change: transform;
 }
 
 .marquee-content {

@@ -1,7 +1,7 @@
 // Event Module Configuration
 export const ADMIN_PASSWORD = "C3ADMIN.2025";
 export const REGISTRATION_DEADLINE = "2026-10-07T15:00:00+05:30";
-export const EVENT_ENABLED = true;
+export const EVENT_ENABLED = false;
 
 export function isValidRoll(roll) {
     if (typeof roll !== 'string') return false;

@@ -16,7 +16,7 @@ const QUICK_PERKS = [
   { label: 'Club Membership', value: '100% Free' },
   { label: 'Technical Domains', value: '5 Tracks' },
   { label: 'Skill Building', value: 'Daily Sessions' },
-  { label: 'Recruitment', value: '2nd Year CSE' }
+  { label: 'Recruitment', value: 'Closed' }
 ];
 
 export const JoinUsSection = () => {
@@ -33,14 +33,14 @@ export const JoinUsSection = () => {
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Title Header */}
         <div ref={introRef} className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
-          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-nav font-medium text-white bg-white/10 border border-white/20 mb-4">
-            <Sparkles className="w-3.5 h-3.5" />
-            2nd Year CSE Recruitment (A & B)
+          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-nav font-medium text-amber-300 bg-amber-500/10 border border-amber-500/20 mb-4">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            Recruitment Status • Currently Closed
           </span>
 
           {introInView && (
             <BlurText
-              text="Join Campus to Corporate Club"
+              text="Campus to Corporate Club"
               direction="top"
               delay={40}
               stepDuration={0.35}
@@ -49,7 +49,7 @@ export const JoinUsSection = () => {
           )}
 
           <p className="text-sm sm:text-base md:text-lg text-[#A1A1AA] leading-relaxed max-w-2xl mx-auto px-2">
-            Every member started exactly where you are now — curious, ready to learn, and looking to build. Pick a domain, show up, and grow with people who will actually teach you.
+            Applications for the current academic session are closed. We will inform and announce the next recruitment drive for the upcoming academic year. In the meantime, all students are welcome to attend our daily peer learning sessions!
           </p>
         </div>
 
@@ -107,13 +107,13 @@ export const JoinUsSection = () => {
                   to="/apply"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full text-sm sm:text-base font-semibold text-black bg-white hover:bg-white/90 shadow-[0_0_20px_rgba(56,189,248,0.4)] hover:shadow-[0_0_30px_rgba(56,189,248,0.7)] hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
-                  Apply Now <ArrowRight className="w-4 h-4" />
+                  Recruitment Status <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 
               {/* Reassurance text */}
-              <p className="text-xs text-[#71717A] max-w-sm mt-1">
-                Applications reviewed on a rolling basis • No prior experience required
+              <p className="text-xs text-[#A1A1AA] max-w-sm mt-1">
+                Recruitment currently closed • Updates for the next year will be announced soon
               </p>
             </div>
           </div>

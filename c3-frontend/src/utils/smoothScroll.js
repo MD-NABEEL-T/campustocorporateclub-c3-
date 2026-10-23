@@ -27,7 +27,7 @@ export function scrollToTarget(target, options = {}) {
   const el = typeof target === 'string' ? document.querySelector(target) : target;
   if (el) {
     if (activeLenis) {
-      activeLenis.scrollTo(el, { duration: 1.0, offset: options.offset ?? -10, ...options });
+      activeLenis.scrollTo(el, { duration: 1.0, offset: options.offset ?? -85, ...options });
     } else {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -40,10 +40,13 @@ export function scrollToTarget(target, options = {}) {
 export function initSmoothScroll() {
   if (typeof window === 'undefined') return;
 
+  document.documentElement.classList.add('lenis', 'lenis-smooth');
+
   const lenis = new Lenis({
-    duration: 1.0,
+    duration: 0.8,
     easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     smoothWheel: true,
+    syncTouch: false,
   });
 
   activeLenis = lenis;
@@ -62,6 +65,7 @@ export function initSmoothScroll() {
   return () => {
     if (animId) cancelAnimationFrame(animId);
     lenis.destroy();
+    document.documentElement.classList.remove('lenis', 'lenis-smooth');
     if (activeLenis === lenis) {
       activeLenis = null;
       if (typeof window !== 'undefined') {
