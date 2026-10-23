@@ -4,6 +4,7 @@ import { UserPlus, Lock, Mail, User, BookOpen, Hash, ArrowRight, CheckCircle2, A
 import api from '../../api/axios';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
+import { PasswordInput } from '../../components/ui/PasswordInput';
 import { Select } from '../../components/ui/Select';
 import { Button } from '../../components/ui/Button';
 
@@ -174,23 +175,23 @@ export const Register = () => {
                 />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input
+                  <PasswordInput
                     label="Password"
-                    type="password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     leftIcon={<Lock className="w-4 h-4" />}
+                    autoComplete="new-password"
                     required
                   />
 
-                  <Input
+                  <PasswordInput
                     label="Confirm Password"
-                    type="password"
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     leftIcon={<Lock className="w-4 h-4" />}
+                    autoComplete="new-password"
                     required
                   />
                 </div>

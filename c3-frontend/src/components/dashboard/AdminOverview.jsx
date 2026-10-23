@@ -18,6 +18,7 @@ import {
   ExternalLink,
   ChevronRight,
   Radio,
+  UserCheck,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -25,8 +26,22 @@ import { Button } from '../ui/Button';
 import { Loader } from '../ui/Loader';
 import CountUp from '../reactbits/CountUp';
 import { DOMAIN_OPTIONS } from '../../constants/domains';
+import { CoordinatorsCard } from './CoordinatorsCard';
 
 const domainLabel = (value) => DOMAIN_OPTIONS.find((d) => d.value === value)?.label || value || 'General';
+
+const getRelativeEditedTime = (editedAt) => {
+  if (!editedAt) return null;
+  const editedDate = new Date(editedAt);
+  const diffMs = Date.now() - editedDate.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 0 || diffSec > 86400) return null;
+  if (diffSec < 60) return 'Updated just now';
+  const mins = Math.floor(diffSec / 60);
+  if (mins < 60) return `Updated ${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  return `Updated ${hours}h ago`;
+};
 
 const formatDate = (value) => {
   if (!value) return '—';
@@ -72,12 +87,12 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
     );
   }
 
-  const counts = data?.counts || {
-    pendingApprovals: 0,
-    pendingApplications: 0,
-    totalSessions: 0,
-    totalEvents: 0,
-    totalMembers: 0,
+  const counts = {
+    pendingApprovals: data?.pending?.memberApprovals ?? data?.counts?.pendingApprovals ?? 0,
+    pendingApplications: data?.pending?.applications ?? data?.counts?.pendingApplications ?? 0,
+    totalSessions: data?.club?.totalSessions ?? data?.counts?.totalSessions ?? 0,
+    totalEvents: data?.club?.totalEvents ?? data?.counts?.totalEvents ?? 0,
+    totalMembers: data?.club?.totalMembers ?? data?.counts?.totalMembers ?? 0,
   };
 
   const todaySession = data?.todaySession || null;
@@ -85,6 +100,7 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
   const broadcasts = data?.broadcasts || [];
   const lowAttendanceMembers = data?.lowAttendanceMembers || [];
   const recentApplications = data?.recentApplications || [];
+  const latestHeldSession = data?.recentSessions?.[0] || null;
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -100,14 +116,26 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
               Admin Overview
             </h1>
             <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-              Track pending registrations, junior applications, today's daily 30-min peer session, and club turnout.
+              Track pending registrations, junior applications, today's peer session, and club turnout.
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {latestHeldSession && (
+              <Link to={`/admin/sessions/${latestHeldSession._id}/attendance`}>
+                <Button
+                  variant="emerald"
+                  size="sm"
+                  className="min-h-[48px] px-4 text-xs font-semibold"
+                  leftIcon={<UserCheck className="w-4 h-4 shrink-0 text-white" />}
+                >
+                  Mark attendance
+                </Button>
+              </Link>
+            )}
             <Link to="/admin/announcements">
-              <Button variant="primary" size="sm" className="text-xs bg-white text-black font-semibold hover:bg-zinc-200">
-                <Bell className="w-3.5 h-3.5" /> Manage Live Broadcasts
+              <Button variant="outline" size="sm" className="min-h-[48px] px-4 text-xs text-white border-white/20 hover:bg-white/5">
+                <Bell className="w-3.5 h-3.5 mr-1.5" /> Manage Live Broadcasts
               </Button>
             </Link>
           </div>
@@ -214,7 +242,7 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
           {/* Pulse Card 1: Total Sessions */}
           <div className="p-5 rounded-2xl bg-zinc-950/80 border border-white/10 shadow-lg flex items-center justify-between">
             <div>
-              <span className="text-xs font-mono text-zinc-400">Daily Peer Sessions</span>
+              <span className="text-xs font-mono text-zinc-400">Sessions held</span>
               <div className="text-2xl sm:text-3xl font-extrabold font-heading text-white mt-1">
                 <CountUp to={counts.totalSessions || 0} duration={1.5} />
               </div>
@@ -263,17 +291,25 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
           <Card className="bg-zinc-950/90 border border-white/10 p-5 sm:p-6 shadow-xl">
             <CardHeader className="p-0 pb-4 border-b border-white/10 flex flex-row items-center justify-between">
               <CardTitle className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                <Radio className={`w-4 h-4 ${todaySession ? 'text-emerald-400 animate-pulse' : 'text-zinc-400'}`} />
+                <Radio className={`w-4 h-4 ${todaySession?.status === 'cancelled' ? 'text-red-400' : todaySession ? 'text-emerald-400 animate-pulse' : 'text-zinc-400'}`} />
                 {todaySession ? "Today's Session Status" : (upcomingSession ? "Scheduled Session" : "Today's Session Status")}
               </CardTitle>
               {todaySession ? (
-                <Badge variant="success" icon={<span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />}>
-                  Live
-                </Badge>
+                todaySession.status === 'cancelled' ? (
+                  <Badge variant="danger">Cancelled</Badge>
+                ) : (
+                  <Badge variant="success" icon={<span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />}>
+                    Live
+                  </Badge>
+                )
               ) : upcomingSession ? (
-                <Badge variant="neutral">
-                  Scheduled &bull; {new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })}
-                </Badge>
+                upcomingSession.status === 'cancelled' ? (
+                  <Badge variant="danger">Cancelled</Badge>
+                ) : (
+                  <Badge variant="neutral">
+                    Scheduled &bull; {new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })}
+                  </Badge>
+                )
               ) : (
                 <Badge variant="warning">Not Set</Badge>
               )}
@@ -283,49 +319,78 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
               {todaySession || upcomingSession ? (
                 (() => {
                   const session = todaySession || upcomingSession;
+                  const isCancelled = session.status === 'cancelled';
+                  const relativeTag = getRelativeEditedTime(session.editedAt);
+
                   return (
                     <div className="space-y-3.5">
-                      <div>
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">
-                          {todaySession ? 'Session Topic' : 'Upcoming Topic'}
-                        </span>
-                        <h3 className="text-lg font-bold text-white mt-0.5 leading-snug">
-                          {session.topic}
-                        </h3>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className={`text-[10px] font-mono uppercase tracking-wider ${isCancelled ? 'text-red-400' : 'text-zinc-400'}`}>
+                            {todaySession ? (isCancelled ? "Today's Session (Cancelled)" : "Session Topic") : (isCancelled ? "Upcoming Session (Cancelled)" : "Upcoming Topic")}
+                          </span>
+                          <h3 className={`text-lg font-bold text-white mt-0.5 leading-snug ${isCancelled ? 'line-through opacity-75' : ''}`}>
+                            {session.topic}
+                          </h3>
+                        </div>
+                        {relativeTag && (
+                          <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full shrink-0">
+                            {relativeTag}
+                          </span>
+                        )}
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-zinc-300">
-                        <div className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-900/60 border border-white/5">
+                      {isCancelled ? (
+                        <div className="p-3 rounded-xl bg-red-950/40 border border-red-500/30 text-xs text-red-300 leading-relaxed space-y-1">
+                          <span className="font-semibold text-red-200 block">Session Cancelled</span>
+                          <span>{session.cancelReason || 'Session cancelled by coordinator.'}</span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-zinc-300">
+                            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-900/60 border border-white/5">
+                              <User className="w-4 h-4 text-zinc-400 shrink-0" />
+                              <div className="truncate">
+                                <span className="text-[10px] font-mono text-zinc-500 block">Presenter</span>
+                                <strong className="text-white truncate block">{session.handledBy}</strong>
+                              </div>
+                            </div>
+
+                            {session.time && (
+                              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-900/60 border border-white/5">
+                                <Clock className="w-4 h-4 text-zinc-400 shrink-0" />
+                                <div className="truncate">
+                                  <span className="text-[10px] font-mono text-zinc-500 block">Scheduled Time</span>
+                                  <span className="text-white font-medium truncate block">
+                                    {session.time}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {session.venue && (
+                            <div className="text-xs text-zinc-400 flex items-center gap-1.5 pt-1">
+                              <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                              <span>{session.venue}</span>
+                            </div>
+                          )}
+
+                          {session.message && (
+                            <div className="p-3 rounded-xl bg-zinc-900/70 border border-white/10 text-xs text-zinc-300 leading-relaxed">
+                              {session.message}
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {isCancelled && (
+                        <div className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-900/60 border border-white/5 text-xs text-zinc-300">
                           <User className="w-4 h-4 text-zinc-400 shrink-0" />
                           <div className="truncate">
                             <span className="text-[10px] font-mono text-zinc-500 block">Presenter</span>
                             <strong className="text-white truncate block">{session.handledBy}</strong>
                           </div>
-                        </div>
-
-                        {session.time && (
-                          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-900/60 border border-white/5">
-                            <Clock className="w-4 h-4 text-zinc-400 shrink-0" />
-                            <div className="truncate">
-                              <span className="text-[10px] font-mono text-zinc-500 block">Scheduled Time</span>
-                              <span className="text-white font-medium truncate block">
-                                {session.time}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {session.venue && (
-                        <div className="text-xs text-zinc-400 flex items-center gap-1.5 pt-1">
-                          <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                          <span>{session.venue}</span>
-                        </div>
-                      )}
-
-                      {session.message && (
-                        <div className="p-3 rounded-xl bg-zinc-900/70 border border-white/10 text-xs text-zinc-300 leading-relaxed">
-                          {session.message}
                         </div>
                       )}
 
@@ -334,6 +399,7 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
                           <span className="text-[11px] font-mono text-zinc-500">Upcoming:</span>
                           <span className="text-zinc-300 truncate max-w-[220px]">
                             {upcomingSession.topic} ({new Date(upcomingSession.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' })})
+                            {upcomingSession.status === 'cancelled' && ' (Cancelled)'}
                           </span>
                         </div>
                       )}
@@ -354,7 +420,7 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
                     <Calendar className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-white">Daily 30-Minute Peer Session Not Set</h4>
+                    <h4 className="text-sm font-semibold text-white">Today's Peer Session Not Set</h4>
                     <p className="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
                       Today's session topic, timing, and presenter haven't been published yet for club members.
                     </p>
@@ -378,7 +444,7 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
                   Turnout Watchlist
                 </CardTitle>
                 <p className="text-[11px] text-zinc-400 mt-0.5">
-                  Members with lowest attendance across peer sessions (up to 5)
+                  Members flagged below {75}% attendance across peer sessions
                 </p>
               </div>
 
@@ -405,6 +471,11 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="text-xs font-semibold text-white truncate">{m.name}</p>
+                          {m.role && m.role !== 'member' && (
+                            <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold uppercase bg-white/10 text-zinc-300 border border-white/20 shrink-0">
+                              {m.role === 'admin' ? 'Admin' : m.role === 'coordinator' ? 'Coordinator' : m.role}
+                            </span>
+                          )}
                           {m.section && (
                             <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-white/5 text-zinc-400 border border-white/10">
                               {m.section}
@@ -535,6 +606,9 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
               )}
             </CardContent>
           </Card>
+
+          {/* Coordinators Card */}
+          <CoordinatorsCard coordinators={data?.coordinators || []} />
         </div>
       </div>
     </div>

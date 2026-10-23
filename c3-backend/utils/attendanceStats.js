@@ -39,8 +39,11 @@ export const calculateMemberAttendance = async (user) => {
   const memberIdStr = user._id.toString();
   const cutoffDate = getStartOfDayUTC(user.createdAt || new Date());
 
-  // Find all sessions on or after member joined, newest first
-  const sessions = await Session.find({ date: { $gte: cutoffDate } })
+  // Find all sessions on or after member joined, newest first (excluding cancelled)
+  const sessions = await Session.find({
+    date: { $gte: cutoffDate },
+    status: { $ne: 'cancelled' },
+  })
     .sort({ date: -1 })
     .select('_id date topic absentees');
 
@@ -51,7 +54,7 @@ export const calculateMemberAttendance = async (user) => {
 
   const history = sessions.slice(0, 10).map((session) => {
     const isAbsent = session.absentees?.some(
-      (absenteeId) => absenteeId.toString() === memberIdStr
+      (absenteeId) => String(absenteeId?._id ?? absenteeId) === memberIdStr
     );
     return {
       _id: session._id,
@@ -63,7 +66,7 @@ export const calculateMemberAttendance = async (user) => {
 
   for (let i = 0; i < sessions.length; i++) {
     const isAbsent = sessions[i].absentees?.some(
-      (absenteeId) => absenteeId.toString() === memberIdStr
+      (absenteeId) => String(absenteeId?._id ?? absenteeId) === memberIdStr
     );
 
     if (isAbsent) {

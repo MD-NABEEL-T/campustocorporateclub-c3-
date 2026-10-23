@@ -50,7 +50,7 @@ export const parseSessionStorageDate = (date) => {
 /**
  * Shared announcement query helper used by both announcementController and dashboardController.
  */
-export const getSessionAnnouncements = async () => {
+export const getSessionAnnouncements = async (broadcastLimit = 10) => {
   const { startOfDay, endOfDay } = getKolkataDayBounds(new Date());
 
   const [todaySession, upcomingSession, broadcasts] = await Promise.all([
@@ -59,21 +59,26 @@ export const getSessionAnnouncements = async () => {
       type: 'today_session',
       isActive: true,
       date: { $gte: startOfDay, $lte: endOfDay },
-    }).sort({ updatedAt: -1 }),
+    })
+      .sort({ updatedAt: -1 })
+      .lean(),
 
     // Nearest active today_session whose date is strictly after today
     Announcement.findOne({
       type: 'today_session',
       isActive: true,
       date: { $gt: endOfDay },
-    }).sort({ date: 1 }),
+    })
+      .sort({ date: 1 })
+      .lean(),
 
-    // Latest 10 broadcasts
+    // Broadcasts
     Announcement.find({
       type: 'broadcast',
     })
       .sort({ createdAt: -1 })
-      .limit(10),
+      .limit(broadcastLimit)
+      .lean(),
   ]);
 
   return {
@@ -82,3 +87,39 @@ export const getSessionAnnouncements = async () => {
     broadcasts: broadcasts || [],
   };
 };
+
+/**
+ * Converts a 24-hour "HH:mm" time string into a 12-hour format string (e.g. "13:05" -> "1:05 PM").
+ */
+export const formatTimeDisplay = (time24) => {
+  if (!time24 || typeof time24 !== 'string') return '';
+  const trimmed = time24.trim();
+  const match = trimmed.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return trimmed;
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2];
+  if (isNaN(hours)) return trimmed;
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  return `${hours}:${minutes} ${ampm}`;
+};
+
+/**
+ * Generates a human-friendly display time string from startTime and optional endTime,
+ * falling back to custom time string if provided.
+ */
+export const generateDisplayTime = (time, startTime, endTime) => {
+  if (startTime && startTime.trim()) {
+    const startStr = formatTimeDisplay(startTime.trim());
+    if (endTime && endTime.trim()) {
+      const endStr = formatTimeDisplay(endTime.trim());
+      return `${startStr} - ${endStr}`;
+    }
+    return startStr;
+  }
+  if (time && time.trim()) {
+    return time.trim();
+  }
+  return '';
+};
+

@@ -64,6 +64,10 @@ export const Button = React.forwardRef(
         'bg-white/10 hover:bg-white/15 text-white border border-white/15 backdrop-blur-md focus:ring-white/20',
       premiumBlue:
         'bg-white hover:bg-zinc-200 text-black font-bold border border-white/20 shadow-lg focus:ring-white/50',
+      emerald:
+        'bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-semibold focus:ring-emerald-500/40 shadow-lg shadow-emerald-500/10',
+      success:
+        'bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-semibold focus:ring-emerald-500/40 shadow-lg shadow-emerald-500/10',
     };
 
     const sizes = {
@@ -79,7 +83,7 @@ export const Button = React.forwardRef(
         type={type}
         disabled={disabled || isLoading}
         onClick={handleClick}
-        className={cn(baseStyles, variants[variant], sizes[size], className)}
+        className={cn(baseStyles, variants[variant] || variants.primary, sizes[size] || sizes.md, className)}
         {...props}
       >
         {ripples.map(r => (

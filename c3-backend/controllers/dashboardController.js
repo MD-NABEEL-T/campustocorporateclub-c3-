@@ -9,51 +9,176 @@ import {
 } from '../utils/attendanceStats.js';
 import { getSessionAnnouncements } from '../utils/dateUtils.js';
 
+const sanitizeSessionAnnouncement = (s) => {
+  if (!s) return null;
+  return {
+    _id: s._id,
+    topic: s.topic || '',
+    handledBy: s.handledBy || '',
+    time: s.time || '',
+    startTime: s.startTime || '',
+    endTime: s.endTime || '',
+    venue: s.venue || '',
+    message: s.message || '',
+    status: s.status || 'scheduled',
+    cancelReason: s.cancelReason || '',
+    editedAt: s.editedAt || null,
+    updatedAt: s.updatedAt || null,
+    date: s.date || null,
+  };
+};
+
 export const getDashboardData = async (req, res) => {
   try {
     const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
 
-    // Shared announcements (uses same helper as announcementController)
-    const { todaySession, upcomingSession, broadcasts } = await getSessionAnnouncements();
+    const now = new Date();
+    const userCutoff = getStartOfDayUTC(user.createdAt || now);
 
-    // If Admin, build admin overview payload
+    // Queries common to everyone (members and admins)
+    const baseQueries = [
+      // 0: member attendance (includes percentage, totalSessions, history, currentStreak)
+      calculateMemberAttendance(user),
+
+      // 1: announcements (broadcasts limited to latest 5)
+      getSessionAnnouncements(5),
+
+      // 2: latest 5 held sessions (not cancelled)
+      Session.find({ status: { $ne: 'cancelled' } })
+        .sort({ date: -1 })
+        .limit(5)
+        .select('_id date topic handledBy type absentees')
+        .lean(),
+
+      // 3: upcoming events (next 3 with date >= now)
+      Event.find({ date: { $gte: now } })
+        .sort({ date: 1 })
+        .limit(3)
+        .select('_id slug title date coverImage category')
+        .lean(),
+
+      // 4: recent events (latest 3 past events)
+      Event.find({ date: { $lt: now } })
+        .sort({ date: -1 })
+        .limit(3)
+        .select('_id slug title date coverImage category')
+        .lean(),
+
+      // 5: total held sessions
+      Session.countDocuments({ status: { $ne: 'cancelled' } }),
+
+      // 6: total events
+      Event.countDocuments(),
+
+      // 7: total approved members
+      User.countDocuments({ $or: [{ isApproved: true }, { role: 'admin' }] }),
+
+      // 8: active coordinators list (names only, id and year) for everyone
+      User.find({ role: 'coordinator', isApproved: true })
+        .sort({ name: 1 })
+        .select('_id name year section')
+        .lean(),
+    ];
+
+    // If Admin, append admin queries to execute concurrently
     if (user.role === 'admin') {
-      const [
-        pendingApprovalsCount,
-        pendingApplicationsCount,
-        totalSessions,
-        totalEvents,
-        totalMembers,
-        approvedMembers,
-        recentApplications,
-        allSessions,
-      ] = await Promise.all([
-        User.countDocuments({ isApproved: false }),
+      baseQueries.push(
+        // 9: pending approvals count (excluding admins)
+        User.countDocuments({ isApproved: false, role: { $ne: 'admin' } }),
+        // 10: pending applications count (never drafts)
         Application.countDocuments({ status: 'pending' }),
-        Session.countDocuments(),
-        Event.countDocuments(),
-        User.countDocuments({ isApproved: true }),
-        User.find({ isApproved: true }).select('name email section year createdAt'),
+        // 11: recent applications (latest 5 non-draft)
         Application.find({ status: { $ne: 'draft' } })
           .sort({ createdAt: -1 })
           .limit(5)
-          .select('fullName preferredDomain year status createdAt section'),
-        Session.find().select('_id date absentees'),
-      ]);
+          .select('fullName preferredDomain year status createdAt')
+          .lean(),
+        // 12: approved members for attendance calculation
+        User.find({ $or: [{ isApproved: true }, { role: 'admin' }] })
+          .select('_id name email section year role createdAt')
+          .lean(),
+        // 13: all held sessions for attendance calculation
+        Session.find({ status: { $ne: 'cancelled' } })
+          .select('_id date absentees')
+          .lean()
+      );
+    }
 
-      // Calculate low-attendance members strictly below threshold (e.g. < 75%)
-      // Rules: Skip members with null percentage (0 sessions). If none below threshold, return []. No lowest-5 fallback.
+    const results = await Promise.all(baseQueries);
+
+    const attendance = results[0];
+    const announcementsData = results[1];
+    const rawRecentSessions = results[2];
+    const upcomingEvents = results[3];
+    const recentEvents = results[4];
+    const totalSessions = results[5];
+    const totalEvents = results[6];
+    const totalMembers = results[7];
+    const coordinators = results[8] || [];
+
+    const me = {
+      name: user.name || '',
+      year: user.year || null,
+      section: user.section || '',
+      role: user.role || 'member',
+    };
+
+    const recentSessions = (rawRecentSessions || []).map((s) => {
+      const isBeforeAccount = new Date(s.date) < userCutoff;
+      let myStatus = null;
+      if (!isBeforeAccount) {
+        const isAbsent = s.absentees?.some(
+          (absId) => String(absId?._id ?? absId) === String(user._id)
+        );
+        myStatus = isAbsent ? 'absent' : 'present';
+      }
+      return {
+        _id: s._id,
+        date: s.date,
+        topic: s.topic,
+        handledBy: s.handledBy,
+        type: s.type,
+        myStatus,
+      };
+    });
+
+    const events = {
+      upcoming: upcomingEvents || [],
+      recent: recentEvents || [],
+    };
+
+    const club = {
+      totalSessions,
+      totalEvents,
+      totalMembers,
+    };
+
+    const todaySession = sanitizeSessionAnnouncement(announcementsData?.todaySession);
+    const upcomingSession = sanitizeSessionAnnouncement(announcementsData?.upcomingSession);
+    const broadcasts = announcementsData?.broadcasts || [];
+
+    // Admin Payload
+    if (user.role === 'admin') {
+      const pendingApprovalsCount = results[9];
+      const pendingApplicationsCount = results[10];
+      const recentApplications = results[11];
+      const approvedMembers = results[12];
+      const allHeldSessions = results[13];
+
       let lowAttendanceMembers = [];
-      if (allSessions.length > 0 && approvedMembers.length > 0) {
+      if (allHeldSessions.length > 0 && approvedMembers.length > 0) {
         const attendanceResults = approvedMembers
           .map((member) => {
             const cutoff = getStartOfDayUTC(member.createdAt);
-            const eligible = allSessions.filter((s) => new Date(s.date) >= cutoff);
+            const eligible = allHeldSessions.filter((s) => new Date(s.date) >= cutoff);
             const total = eligible.length;
-            if (total === 0) return null; // Skip members with null percentage (no sessions yet)
+            if (total === 0) return null; // Skip members with null percentage (0 sessions)
 
             const absent = eligible.filter((s) =>
-              s.absentees?.some((id) => id.toString() === member._id.toString())
+              s.absentees?.some((id) => String(id?._id ?? id) === String(member._id))
             ).length;
             const present = total - absent;
             const percentage = Number(((present / total) * 100).toFixed(1));
@@ -64,26 +189,40 @@ export const getDashboardData = async (req, res) => {
               email: member.email,
               section: member.section || 'CSE',
               year: member.year,
+              role: member.role || 'member',
               totalSessions: total,
               presentCount: present,
               absentCount: absent,
               percentage,
             };
           })
-          .filter(Boolean); // Filter out nulls
+          .filter(Boolean);
 
-        // Only include members strictly below the threshold
         const belowThreshold = attendanceResults.filter(
           (m) => m.percentage < LOW_ATTENDANCE_THRESHOLD
         );
 
-        // Sort ascending (worst turnout first) and take up to 5
         belowThreshold.sort((a, b) => a.percentage - b.percentage);
-        lowAttendanceMembers = belowThreshold.slice(0, 5);
+        lowAttendanceMembers = belowThreshold;
       }
 
       return res.json({
         role: 'admin',
+        me,
+        attendance,
+        todaySession,
+        upcomingSession,
+        broadcasts,
+        recentSessions,
+        events,
+        club,
+        coordinators,
+        pending: {
+          memberApprovals: pendingApprovalsCount,
+          applications: pendingApplicationsCount,
+        },
+        recentApplications: recentApplications || [],
+        lowAttendanceMembers,
         counts: {
           pendingApprovals: pendingApprovalsCount,
           pendingApplications: pendingApplicationsCount,
@@ -91,23 +230,21 @@ export const getDashboardData = async (req, res) => {
           totalEvents,
           totalMembers,
         },
-        todaySession: todaySession || null,
-        upcomingSession: upcomingSession || null,
-        broadcasts: broadcasts || [],
-        lowAttendanceMembers,
-        recentApplications: recentApplications || [],
       });
     }
 
-    // If regular Member, return personal stats via reusable helper
-    const attendance = await calculateMemberAttendance(user);
-
+    // Member / Staff Payload (strictly no pending, recentApplications, or lowAttendanceMembers)
     return res.json({
-      role: 'member',
+      role: user.role || 'member',
+      me,
       attendance,
-      todaySession: todaySession || null,
-      upcomingSession: upcomingSession || null,
-      broadcasts: broadcasts || [],
+      todaySession,
+      upcomingSession,
+      broadcasts,
+      recentSessions,
+      events,
+      club,
+      coordinators,
     });
   } catch (err) {
     console.error('getDashboardData error:', err);

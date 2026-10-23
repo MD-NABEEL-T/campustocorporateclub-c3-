@@ -3,6 +3,7 @@ import {
   getSessionAnnouncements,
   getKolkataDayBounds,
   parseSessionStorageDate,
+  generateDisplayTime,
 } from '../utils/dateUtils.js';
 
 // GET /api/announcements - Fetch active today's session, nearest upcoming session, and recent broadcasts
@@ -18,7 +19,7 @@ export const getAnnouncements = async (req, res) => {
 // POST /api/announcements/today-session - Admin set / update session details for today or a future date
 export const updateTodaySession = async (req, res) => {
   try {
-    const { topic, handledBy, time, venue, message, date } = req.body;
+    const { topic, handledBy, time, venue, message, date, startTime, endTime } = req.body;
 
     if (!topic || !handledBy) {
       return res.status(400).json({ message: 'Topic and Handled By are required' });
@@ -37,15 +38,21 @@ export const updateTodaySession = async (req, res) => {
       { isActive: false }
     );
 
+    const displayTime = generateDisplayTime(time, startTime, endTime);
+
     // Create fresh active session announcement without hardcoded time/venue defaults
     const sessionAnnouncement = await Announcement.create({
       type: 'today_session',
       title: "Today's Peer Session",
       topic: topic.trim(),
       handledBy: handledBy.trim(),
-      time: time ? time.trim() : '',
+      startTime: startTime ? startTime.trim() : '',
+      endTime: endTime ? endTime.trim() : '',
+      time: displayTime,
       venue: venue ? venue.trim() : '',
       message: message ? message.trim() : '',
+      status: 'scheduled',
+      cancelReason: '',
       isActive: true,
       createdBy: req.user._id,
       date: sessionStorageDate,
@@ -54,6 +61,99 @@ export const updateTodaySession = async (req, res) => {
     res.status(201).json({
       message: "Today's session announcement updated successfully",
       sessionAnnouncement,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// PATCH /api/announcements/:id/quick-edit - Quick update venue, startTime, endTime, message
+export const quickEditAnnouncement = async (req, res) => {
+  try {
+    const announcement = await Announcement.findById(req.params.id);
+    if (!announcement) {
+      return res.status(404).json({ message: 'Announcement not found' });
+    }
+
+    const { venue, startTime, endTime, message, time } = req.body;
+
+    if (venue !== undefined) {
+      announcement.venue = venue.trim();
+    }
+    if (startTime !== undefined) {
+      announcement.startTime = startTime.trim();
+    }
+    if (endTime !== undefined) {
+      announcement.endTime = endTime.trim();
+    }
+    if (message !== undefined) {
+      announcement.message = message.trim();
+    }
+
+    // If timing was provided or updated, regenerate display time
+    if (startTime !== undefined || endTime !== undefined || time !== undefined) {
+      const newDisplayTime = generateDisplayTime(
+        time !== undefined ? time : announcement.time,
+        announcement.startTime,
+        announcement.endTime
+      );
+      announcement.time = newDisplayTime;
+    }
+
+    announcement.editedAt = new Date();
+    announcement.updatedBy = req.user._id;
+
+    await announcement.save();
+
+    res.json({
+      message: 'Announcement updated successfully',
+      announcement,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// PATCH /api/announcements/:id/cancel - Admin cancel a session
+export const cancelAnnouncement = async (req, res) => {
+  try {
+    const announcement = await Announcement.findById(req.params.id);
+    if (!announcement) {
+      return res.status(404).json({ message: 'Announcement not found' });
+    }
+
+    announcement.status = 'cancelled';
+    announcement.cancelReason = req.body.reason ? req.body.reason.trim() : 'Session cancelled by coordinator';
+    announcement.updatedBy = req.user._id;
+
+    await announcement.save();
+
+    res.json({
+      message: 'Session announcement cancelled',
+      announcement,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// PATCH /api/announcements/:id/restore - Admin restore a cancelled session
+export const restoreAnnouncement = async (req, res) => {
+  try {
+    const announcement = await Announcement.findById(req.params.id);
+    if (!announcement) {
+      return res.status(404).json({ message: 'Announcement not found' });
+    }
+
+    announcement.status = 'scheduled';
+    announcement.cancelReason = '';
+    announcement.updatedBy = req.user._id;
+
+    await announcement.save();
+
+    res.json({
+      message: 'Session announcement restored',
+      announcement,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -87,12 +187,19 @@ export const createBroadcast = async (req, res) => {
   }
 };
 
-// DELETE /api/announcements/:id - Admin delete an announcement
+// DELETE /api/announcements/:id - Delete an announcement (Admin or creator staff)
 export const deleteAnnouncement = async (req, res) => {
   try {
     const announcement = await Announcement.findById(req.params.id);
     if (!announcement) {
       return res.status(404).json({ message: 'Announcement not found' });
+    }
+
+    const isAdmin = req.user.role === 'admin';
+    const isCreator = announcement.createdBy && announcement.createdBy.toString() === req.user._id.toString();
+
+    if (!isAdmin && !isCreator) {
+      return res.status(403).json({ message: 'Forbidden: You can only delete announcements you created' });
     }
 
     await announcement.deleteOne();

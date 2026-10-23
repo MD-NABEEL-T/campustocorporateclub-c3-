@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect, adminOnly } from '../middleware/authMiddleware.js';
+import { protect, adminOnly, staffOnly } from '../middleware/authMiddleware.js';
 import upload from '../middleware/upload.js';
 import {
   createSession,
@@ -7,6 +7,7 @@ import {
   getSessionById,
   markAbsentees,
   updateSession,
+  deleteSession,
 } from '../controllers/sessionController.js';
 
 const router = express.Router();
@@ -16,10 +17,11 @@ const sessionUpload = upload.fields([
   { name: 'images', maxCount: 4 },
 ]);
 
-router.post('/', protect, adminOnly, sessionUpload, createSession);
+router.post('/', protect, staffOnly, sessionUpload, createSession);
 router.get('/', protect, getSessions);
 router.get('/:id', protect, getSessionById);
-router.put('/:id/absentees', protect, adminOnly, markAbsentees);
-router.put('/:id', protect, adminOnly, sessionUpload, updateSession);
+router.put('/:id/absentees', protect, staffOnly, markAbsentees);
+router.put('/:id', protect, staffOnly, sessionUpload, updateSession);
+router.delete('/:id', protect, adminOnly, deleteSession);
 
 export default router;

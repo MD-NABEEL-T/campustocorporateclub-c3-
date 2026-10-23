@@ -18,10 +18,10 @@ export const getMemberAttendance = async (req, res) => {
   try {
     const targetId = req.params.memberId;
     const isSelf = targetId === req.user._id.toString();
-    const isAdmin = req.user.role === 'admin';
+    const isStaff = req.user.role === 'admin' || req.user.role === 'coordinator';
 
     // Strict ownership & role check
-    if (!isSelf && !isAdmin) {
+    if (!isSelf && !isStaff) {
       return res.status(403).json({ message: 'Forbidden: Access denied' });
     }
 
@@ -42,11 +42,12 @@ export const getMemberAttendance = async (req, res) => {
 export const getAllAttendance = async (req, res) => {
   try {
     let results;
+    const ownerEmail = (process.env.OWNER_EMAIL || '').trim().toLowerCase();
 
     try {
       // Primary attempt: Single MongoDB aggregation using $dateTrunc with timezone "UTC"
       results = await User.aggregate([
-        { $match: { isApproved: true } },
+        { $match: { $or: [{ isApproved: true }, { role: 'admin' }] } },
         {
           $lookup: {
             from: 'sessions',
@@ -57,12 +58,19 @@ export const getAllAttendance = async (req, res) => {
             pipeline: [
               {
                 $match: {
-                  $expr: {
-                    $gte: [
-                      '$date',
-                      { $dateTrunc: { date: '$$userCreatedAt', unit: 'day', timezone: 'UTC' } },
-                    ],
-                  },
+                  $and: [
+                    {
+                      $expr: {
+                        $gte: [
+                          '$date',
+                          { $dateTrunc: { date: '$$userCreatedAt', unit: 'day', timezone: 'UTC' } },
+                        ],
+                      },
+                    },
+                    {
+                      status: { $ne: 'cancelled' },
+                    },
+                  ],
                 },
               },
               {
@@ -84,6 +92,14 @@ export const getAllAttendance = async (req, res) => {
             email: 1,
             section: 1,
             year: 1,
+            role: { $ifNull: ['$role', 'member'] },
+            isOwner: {
+              $and: [
+                { $ne: [ownerEmail, ''] },
+                { $eq: [{ $toLower: '$email' }, ownerEmail] },
+                { $eq: ['$role', 'admin'] },
+              ],
+            },
             totalSessions: { $size: '$eligibleSessions' },
             absentCount: {
               $size: {
@@ -127,17 +143,19 @@ export const getAllAttendance = async (req, res) => {
       ]);
     } catch (aggErr) {
       // Fallback: If $dateTrunc is not supported in MongoDB version, compute cutoff in JS
-      const members = await User.find({ isApproved: true })
-        .select('name email section year createdAt')
+      const members = await User.find({
+        $or: [{ isApproved: true }, { role: 'admin' }],
+      })
+        .select('name email section year role createdAt')
         .sort({ name: 1 });
-      const sessions = await Session.find().select('_id date absentees');
+      const sessions = await Session.find({ status: { $ne: 'cancelled' } }).select('_id date absentees');
 
       results = members.map((member) => {
         const cutoff = getStartOfDayUTC(member.createdAt);
         const eligible = sessions.filter((s) => new Date(s.date) >= cutoff);
         const totalSessions = eligible.length;
         const absentCount = eligible.filter((s) =>
-          s.absentees?.some((id) => id.toString() === member._id.toString())
+          s.absentees?.some((id) => String(id?._id ?? id) === String(member._id))
         ).length;
         const presentCount = totalSessions - absentCount;
         const percentage =
@@ -151,6 +169,12 @@ export const getAllAttendance = async (req, res) => {
           email: member.email,
           section: member.section,
           year: member.year,
+          role: member.role || 'member',
+          isOwner: Boolean(
+            ownerEmail &&
+            member.role === 'admin' &&
+            (member.email || '').trim().toLowerCase() === ownerEmail
+          ),
           totalSessions,
           presentCount,
           absentCount,
