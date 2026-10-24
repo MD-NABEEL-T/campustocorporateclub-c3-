@@ -31,6 +31,9 @@ import {
   Calendar,
   Edit3,
   RotateCcw,
+  Key,
+  Copy,
+  Check,
 } from 'lucide-react';
 
 const formatDate = (val) => {
@@ -92,6 +95,13 @@ export const Members = () => {
   const [auditLogs, setAuditLogs] = useState([]);
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError] = useState('');
+
+  // Password reset modal states
+  const [resetConfirmTarget, setResetConfirmTarget] = useState(null);
+  const [resetSubmitting, setResetSubmitting] = useState(false);
+  const [resetError, setResetError] = useState('');
+  const [resetResult, setResetResult] = useState(null);
+  const [hasCopiedPassword, setHasCopiedPassword] = useState(false);
 
   // Bulk dry-run effect
   useEffect(() => {
@@ -223,6 +233,14 @@ export const Members = () => {
   });
 
   const isCurrentUserOwner = Boolean(user?.isOwner);
+
+  const canResetPassword = (target) => {
+    if (!user || user.role !== 'admin') return false;
+    if (target._id === user._id) return false;
+    if (target.isOwner) return false;
+    if (isCurrentUserOwner) return true;
+    return target.role !== 'admin';
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -368,6 +386,43 @@ export const Members = () => {
     }
   };
 
+  const handleResetPasswordConfirm = async () => {
+    if (!resetConfirmTarget || resetSubmitting) return;
+
+    setResetSubmitting(true);
+    setResetError('');
+    try {
+      const res = await api.post(`/users/${resetConfirmTarget._id}/reset-password`);
+      const tempPassword = res.data?.temporaryPassword;
+      const targetName = resetConfirmTarget.name;
+      setResetConfirmTarget(null);
+      setResetResult({
+        name: targetName,
+        tempPassword,
+      });
+      setHasCopiedPassword(false);
+      setSuccessMsg(`Password reset successfully for ${targetName}.`);
+      if (isAuditLogOpen) {
+        fetchAuditLogs();
+      }
+    } catch (err) {
+      setResetError(err.response?.data?.message || 'Failed to reset password');
+    } finally {
+      setResetSubmitting(false);
+    }
+  };
+
+  const handleCopyTempPassword = async () => {
+    if (!resetResult?.tempPassword) return;
+    try {
+      await navigator.clipboard.writeText(resetResult.tempPassword);
+      setHasCopiedPassword(true);
+      setTimeout(() => setHasCopiedPassword(false), 2500);
+    } catch {
+      // fallback
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -377,7 +432,7 @@ export const Members = () => {
     setError('');
     try {
       await api.put(`/users/${memberId}/approve`);
-      setSuccessMsg(`Approved ${memberName}. An approval email has been sent.`);
+      setSuccessMsg(`Approved ${memberName}.`);
       fetchData();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to approve member');
@@ -905,6 +960,22 @@ export const Members = () => {
                           </Button>
                         )
                       )}
+
+                      {/* Admin-assisted Password Reset */}
+                      {canResetPassword(m) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setResetConfirmTarget(m);
+                            setResetError('');
+                          }}
+                          className="text-xs text-zinc-300 hover:text-white border-white/10 hover:border-amber-500/30 w-full sm:w-auto justify-center"
+                          leftIcon={<Key className="w-3.5 h-3.5 text-amber-400" />}
+                        >
+                          Reset password
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -1055,6 +1126,22 @@ export const Members = () => {
                                 </Button>
                               )
                             )}
+
+                            {/* Admin-assisted Password Reset */}
+                            {canResetPassword(m) && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setResetConfirmTarget(m);
+                                  setResetError('');
+                                }}
+                                className="text-xs text-zinc-300 hover:text-white border-white/10 hover:border-amber-500/30"
+                                leftIcon={<Key className="w-3.5 h-3.5 text-amber-400" />}
+                              >
+                                Reset password
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -1151,6 +1238,11 @@ export const Members = () => {
                               <ShieldCheck className="w-3 h-3" />
                               Appointed Coordinator
                             </span>
+                          ) : log.action === 'reset_password' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-300 shrink-0">
+                              <Key className="w-3 h-3" />
+                              Reset Password
+                            </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-500/10 border border-zinc-500/30 text-zinc-300 shrink-0">
                               <ShieldOff className="w-3 h-3" />
@@ -1204,6 +1296,11 @@ export const Members = () => {
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-300">
                                   <ShieldCheck className="w-3 h-3" />
                                   Appointed Coordinator
+                                </span>
+                              ) : log.action === 'reset_password' ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-300">
+                                  <Key className="w-3 h-3" />
+                                  Reset Password
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-500/10 border border-zinc-500/30 text-zinc-300">
@@ -1658,6 +1755,137 @@ export const Members = () => {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Reset Password Confirmation Modal */}
+      <Modal
+        isOpen={Boolean(resetConfirmTarget)}
+        onClose={() => {
+          if (!resetSubmitting) {
+            setResetConfirmTarget(null);
+            setResetError('');
+          }
+        }}
+        title="Reset Member Password"
+        description={`Generate a temporary password for ${resetConfirmTarget?.name}.`}
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4">
+          <div className="p-3 rounded-xl bg-zinc-900 border border-white/10 text-xs space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-zinc-400">Target Member:</span>
+              <span className="font-semibold text-white">{resetConfirmTarget?.name}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-zinc-400">Email:</span>
+              <span className="font-mono text-zinc-300">{resetConfirmTarget?.email}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-zinc-400">Role:</span>
+              <span className="capitalize text-zinc-300">{resetConfirmTarget?.role || 'Member'}</span>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200/90 space-y-2">
+            <div className="font-semibold text-amber-300 flex items-center gap-1.5">
+              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>Important Security Notice</span>
+            </div>
+            <ul className="list-disc pl-4 space-y-1 text-zinc-300 text-[11px] leading-relaxed">
+              <li>This will immediately revoke their current password and all active login sessions.</li>
+              <li>A secure 10-character temporary password will be generated for you to share with them privately.</li>
+              <li>They will be required to set a new password immediately upon their next login.</li>
+            </ul>
+          </div>
+
+          {resetError && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{resetError}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
+            <Button
+              type="button"
+              variant="ghost"
+              size="md"
+              disabled={resetSubmitting}
+              onClick={() => {
+                setResetConfirmTarget(null);
+                setResetError('');
+              }}
+              className="text-xs text-zinc-400 hover:text-white"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              disabled={resetSubmitting}
+              isLoading={resetSubmitting}
+              onClick={handleResetPasswordConfirm}
+              className="text-xs font-semibold bg-amber-400 text-black hover:bg-amber-300 border-none"
+              leftIcon={<Key className="w-3.5 h-3.5" />}
+            >
+              Generate Temp Password
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Temporary Password Result Modal */}
+      <Modal
+        isOpen={Boolean(resetResult)}
+        onClose={() => setResetResult(null)}
+        title="Temporary Password Generated"
+        description={`Password reset complete for ${resetResult?.name}.`}
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4">
+          <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>Password successfully reset. Their previous sessions have been logged out.</span>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-zinc-300">Temporary Password</label>
+            <div className="p-3 rounded-xl bg-zinc-900 border border-amber-500/30 flex items-center justify-between gap-3">
+              <span className="font-mono text-base font-bold text-amber-300 tracking-wider select-all">
+                {resetResult?.tempPassword}
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={handleCopyTempPassword}
+                className="h-8 px-3 text-xs shrink-0"
+                leftIcon={hasCopiedPassword ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-zinc-300" />}
+              >
+                {hasCopiedPassword ? 'Copied' : 'Copy'}
+              </Button>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-zinc-300">
+            <p className="leading-relaxed">
+              Share this privately. They must set a new password at next login.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-end pt-3 border-t border-white/10">
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              onClick={() => setResetResult(null)}
+              className="text-xs font-semibold bg-white text-black hover:bg-zinc-200"
+            >
+              Done
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

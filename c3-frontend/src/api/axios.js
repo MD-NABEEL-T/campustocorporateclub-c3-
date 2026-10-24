@@ -62,7 +62,9 @@ function trackRequestEnd() {
 // Automatically inject JWT token from localStorage if present
 api.interceptors.request.use(
   (config) => {
-    trackRequestStart();
+    if (!config.silent) {
+      trackRequestStart();
+    }
     if (!config.headers.Authorization) {
       try {
         const storedUser = localStorage.getItem('c3user');
@@ -79,7 +81,9 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    trackRequestEnd();
+    if (!error.config?.silent) {
+      trackRequestEnd();
+    }
     return Promise.reject(error);
   }
 );
@@ -87,14 +91,16 @@ api.interceptors.request.use(
 // Response interceptor: GET retry on sleep/502/503/504 & session expiration
 api.interceptors.response.use(
   (response) => {
-    trackRequestEnd();
+    if (!response.config?.silent) {
+      trackRequestEnd();
+    }
     return response;
   },
   async (error) => {
     const config = error.config;
 
-    // Retry only GET requests on network failure or 502/503/504 server sleep
-    if (config) {
+    // Retry only GET requests on network failure or 502/503/504 server sleep (unless marked silent)
+    if (config && !config.silent) {
       const method = (config.method || 'get').toLowerCase();
       const status = error.response?.status;
       const isRetryableStatus = status === 502 || status === 503 || status === 504;
@@ -111,7 +117,9 @@ api.interceptors.response.use(
       }
     }
 
-    trackRequestEnd();
+    if (!config?.silent) {
+      trackRequestEnd();
+    }
 
     // 401 Unauthorized handling
     if (error.response?.status === 401) {
@@ -142,11 +150,29 @@ api.interceptors.response.use(
         }
       }
     } else if (error.response?.status === 403) {
-      const requestUrl = error.config?.url || '';
-      // If 403 Forbidden received on non-auth endpoint, refresh permissions immediately
-      if (!requestUrl.includes('/auth/me')) {
+      const isPasswordChangeRequired =
+        error.response?.data?.code === 'PASSWORD_CHANGE_REQUIRED' ||
+        Boolean(error.response?.data?.mustChangePassword);
+
+      if (isPasswordChangeRequired) {
+        try {
+          const stored = localStorage.getItem('c3user');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            parsed.mustChangePassword = true;
+            localStorage.setItem('c3user', JSON.stringify(parsed));
+          }
+        } catch {}
         if (typeof window !== 'undefined') {
-          window.dispatchEvent(new Event('c3:auth-refresh'));
+          window.dispatchEvent(new CustomEvent('c3:password-change-required'));
+        }
+      } else {
+        const requestUrl = error.config?.url || '';
+        // If 403 Forbidden received on non-auth endpoint, refresh permissions immediately
+        if (!requestUrl.includes('/auth/me')) {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('c3:auth-refresh'));
+          }
         }
       }
     }

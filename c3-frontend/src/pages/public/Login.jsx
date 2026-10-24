@@ -13,6 +13,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isPending, setIsPending] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotInfo, setShowForgotInfo] = useState(false);
   const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -100,6 +101,27 @@ const Login = () => {
                 autoComplete="current-password"
                 required
               />
+
+              {/* Forgot password info toggle */}
+              <div className="pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotInfo(!showForgotInfo)}
+                  className="text-[11px] font-mono text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+                >
+                  Forgot password?
+                </button>
+
+                {showForgotInfo && (
+                  <div className="mt-2 p-3 rounded-xl bg-zinc-900/90 border border-white/10 text-[11px] text-zinc-300 leading-relaxed flex items-start gap-2.5 animate-in fade-in">
+                    <span className="text-amber-400 font-bold shrink-0">ℹ️</span>
+                    <div>
+                      <span className="text-white font-medium block mb-0.5">Admin-Assisted Reset</span>
+                      Ask a C3 admin to reset your password. They'll give you a temporary password and you'll set a new one.
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <Button
                 type="submit"

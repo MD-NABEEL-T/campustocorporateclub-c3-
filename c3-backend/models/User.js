@@ -12,6 +12,8 @@ const userSchema = new mongoose.Schema({
   attendanceStartDate: { type: Date },
   attendanceStartSetBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   attendanceStartSetAt: { type: Date },
+  mustChangePassword: { type: Boolean, default: false },
+  passwordChangedAt: { type: Date },
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

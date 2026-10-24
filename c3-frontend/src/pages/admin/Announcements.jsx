@@ -24,6 +24,7 @@ import { Loader } from '../../components/ui/Loader';
 import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { DEFAULT_SESSION_START_TIME } from '../../constants/session';
 import api from '../../api/axios';
 
 const getTodayKolkataDateString = () => {
@@ -127,7 +128,7 @@ export const Announcements = () => {
   const [sessionDate, setSessionDate] = useState(todayStr);
   const [topic, setTopic] = useState('');
   const [handledBy, setHandledBy] = useState('');
-  const [startTime, setStartTime] = useState('');
+  const [startTime, setStartTime] = useState(DEFAULT_SESSION_START_TIME);
   const [endTime, setEndTime] = useState('');
   const [venue, setVenue] = useState('');
   const [sessionNotes, setSessionNotes] = useState('');
@@ -204,7 +205,7 @@ export const Announcements = () => {
     if (!session) return;
     setTopic(session.topic || '');
     setHandledBy(session.handledBy || '');
-    setStartTime(session.startTime || '');
+    setStartTime(session.startTime || DEFAULT_SESSION_START_TIME);
     setEndTime(session.endTime || '');
     setVenue(session.venue || '');
     setSessionNotes(session.message || '');
@@ -224,7 +225,7 @@ export const Announcements = () => {
     setSessionDate(todayStr);
     setTopic('');
     setHandledBy('');
-    setStartTime('');
+    setStartTime(DEFAULT_SESSION_START_TIME);
     setEndTime('');
     setVenue('');
     setSessionNotes('');

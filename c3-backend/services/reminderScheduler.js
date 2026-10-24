@@ -1,17 +1,41 @@
 import cron from 'node-cron';
 import Announcement from '../models/Announcement.js';
-import { getKolkataDayBounds } from '../utils/dateUtils.js';
-import { broadcastPushNotification } from '../utils/pushNotificationService.js';
+import { getKolkataDayBounds, formatTimeDisplay } from '../utils/dateUtils.js';
+import { notifyAllApproved } from '../utils/notify.js';
+
+export const getReminderSettings = () => {
+  const defaultStartTime = (process.env.SESSION_DEFAULT_START_TIME || '13:00').trim();
+  const leadMinutes = parseInt(process.env.REMINDER_LEAD_MINUTES || '5', 10) || 5;
+  return { defaultStartTime, leadMinutes };
+};
 
 /**
- * Checks if an active session is scheduled for today and sends the 12:55 PM reminder if not sent yet
+ * Computes the session start date, reminder time, and 15-minute cutoff time in Asia/Kolkata
+ */
+export const computeSessionReminderTimes = (date, startTime) => {
+  const { defaultStartTime, leadMinutes } = getReminderSettings();
+  const { dateStr } = getKolkataDayBounds(date || new Date());
+  const effectiveStartTime =
+    startTime && /^\d{1,2}:\d{2}$/.test(startTime.trim()) ? startTime.trim() : defaultStartTime;
+
+  const [h, m] = effectiveStartTime.split(':').map((v) => parseInt(v, 10));
+  const pad = (n) => String(n).padStart(2, '0');
+  const sessionStartDate = new Date(`${dateStr}T${pad(h)}:${pad(m)}:00.000+05:30`);
+  const reminderTime = new Date(sessionStartDate.getTime() - leadMinutes * 60 * 1000);
+  const cutoffTime = new Date(sessionStartDate.getTime() + 15 * 60 * 1000);
+
+  return { sessionStartDate, reminderTime, cutoffTime, effectiveStartTime };
+};
+
+/**
+ * Checks if a session reminder is due for today and claims it atomically
  */
 export const checkAndSendSessionReminders = async () => {
   try {
-    const today = new Date();
-    const { startOfDay, endOfDay } = getKolkataDayBounds(today);
+    const now = new Date();
+    const { startOfDay, endOfDay } = getKolkataDayBounds(now);
 
-    // Look for active scheduled today_session announcements for today's date
+    // Look for active today_session for today's IST date that is scheduled and active
     const sessionAnnouncement = await Announcement.findOne({
       type: 'today_session',
       status: 'scheduled',
@@ -20,49 +44,67 @@ export const checkAndSendSessionReminders = async () => {
     });
 
     if (!sessionAnnouncement) {
-      return { triggered: false, reason: 'No active session scheduled for today' };
+      return { due: false, sent: false, reason: 'No active session scheduled today' };
     }
 
-    // If reminder was already sent today, avoid duplicate notifications
-    if (sessionAnnouncement.reminderSentAt) {
-      const alreadySentBounds = getKolkataDayBounds(sessionAnnouncement.reminderSentAt);
-      if (sessionAnnouncement.reminderSentAt >= alreadySentBounds.startOfDay) {
-        return { triggered: false, reason: 'Reminder already sent today' };
-      }
+    const { reminderTime, cutoffTime, effectiveStartTime } = computeSessionReminderTimes(
+      sessionAnnouncement.date,
+      sessionAnnouncement.startTime
+    );
+
+    const isDue = now >= reminderTime && now < cutoffTime;
+    if (!isDue) {
+      return { due: false, sent: false, reason: 'Reminder window is not currently active' };
     }
 
-    const topic = sessionAnnouncement.topic || 'Club Session';
-    const venue = sessionAnnouncement.venue ? `at ${sessionAnnouncement.venue}` : '';
-    const time = sessionAnnouncement.time || '1:00 PM';
+    // Atomically claim the send so external triggers and cron never double send
+    const claimed = await Announcement.findOneAndUpdate(
+      {
+        _id: sessionAnnouncement._id,
+        reminderSentAt: null,
+      },
+      {
+        $set: { reminderSentAt: now },
+      },
+      { new: true }
+    );
 
-    // Broadcast push notification to all approved members
-    const result = await broadcastPushNotification({
-      title: '🚨 C3 Session Starting Soon!',
-      body: `Today's session "${topic}" starts in 5 minutes (${time}) ${venue}! Tap to open.`.trim(),
-      data: { url: '/dashboard' },
+    if (!claimed) {
+      return { due: true, sent: false, reason: 'Reminder already sent today' };
+    }
+
+    // Format 12-hour display time from effective start time
+    const display12h = formatTimeDisplay(effectiveStartTime);
+    const venueText = claimed.venue && claimed.venue.trim() ? ` at ${claimed.venue.trim()}` : '';
+
+    await notifyAllApproved({
+      type: 'reminder',
+      title: `Session starts soon: ${claimed.topic}`,
+      body: `Starts at ${display12h}${venueText}! Tap to open.`,
+      link: '/dashboard',
+      refId: String(claimed._id),
+      tag: `session-reminder-${claimed._id}`,
     });
 
-    sessionAnnouncement.reminderSentAt = new Date();
-    await sessionAnnouncement.save();
-
-    console.log(`[ReminderScheduler] 12:55 PM Session reminder sent. Delivered to ${result.sent} devices.`);
-    return { triggered: true, sent: result.sent, failed: result.failed };
+    console.log(
+      `[ReminderScheduler] Session reminder sent for "${claimed.topic}" (Starts: ${display12h}${venueText})`
+    );
+    return { due: true, sent: true };
   } catch (err) {
-    console.error('[ReminderScheduler] Error running session reminder:', err.message);
-    return { triggered: false, error: err.message };
+    console.error('[ReminderScheduler] Error checking session reminders:', err.message);
+    return { due: false, sent: false, error: err.message };
   }
 };
 
 /**
- * Initializes the node-cron scheduler for 12:55 PM IST daily
+ * Initializes the node-cron scheduler to run every minute
  */
 export const initReminderScheduler = () => {
   try {
-    // '55 12 * * *' = 12:55 PM every day in Asia/Kolkata (IST) timezone
+    // Run every minute ('* * * * *')
     cron.schedule(
-      '55 12 * * *',
+      '* * * * *',
       async () => {
-        console.log('[ReminderScheduler] Running scheduled 12:55 PM session reminder check...');
         await checkAndSendSessionReminders();
       },
       {
@@ -70,8 +112,18 @@ export const initReminderScheduler = () => {
       }
     );
 
-    console.log('Automated 12:55 PM IST reminder scheduler initialized');
+    const { defaultStartTime, leadMinutes } = getReminderSettings();
+    console.log(
+      `Automated per-minute reminder scheduler initialized (Default Start: ${defaultStartTime}, Lead: ${leadMinutes}m)`
+    );
   } catch (err) {
     console.error('Failed to initialize reminder scheduler:', err.message);
   }
+};
+
+export default {
+  checkAndSendSessionReminders,
+  initReminderScheduler,
+  computeSessionReminderTimes,
+  getReminderSettings,
 };

@@ -5,7 +5,8 @@ import {
   parseSessionStorageDate,
   generateDisplayTime,
 } from '../utils/dateUtils.js';
-import { broadcastPushNotification } from '../utils/pushNotificationService.js';
+import { notifyAllApproved } from '../utils/notify.js';
+import { computeSessionReminderTimes } from '../services/reminderScheduler.js';
 
 // GET /api/announcements - Fetch active today's session, nearest upcoming session, and recent broadcasts
 export const getAnnouncements = async (req, res) => {
@@ -57,14 +58,21 @@ export const updateTodaySession = async (req, res) => {
       isActive: true,
       createdBy: req.user._id,
       date: sessionStorageDate,
+      reminderSentAt: null, // Fresh session starts with unconsumed reminder
     });
 
-    // Send instant push notification to all members' devices
-    broadcastPushNotification({
-      title: `📢 New Session: ${topic.trim()}`,
-      body: `${displayTime ? displayTime + ' • ' : ''}${venue ? 'Venue: ' + venue.trim() + ' • ' : ''}Handled by ${handledBy.trim()}`,
-      data: { url: '/dashboard' },
-    }).catch((err) => console.error('[Push] Failed to broadcast session notification:', err.message));
+    // Notify all approved members via central notifier (in-app + web push)
+    notifyAllApproved(
+      {
+        type: 'session',
+        title: `📢 New Session: ${topic.trim()}`,
+        body: `${displayTime ? displayTime + ' • ' : ''}${venue ? 'Venue: ' + venue.trim() + ' • ' : ''}Handled by ${handledBy.trim()}`,
+        link: '/dashboard',
+        refId: String(sessionAnnouncement._id),
+        tag: `session-${sessionAnnouncement._id}`,
+      },
+      { excludeUserId: req.user._id }
+    ).catch((err) => console.error('[Notify] Failed to broadcast session notification:', err.message));
 
     res.status(201).json({
       message: "Today's session announcement updated successfully",
@@ -84,38 +92,90 @@ export const quickEditAnnouncement = async (req, res) => {
     }
 
     const { venue, startTime, endTime, message, time } = req.body;
+    const changes = [];
 
+    // Track venue change
     if (venue !== undefined) {
-      announcement.venue = venue.trim();
+      const trimmedVenue = venue.trim();
+      if (trimmedVenue !== (announcement.venue || '')) {
+        changes.push(trimmedVenue ? `Venue changed to ${trimmedVenue}` : 'Venue cleared');
+        announcement.venue = trimmedVenue;
+      }
     }
+
+    // Track time change
+    let timingUpdated = false;
     if (startTime !== undefined) {
-      announcement.startTime = startTime.trim();
+      const trimmedStart = startTime.trim();
+      if (trimmedStart !== (announcement.startTime || '')) {
+        announcement.startTime = trimmedStart;
+        timingUpdated = true;
+      }
     }
     if (endTime !== undefined) {
-      announcement.endTime = endTime.trim();
-    }
-    if (message !== undefined) {
-      announcement.message = message.trim();
+      const trimmedEnd = endTime.trim();
+      if (trimmedEnd !== (announcement.endTime || '')) {
+        announcement.endTime = trimmedEnd;
+        timingUpdated = true;
+      }
     }
 
-    // If timing was provided or updated, regenerate display time
-    if (startTime !== undefined || endTime !== undefined || time !== undefined) {
+    if (timingUpdated || time !== undefined) {
       const newDisplayTime = generateDisplayTime(
         time !== undefined ? time : announcement.time,
         announcement.startTime,
         announcement.endTime
       );
-      announcement.time = newDisplayTime;
+      if (newDisplayTime !== announcement.time) {
+        changes.push(`Time changed to ${newDisplayTime}`);
+        announcement.time = newDisplayTime;
+      }
+    }
+
+    // Track message change
+    if (message !== undefined) {
+      const trimmedMsg = message.trim();
+      if (trimmedMsg !== (announcement.message || '')) {
+        changes.push('Session agenda updated');
+        announcement.message = trimmedMsg;
+      }
     }
 
     announcement.editedAt = new Date();
     announcement.updatedBy = req.user._id;
 
+    // If startTime or date changed and the new reminder time is still in future, clear reminderSentAt
+    if (timingUpdated && announcement.reminderSentAt) {
+      const { reminderTime } = computeSessionReminderTimes(announcement.date, announcement.startTime);
+      if (reminderTime > new Date()) {
+        announcement.reminderSentAt = null;
+      }
+    }
+
     await announcement.save();
+
+    // Only notify if something actually changed
+    if (changes.length > 0) {
+      notifyAllApproved(
+        {
+          type: 'quick_edit',
+          title: `Update: ${announcement.topic}`,
+          body: changes.join(' • '),
+          link: '/dashboard',
+          refId: String(announcement._id),
+          tag: `session-${announcement._id}`,
+        },
+        {
+          excludeUserId: req.user._id,
+          collapseWindowMs: 120000, // 2 minutes collapse window
+        }
+      ).catch((err) => console.error('[Notify] Quick edit notification error:', err.message));
+    }
 
     res.json({
       message: 'Announcement updated successfully',
       announcement,
+      changes,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -137,11 +197,17 @@ export const cancelAnnouncement = async (req, res) => {
     await announcement.save();
 
     // Notify members that session was cancelled
-    broadcastPushNotification({
-      title: '⚠️ Session Cancelled',
-      body: `Today's session "${announcement.topic || 'Club Session'}" has been cancelled. Reason: ${announcement.cancelReason}`,
-      data: { url: '/dashboard' },
-    }).catch((err) => console.error('[Push] Cancel notification error:', err.message));
+    notifyAllApproved(
+      {
+        type: 'cancellation',
+        title: '⚠️ Session Cancelled',
+        body: `Today's session "${announcement.topic || 'Club Session'}" has been cancelled. Reason: ${announcement.cancelReason}`,
+        link: '/dashboard',
+        refId: String(announcement._id),
+        tag: `session-${announcement._id}`,
+      },
+      { excludeUserId: req.user._id }
+    ).catch((err) => console.error('[Notify] Cancel notification error:', err.message));
 
     res.json({
       message: 'Session announcement cancelled',
@@ -164,7 +230,26 @@ export const restoreAnnouncement = async (req, res) => {
     announcement.cancelReason = '';
     announcement.updatedBy = req.user._id;
 
+    // If new reminder time is still in future, clear reminderSentAt
+    const { reminderTime } = computeSessionReminderTimes(announcement.date, announcement.startTime);
+    if (reminderTime > new Date()) {
+      announcement.reminderSentAt = null;
+    }
+
     await announcement.save();
+
+    // Notify members that session is back on
+    notifyAllApproved(
+      {
+        type: 'restore',
+        title: 'Session is back on',
+        body: `Today's session "${announcement.topic || 'Club Session'}" is back on (${announcement.time || 'scheduled'})!`,
+        link: '/dashboard',
+        refId: String(announcement._id),
+        tag: `session-${announcement._id}`,
+      },
+      { excludeUserId: req.user._id }
+    ).catch((err) => console.error('[Notify] Restore notification error:', err.message));
 
     res.json({
       message: 'Session announcement restored',
@@ -193,12 +278,18 @@ export const createBroadcast = async (req, res) => {
       date: new Date(),
     });
 
-    // Send push notification for club broadcast
-    broadcastPushNotification({
-      title: `📢 Club Announcement: ${title.trim()}`,
-      body: message.trim(),
-      data: { url: '/dashboard' },
-    }).catch((err) => console.error('[Push] Broadcast notification error:', err.message));
+    // Send notification for club broadcast
+    notifyAllApproved(
+      {
+        type: 'broadcast',
+        title: `📢 Club Announcement: ${title.trim()}`,
+        body: message.trim(),
+        link: '/dashboard',
+        refId: String(broadcast._id),
+        tag: `broadcast-${broadcast._id}`,
+      },
+      { excludeUserId: req.user._id }
+    ).catch((err) => console.error('[Notify] Broadcast notification error:', err.message));
 
     res.status(201).json({
       message: 'Broadcast published successfully',

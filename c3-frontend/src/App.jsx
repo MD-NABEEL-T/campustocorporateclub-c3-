@@ -22,6 +22,7 @@ const ApplyForm = lazy(() => import('./pages/public/ApplyForm'));
 const Login = lazy(() => import('./pages/public/Login'));
 const Register = lazy(() => import('./pages/public/Register'));
 const EventDetails = lazy(() => import('./pages/public/EventDetails'));
+const SetNewPassword = lazy(() => import('./pages/public/SetNewPassword'));
 
 
 // Admin Portal Pages - lazy loaded, only fetched for admins
@@ -102,6 +103,7 @@ function App() {
                 <Route path="/apply-form" element={<ApplyForm />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/set-new-password" element={<SetNewPassword />} />
 
               </Route>
 

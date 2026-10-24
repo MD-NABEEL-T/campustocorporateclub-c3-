@@ -1,9 +1,11 @@
 import User from '../models/User.js';
 import AdminAudit from '../models/AdminAudit.js';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { sendEmail } from '../utils/sendEmail.js';
 import { isOwnerUser } from '../middleware/authMiddleware.js';
 import { getAttendanceCutoff, getStartOfDayUTC } from '../utils/attendanceStats.js';
+import { notifyUsers } from '../utils/notify.js';
 
 // Get all pending (unapproved) users - admin only
 export const getPendingUsers = async (req, res) => {
@@ -200,6 +202,19 @@ export const updateUserAdminStatus = async (req, res) => {
       console.error('[AdminAudit] Failed to create audit log entry:', auditErr.message);
     }
 
+    // In-app & Web push notification to target user
+    const adminRoleLabel = makeAdmin ? 'Admin' : 'Member';
+    notifyUsers(
+      [targetUser._id],
+      {
+        type: 'role_change',
+        title: 'Role Updated',
+        body: `Your role is now ${adminRoleLabel}`,
+        link: makeAdmin ? '/admin' : '/dashboard',
+        refId: String(targetUser._id),
+      }
+    ).catch((err) => console.error('[Notify] Admin role change notification error:', err.message));
+
     // Send email notification to the target user (role change still succeeds if email fails)
     try {
       const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, '') : '';
@@ -316,6 +331,19 @@ export const updateUserRole = async (req, res) => {
     } catch (auditErr) {
       console.error('[AdminAudit] Failed to create audit log entry:', auditErr.message);
     }
+
+    // In-app & Web push notification to target user
+    const memberRoleLabel = role === 'coordinator' ? 'Coordinator' : 'Member';
+    notifyUsers(
+      [targetUser._id],
+      {
+        type: 'role_change',
+        title: 'Role Updated',
+        body: `Your role is now ${memberRoleLabel}`,
+        link: '/dashboard',
+        refId: String(targetUser._id),
+      }
+    ).catch((err) => console.error('[Notify] Coordinator/member role change notification error:', err.message));
 
     const updated = await User.findById(targetUser._id).select('-password');
     res.json({
@@ -450,6 +478,84 @@ export const bulkUpdateAttendanceStartDate = async (req, res) => {
       count,
       dryRun: false,
       message: `Successfully updated attendance start date for ${count} members`,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/**
+ * Generates a random temporary password (10 chars, no look-alike characters like 0/O/1/l)
+ */
+const generateTemporaryPassword = (length = 10) => {
+  // Exclude look-alikes 0, O, o, 1, l, I
+  const CHARSET = '23456789abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
+  let pwd = '';
+  for (let i = 0; i < length; i++) {
+    const idx = crypto.randomInt(0, CHARSET.length);
+    pwd += CHARSET[idx];
+  }
+  return pwd;
+};
+
+// POST /api/users/:id/reset-password (adminOnly)
+export const resetUserPassword = async (req, res) => {
+  try {
+    const targetUser = await User.findById(req.params.id);
+    if (!targetUser) {
+      return res.status(404).json({ message: 'Target user not found' });
+    }
+
+    if (!targetUser.isApproved) {
+      return res.status(400).json({ message: 'Target user must be approved before resetting password' });
+    }
+
+    // Actor cannot reset themselves
+    if (targetUser._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ message: 'Cannot reset your own password' });
+    }
+
+    const isActorOwner = isOwnerUser(req.user);
+    const isTargetAdmin = targetUser.role === 'admin';
+    const isTargetOwner = isOwnerUser(targetUser);
+
+    if (isTargetOwner) {
+      return res.status(403).json({ message: 'Cannot reset the club owner account password' });
+    }
+
+    // Non-owner admins can reset members and coordinators only, never other admins
+    if (!isActorOwner && isTargetAdmin) {
+      return res.status(403).json({
+        message: 'Only the club owner can reset an administrator account password',
+      });
+    }
+
+    const tempPassword = generateTemporaryPassword(10);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(tempPassword, salt);
+
+    targetUser.password = hashedPassword;
+    targetUser.mustChangePassword = true;
+    targetUser.passwordChangedAt = new Date();
+    await targetUser.save();
+
+    // Log to AdminAudit (NEVER log or store the password)
+    try {
+      await AdminAudit.create({
+        action: 'reset_password',
+        actor: req.user._id,
+        target: targetUser._id,
+        targetName: targetUser.name,
+        targetEmail: targetUser.email,
+      });
+    } catch (auditErr) {
+      console.error('[AdminAudit] Failed to log reset_password:', auditErr.message);
+    }
+
+    // Return the plain temporary password ONCE in response (never logged)
+    res.status(200).json({
+      message: 'Temporary password generated successfully',
+      temporaryPassword: tempPassword,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

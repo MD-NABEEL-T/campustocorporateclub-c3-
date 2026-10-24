@@ -15,6 +15,7 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import { initWebPush } from './utils/pushNotificationService.js';
 import { initReminderScheduler } from './services/reminderScheduler.js';
+import { getNotificationsConfig } from './utils/notify.js';
 import dns from 'node:dns';
 
 dns.setServers(['8.8.8.8', '1.1.1.1']);
@@ -22,6 +23,15 @@ dotenv.config();
 connectDB();
 initWebPush();
 initReminderScheduler();
+
+const notifyConfig = getNotificationsConfig();
+console.log(
+  `[Notifications] Mode: ${notifyConfig.mode.toUpperCase()}${
+    notifyConfig.mode === 'test'
+      ? ` | Whitelist: ${notifyConfig.testEmails.join(', ') || '(none - no one receives notifications)'}`
+      : ''
+  }`
+);
 
 const app = express();
 
