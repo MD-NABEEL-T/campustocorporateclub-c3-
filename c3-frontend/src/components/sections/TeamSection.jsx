@@ -175,10 +175,25 @@ const CORE_MEMBERS = [
       github: 'https://github.com/Akramullah7',
       linkedin: 'https://www.linkedin.com/in/akramullah-'
     }
+  },
+  {
+    name: 'Jayasuriyan K',
+    tier: 'Core Member',
+    domain: 'Public Speaking & Corporate Communication',
+    accent: '#FB7185',
+    quote: null,
+    photo: '/assets/team/JAYASURIYAN.jpg',
+    photoPosition: 'center 20%',
+    socials: {
+      email: 'mailto:jayasuriyan2209@gmail.com',
+      github: 'https://github.com/jayasuriyan2209',
+      linkedin: 'https://www.linkedin.com/in/jayasuriyan-k-596265779'
+    }
   }
 ];
-const CORE_ROW_1 = CORE_MEMBERS.slice(0, 5);
-const CORE_ROW_2 = CORE_MEMBERS.slice(5);
+const half = Math.ceil(CORE_MEMBERS.length / 2);
+const CORE_ROW_1 = CORE_MEMBERS.slice(0, half);
+const CORE_ROW_2 = CORE_MEMBERS.slice(half);
 
 // Shows the real photo when `photo` is set and loads successfully;
 // otherwise falls back to the original icon placeholder unchanged.

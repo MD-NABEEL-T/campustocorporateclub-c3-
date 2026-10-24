@@ -73,13 +73,7 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// --- EVENT MODULE ---
-import * as eventConfig from './event-module/config.js';
-import eventModuleRoutes from './event-module/routes.js';
-if (eventConfig.EVENT_ENABLED) {
-    app.use('/api/event', eventModuleRoutes);
-}
-// --------------------
+
 
 // Global error handler
 app.use((err, req, res, next) => {

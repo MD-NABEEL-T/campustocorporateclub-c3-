@@ -3,7 +3,6 @@ import { Outlet } from 'react-router-dom';
 import { Navbar } from '../navigation/Navbar';
 import { Footer } from '../navigation/Footer';
 import { initSmoothScroll } from '../../utils/smoothScroll';
-import FloatingEventBtn from '../../event-module/components/FloatingEventBtn';
 import ClickSpark from '../reactbits/ClickSpark';
 
 export const PublicLayout = () => {
@@ -23,7 +22,6 @@ export const PublicLayout = () => {
           <Outlet />
         </main>
         <Footer />
-        <FloatingEventBtn />
       </div>
     </ClickSpark>
   );

@@ -22,9 +22,6 @@ const Login = lazy(() => import('./pages/public/Login'));
 const Register = lazy(() => import('./pages/public/Register'));
 const EventDetails = lazy(() => import('./pages/public/EventDetails'));
 
-// Event Module
-import { EVENT_ENABLED } from './event-module/config';
-const EventApp = lazy(() => import('./event-module/EventApp'));
 
 // Admin Portal Pages - lazy loaded, only fetched for admins
 const Members = lazy(() => import('./pages/admin/Members'));
@@ -104,7 +101,6 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
 
-                {EVENT_ENABLED && <Route path="/event/*" element={<EventApp />} />}
               </Route>
 
               {/* Member Portal Protected Routes */}

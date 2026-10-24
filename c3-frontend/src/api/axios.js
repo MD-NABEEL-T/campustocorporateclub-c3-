@@ -48,9 +48,7 @@ api.interceptors.response.use(
             (pathname === '/sessions-archive') ||
             (pathname.startsWith('/apply')) ||
             (pathname.startsWith('/events/')) ||
-            (pathname === '/events') ||
-            (pathname.startsWith('/event/')) ||
-            (pathname === '/event');
+            (pathname === '/events');
 
           // Redirect to /login unless on a public route (avoids redirect loops)
           if (!isPublic) {

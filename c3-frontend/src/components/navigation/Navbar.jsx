@@ -5,7 +5,6 @@ import { Button } from '../ui/Button';
 import { useAuth } from '../../context/AuthContext';
 import { DesktopNav } from './DesktopNav';
 import { MobileNav } from './MobileNav';
-import { EVENT_ENABLED } from '../../event-module/config';
 
 export const Navbar = () => {
   const { user } = useAuth();
@@ -20,13 +19,6 @@ export const Navbar = () => {
           <DesktopNav />
 
           <div className="z-[99] flex items-center gap-4">
-            {EVENT_ENABLED && (
-              <Link to="/event/register">
-                <Button variant="premiumBlue" size="md">
-                  Register for Event
-                </Button>
-              </Link>
-            )}
 
             {user ? (
               <Link to="/dashboard">
