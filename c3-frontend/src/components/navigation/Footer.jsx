@@ -13,7 +13,7 @@ export const Footer = () => {
           <div className="md:col-span-2 space-y-4">
             <Link to="/" className="inline-flex items-center gap-3">
               <img
-                src="/assets/c3-logo.jpeg"
+                src="/assets/newlogo.jpeg"
                 alt="C3 Logo"
                 className="w-9 h-9 rounded-xl object-cover border border-white/10"
               />

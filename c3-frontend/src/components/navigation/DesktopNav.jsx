@@ -13,7 +13,7 @@ export const DesktopNav = () => {
   return (
 <div className="hidden lg:block flex-1">
         <PillNav
-        logo="/assets/c3-logo.jpeg"
+        logo="/assets/newlogo.jpeg"
         logoAlt="Campus to Corporate Club"
         items={items}
         activeHref={location.pathname}

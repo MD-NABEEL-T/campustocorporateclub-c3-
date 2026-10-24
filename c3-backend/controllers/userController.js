@@ -3,6 +3,7 @@ import AdminAudit from '../models/AdminAudit.js';
 import bcrypt from 'bcryptjs';
 import { sendEmail } from '../utils/sendEmail.js';
 import { isOwnerUser } from '../middleware/authMiddleware.js';
+import { getAttendanceCutoff, getStartOfDayUTC } from '../utils/attendanceStats.js';
 
 // Get all pending (unapproved) users - admin only
 export const getPendingUsers = async (req, res) => {
@@ -17,22 +18,32 @@ export const getPendingUsers = async (req, res) => {
 // Get all approved members - admin only
 export const getApprovedUsers = async (req, res) => {
   try {
-    const users = await User.find({ isApproved: true }).select('-password').sort({ createdAt: -1 });
+    const users = await User.find({ isApproved: true })
+      .select('-password')
+      .populate('attendanceStartSetBy', 'name email')
+      .sort({ createdAt: -1 });
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// Get all attendees for session attendance (approved accounts regardless of role) - admin only
+// Get all attendees for session attendance (approved accounts regardless of role) - staff / admin
 export const getAttendees = async (req, res) => {
   try {
     const attendees = await User.find({
       $or: [{ isApproved: true }, { role: 'admin' }],
     })
-      .select('_id name email registerNumber year section role')
-      .sort({ name: 1 });
-    res.json(attendees);
+      .select('_id name email registerNumber year section role createdAt attendanceStartDate')
+      .sort({ name: 1 })
+      .lean();
+
+    const results = attendees.map((attendee) => ({
+      ...attendee,
+      attendanceCutoff: getAttendanceCutoff(attendee).toISOString(),
+    }));
+
+    res.json(results);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -314,4 +325,134 @@ export const updateUserRole = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-};
+};
+
+// PUT /api/users/:id/attendance-start (staffOnly)
+// Body: { date: 'YYYY-MM-DD' | null }
+export const updateAttendanceStartDate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { date } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!user.isApproved && user.role !== 'admin') {
+      return res.status(400).json({ message: 'Target user account is not approved' });
+    }
+
+    if (date !== null && date !== undefined) {
+      if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return res.status(400).json({ message: 'Date must be in YYYY-MM-DD format or null' });
+      }
+
+      const d = new Date(date + 'T00:00:00.000Z');
+      if (isNaN(d.getTime())) {
+        return res.status(400).json({ message: 'Invalid date provided' });
+      }
+
+      const todayUTC = getStartOfDayUTC(new Date());
+      const minDate = new Date('2020-01-01T00:00:00.000Z');
+
+      if (d > todayUTC) {
+        return res.status(400).json({ message: 'Attendance start date cannot be in the future' });
+      }
+      if (d < minDate) {
+        return res.status(400).json({ message: 'Attendance start date cannot be before 2020-01-01' });
+      }
+
+      user.attendanceStartDate = d;
+      user.attendanceStartSetBy = req.user._id;
+      user.attendanceStartSetAt = new Date();
+    } else {
+      user.attendanceStartDate = null;
+      user.attendanceStartSetBy = null;
+      user.attendanceStartSetAt = null;
+    }
+
+    await user.save();
+    await user.populate('attendanceStartSetBy', 'name email');
+
+    res.json({
+      message: date ? 'Attendance start date updated successfully' : 'Attendance start date reset to default',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+        attendanceStartDate: user.attendanceStartDate,
+        attendanceStartSetBy: user.attendanceStartSetBy,
+        attendanceStartSetAt: user.attendanceStartSetAt,
+        attendanceCutoff: getAttendanceCutoff(user).toISOString(),
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// POST /api/users/attendance-start/bulk (adminOnly)
+// Body: { date: 'YYYY-MM-DD', dryRun?: boolean }
+export const bulkUpdateAttendanceStartDate = async (req, res) => {
+  try {
+    const { date, dryRun } = req.body;
+
+    if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ message: 'Date must be in YYYY-MM-DD format' });
+    }
+
+    const targetDate = new Date(date + 'T00:00:00.000Z');
+    if (isNaN(targetDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid date provided' });
+    }
+
+    const todayUTC = getStartOfDayUTC(new Date());
+    const minDate = new Date('2020-01-01T00:00:00.000Z');
+
+    if (targetDate > todayUTC) {
+      return res.status(400).json({ message: 'Attendance start date cannot be in the future' });
+    }
+    if (targetDate < minDate) {
+      return res.status(400).json({ message: 'Attendance start date cannot be before 2020-01-01' });
+    }
+
+    // Every approved account (and admins) whose effective cutoff is later than targetDate
+    const approvedUsers = await User.find({
+      $or: [{ isApproved: true }, { role: 'admin' }],
+    }).select('_id createdAt attendanceStartDate');
+
+    const usersToUpdate = approvedUsers.filter((u) => {
+      const currentCutoff = getAttendanceCutoff(u);
+      return currentCutoff > targetDate;
+    });
+
+    const count = usersToUpdate.length;
+
+    if (dryRun) {
+      return res.json({ count, dryRun: true });
+    }
+
+    if (count > 0) {
+      const userIds = usersToUpdate.map((u) => u._id);
+      await User.updateMany(
+        { _id: { $in: userIds } },
+        {
+          $set: {
+            attendanceStartDate: targetDate,
+            attendanceStartSetBy: req.user._id,
+            attendanceStartSetAt: new Date(),
+          },
+        }
+      );
+    }
+
+    res.json({
+      count,
+      dryRun: false,
+      message: `Successfully updated attendance start date for ${count} members`,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+

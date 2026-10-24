@@ -6,6 +6,7 @@ import {
   calculateMemberAttendance,
   LOW_ATTENDANCE_THRESHOLD,
   getStartOfDayUTC,
+  getAttendanceCutoff,
 } from '../utils/attendanceStats.js';
 import { getSessionAnnouncements } from '../utils/dateUtils.js';
 
@@ -36,7 +37,7 @@ export const getDashboardData = async (req, res) => {
     }
 
     const now = new Date();
-    const userCutoff = getStartOfDayUTC(user.createdAt || now);
+    const userCutoff = getAttendanceCutoff(user);
 
     // Queries common to everyone (members and admins)
     const baseQueries = [
@@ -98,7 +99,7 @@ export const getDashboardData = async (req, res) => {
           .lean(),
         // 12: approved members for attendance calculation
         User.find({ $or: [{ isApproved: true }, { role: 'admin' }] })
-          .select('_id name email section year role createdAt')
+          .select('_id name email section year role createdAt attendanceStartDate')
           .lean(),
         // 13: all held sessions for attendance calculation
         Session.find({ status: { $ne: 'cancelled' } })
@@ -172,7 +173,7 @@ export const getDashboardData = async (req, res) => {
       if (allHeldSessions.length > 0 && approvedMembers.length > 0) {
         const attendanceResults = approvedMembers
           .map((member) => {
-            const cutoff = getStartOfDayUTC(member.createdAt);
+            const cutoff = getAttendanceCutoff(member);
             const eligible = allHeldSessions.filter((s) => new Date(s.date) >= cutoff);
             const total = eligible.length;
             if (total === 0) return null; // Skip members with null percentage (0 sessions)

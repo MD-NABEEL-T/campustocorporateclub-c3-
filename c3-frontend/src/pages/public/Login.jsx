@@ -54,8 +54,8 @@ const Login = () => {
       <div className="w-full max-w-md">
         <Card className="bg-zinc-950/90 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.9)] backdrop-blur-xl p-6 sm:p-8 rounded-3xl">
           <CardHeader className="text-center pb-4">
-            <div className="mx-auto w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/15 flex items-center justify-center mb-3">
-              <Terminal className="w-6 h-6 text-white" />
+            <div className="mx-auto w-14 h-14 rounded-2xl bg-black border border-white/15 flex items-center justify-center mb-3 overflow-hidden shadow-lg">
+              <img src="/assets/newlogo.jpeg" alt="C3 Logo" className="w-full h-full object-cover" />
             </div>
             <CardTitle className="text-2xl font-bold font-heading text-white">
               C3 Member Login

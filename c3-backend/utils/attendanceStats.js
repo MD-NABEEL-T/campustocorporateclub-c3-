@@ -14,8 +14,18 @@ export const getStartOfDayUTC = (date) => {
 };
 
 /**
+ * Returns effective attendance cutoff for a user (start of day UTC).
+ * Uses attendanceStartDate if set, otherwise createdAt.
+ */
+export const getAttendanceCutoff = (user) => {
+  if (!user) return getStartOfDayUTC(new Date());
+  const effective = user.attendanceStartDate || user.createdAt || new Date();
+  return getStartOfDayUTC(effective);
+};
+
+/**
  * Calculates member attendance metrics:
- * - Count only sessions with date >= start-of-day of user's account createdAt in UTC
+ * - Count only sessions with date >= user's effective attendance cutoff in UTC
  * - Response format:
  *   totalSessions: number
  *   presentCount: number
@@ -23,6 +33,7 @@ export const getStartOfDayUTC = (date) => {
  *   percentage: number rounded to 1 decimal place, or null if totalSessions === 0
  *   currentStreak: number of consecutive most-recent sessions present
  *   history: last 10 eligible sessions as [{ _id, date, topic, status: 'present' | 'absent' }] newest first
+ *   attendanceCutoff: string (ISO)
  */
 export const calculateMemberAttendance = async (user) => {
   if (!user || !user._id) {
@@ -33,11 +44,12 @@ export const calculateMemberAttendance = async (user) => {
       percentage: null,
       currentStreak: 0,
       history: [],
+      attendanceCutoff: null,
     };
   }
 
   const memberIdStr = user._id.toString();
-  const cutoffDate = getStartOfDayUTC(user.createdAt || new Date());
+  const cutoffDate = getAttendanceCutoff(user);
 
   // Find all sessions on or after member joined, newest first (excluding cancelled)
   const sessions = await Session.find({
@@ -90,5 +102,6 @@ export const calculateMemberAttendance = async (user) => {
     percentage,
     currentStreak,
     history,
+    attendanceCutoff: cutoffDate.toISOString(),
   };
 };

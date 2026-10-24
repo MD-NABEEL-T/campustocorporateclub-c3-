@@ -9,6 +9,9 @@ const userSchema = new mongoose.Schema({
   section: { type: String, trim: true },
   registerNumber: { type: String, trim: true },
   isApproved: { type: Boolean, default: false },
+  attendanceStartDate: { type: Date },
+  attendanceStartSetBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  attendanceStartSetAt: { type: Date },
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

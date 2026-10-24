@@ -35,6 +35,14 @@ const formatIST12Hour = (dateStr) => {
     .toUpperCase();
 };
 
+const getStartOfDayUTC = (dateStr) => {
+  if (!dateStr) return 0;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return 0;
+  d.setUTCHours(0, 0, 0, 0);
+  return d.getTime();
+};
+
 const toIdString = (x) => String(x?._id ?? x ?? '').trim();
 
 const SessionAttendance = () => {
@@ -59,6 +67,7 @@ const SessionAttendance = () => {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [includingMemberId, setIncludingMemberId] = useState(null);
   const [error, setError] = useState('');
 
   // Fetch session and approved members - build absent set only after BOTH have loaded
@@ -216,15 +225,79 @@ const SessionAttendance = () => {
     return Array.from(sections).sort();
   }, [members]);
 
+  const sessionTimeUTC = useMemo(() => {
+    return getStartOfDayUTC(session?.date);
+  }, [session?.date]);
+
+  const isMemberEligible = (member) => {
+    if (!sessionTimeUTC) return true;
+    if (!member?.attendanceCutoff) return true;
+    return new Date(member.attendanceCutoff).getTime() <= sessionTimeUTC;
+  };
+
+  const eligibleMembers = useMemo(() => {
+    return members.filter(isMemberEligible);
+  }, [members, sessionTimeUTC]);
+
   const totalMembers = members.length;
-  // Header counts and row statuses derived from the same single piece of state (absenteeIds)
+  const totalEligible = eligibleMembers.length;
+
+  // Header counts only include people the session counts for (eligible members)
   const absentCount = useMemo(() => {
-    return members.reduce((acc, m) => {
+    return eligibleMembers.reduce((acc, m) => {
       const mId = toIdString(m);
       return acc + (absenteeIds.has(mId) ? 1 : 0);
     }, 0);
-  }, [members, absenteeIds]);
-  const presentCount = Math.max(0, totalMembers - absentCount);
+  }, [eligibleMembers, absenteeIds]);
+  const presentCount = Math.max(0, totalEligible - absentCount);
+
+  const handleIncludeMember = async (member) => {
+    const memberId = toIdString(member);
+    if (!memberId || !session?.date || includingMemberId) return;
+
+    const d = new Date(session.date);
+    const sessionDateStr = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+
+    setIncludingMemberId(memberId);
+    setError('');
+    try {
+      const res = await api.put(`/users/${memberId}/attendance-start`, {
+        date: sessionDateStr,
+      });
+
+      const updatedUser = res.data?.user;
+      const newCutoff =
+        updatedUser?.attendanceCutoff ||
+        new Date(sessionDateStr + 'T00:00:00.000Z').toISOString();
+
+      setMembers((prev) =>
+        prev.map((m) =>
+          toIdString(m) === memberId
+            ? {
+                ...m,
+                attendanceCutoff: newCutoff,
+                attendanceStartDate: updatedUser?.attendanceStartDate,
+              }
+            : m
+        )
+      );
+
+      // Becoming eligible -> normal Present row
+      setAbsenteeIds((prev) => {
+        const next = new Set(prev);
+        next.delete(memberId);
+        return next;
+      });
+
+      addToast(`${member.name} included in this session as Present`, 'success');
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to include member in session';
+      setError(msg);
+      addToast(msg, 'error');
+    } finally {
+      setIncludingMemberId(null);
+    }
+  };
 
   // Filter members by search, year, section
   const filteredMembers = useMemo(() => {
@@ -252,9 +325,14 @@ const SessionAttendance = () => {
     });
   }, [members, selectedYear, selectedSection, searchQuery]);
 
-  // Absent members pinned to top, remaining sorted alphabetically below
+  // Eligible members first (absent pinned to top, present below), then ineligible members below
   const sortedMembers = useMemo(() => {
     return [...filteredMembers].sort((a, b) => {
+      const aEligible = isMemberEligible(a);
+      const bEligible = isMemberEligible(b);
+      if (aEligible && !bEligible) return -1;
+      if (!aEligible && bEligible) return 1;
+
       const aId = toIdString(a);
       const bId = toIdString(b);
       const aAbsent = absenteeIds.has(aId);
@@ -263,7 +341,7 @@ const SessionAttendance = () => {
       if (!aAbsent && bAbsent) return 1;
       return (a.name || '').localeCompare(b.name || '');
     });
-  }, [filteredMembers, absenteeIds]);
+  }, [filteredMembers, absenteeIds, sessionTimeUTC]);
 
   // Format last updated audit text
   const auditText = useMemo(() => {
@@ -495,30 +573,42 @@ const SessionAttendance = () => {
           ) : (
             sortedMembers.map((member) => {
               const memberId = toIdString(member);
-              const isAbsent = absenteeIds.has(memberId);
+              const isEligible = isMemberEligible(member);
+              const isAbsent = isEligible && absenteeIds.has(memberId);
+              const isIncluding = includingMemberId === memberId;
+
               return (
                 <div
                   key={memberId}
-                  onClick={() => toggleAbsentee(member)}
-                  role="button"
-                  tabIndex={0}
+                  onClick={() => {
+                    if (!isEligible) return;
+                    toggleAbsentee(member);
+                  }}
+                  role={isEligible ? 'button' : undefined}
+                  tabIndex={isEligible ? 0 : undefined}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
+                    if (isEligible && (e.key === 'Enter' || e.key === ' ')) {
                       e.preventDefault();
                       toggleAbsentee(member);
                     }
                   }}
-                  className={`min-h-[56px] p-3 sm:p-3.5 rounded-xl border transition-all duration-200 cursor-pointer select-none flex items-center justify-between gap-3 ${
-                    isAbsent
-                      ? 'bg-red-500/10 border-red-500/35 hover:bg-red-500/20'
-                      : 'bg-zinc-900/60 border-white/5 hover:border-white/20 hover:bg-zinc-900'
+                  className={`min-h-[56px] p-3 sm:p-3.5 rounded-xl border transition-all duration-200 select-none flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                    !isEligible
+                      ? 'bg-zinc-950/70 border-white/5 opacity-65 cursor-default'
+                      : isAbsent
+                      ? 'bg-red-500/10 border-red-500/35 hover:bg-red-500/20 cursor-pointer'
+                      : 'bg-zinc-900/60 border-white/5 hover:border-white/20 hover:bg-zinc-900 cursor-pointer'
                   }`}
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p
                         className={`text-xs sm:text-sm font-semibold truncate ${
-                          isAbsent ? 'text-red-200 line-through opacity-85' : 'text-white'
+                          !isEligible
+                            ? 'text-zinc-300'
+                            : isAbsent
+                            ? 'text-red-200 line-through opacity-85'
+                            : 'text-white'
                         }`}
                       >
                         {member.name}
@@ -549,17 +639,36 @@ const SessionAttendance = () => {
                     </p>
                   </div>
 
-                  {/* Status Indicator Pill / Minimum 48px Tap Target */}
+                  {/* Status Indicator Pill / Late Sign-up Action */}
                   <div className="shrink-0 flex items-center">
-                    {isAbsent ? (
-                      <div className="min-h-[48px] flex items-center gap-1.5 px-3 rounded-lg bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-bold font-mono">
-                        <UserX className="w-4 h-4 text-red-400 shrink-0" />
-                        <span>Absent</span>
-                      </div>
+                    {isEligible ? (
+                      isAbsent ? (
+                        <div className="min-h-[48px] flex items-center gap-1.5 px-3 rounded-lg bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-bold font-mono">
+                          <UserX className="w-4 h-4 text-red-400 shrink-0" />
+                          <span>Absent</span>
+                        </div>
+                      ) : (
+                        <div className="min-h-[48px] flex items-center gap-1.5 px-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold font-mono">
+                          <UserCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span>Present</span>
+                        </div>
+                      )
                     ) : (
-                      <div className="min-h-[48px] flex items-center gap-1.5 px-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold font-mono">
-                        <UserCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span>Present</span>
+                      <div className="w-full sm:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                        <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg">
+                          Not counted · joined after this session
+                        </span>
+                        <button
+                          type="button"
+                          disabled={isIncluding}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleIncludeMember(member);
+                          }}
+                          className="min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-black hover:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50 w-full sm:w-auto shrink-0"
+                        >
+                          {isIncluding ? 'Including...' : 'Include in this session'}
+                        </button>
                       </div>
                     )}
                   </div>
@@ -575,6 +684,11 @@ const SessionAttendance = () => {
         className={`fixed bottom-0 right-0 z-30 bg-zinc-950/95 backdrop-blur-md border-t border-white/10 px-3 sm:px-6 py-3 shadow-2xl transition-all duration-300 left-0 ${
           collapsed ? 'lg:left-20' : 'lg:left-64'
         }`}
+        style={{
+          paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))',
+          paddingLeft: 'calc(0.75rem + env(safe-area-inset-left, 0px))',
+          paddingRight: 'calc(0.75rem + env(safe-area-inset-right, 0px))',
+        }}
       >
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-mono">

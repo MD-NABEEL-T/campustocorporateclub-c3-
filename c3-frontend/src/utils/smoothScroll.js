@@ -1,5 +1,3 @@
-import Lenis from 'lenis';
-
 let activeLenis = null;
 
 /**
@@ -36,37 +34,47 @@ export function scrollToTarget(target, options = {}) {
 
 /**
  * Initialize Lenis smooth scroll engine for public pages.
+ * Lazy-loaded so portal routes never download the Lenis chunk.
  */
 export function initSmoothScroll() {
-  if (typeof window === 'undefined') return;
-
-  document.documentElement.classList.add('lenis', 'lenis-smooth');
-
-  const lenis = new Lenis({
-    duration: 0.8,
-    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    smoothWheel: true,
-    syncTouch: false,
-  });
-
-  activeLenis = lenis;
-  if (typeof window !== 'undefined') {
-    window.__c3_lenis = lenis;
-  }
+  if (typeof window === 'undefined') return () => {};
 
   let animId;
-  function raf(time) {
-    lenis.raf(time);
-    animId = requestAnimationFrame(raf);
-  }
+  let lenisInstance = null;
+  let isCancelled = false;
 
-  animId = requestAnimationFrame(raf);
+  import('lenis').then(({ default: Lenis }) => {
+    if (isCancelled) return;
+    document.documentElement.classList.add('lenis', 'lenis-smooth');
+
+    lenisInstance = new Lenis({
+      duration: 0.8,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      syncTouch: false,
+    });
+
+    activeLenis = lenisInstance;
+    window.__c3_lenis = lenisInstance;
+
+    function raf(time) {
+      if (isCancelled) return;
+      lenisInstance.raf(time);
+      animId = requestAnimationFrame(raf);
+    }
+    animId = requestAnimationFrame(raf);
+  }).catch((err) => {
+    console.warn('[SmoothScroll] Failed to lazy-load Lenis, falling back to native scroll:', err);
+  });
 
   return () => {
+    isCancelled = true;
     if (animId) cancelAnimationFrame(animId);
-    lenis.destroy();
+    if (lenisInstance) {
+      lenisInstance.destroy();
+    }
     document.documentElement.classList.remove('lenis', 'lenis-smooth');
-    if (activeLenis === lenis) {
+    if (activeLenis === lenisInstance) {
       activeLenis = null;
       if (typeof window !== 'undefined') {
         window.__c3_lenis = null;

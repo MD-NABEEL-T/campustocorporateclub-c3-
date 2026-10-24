@@ -51,7 +51,7 @@ export const MobileNav = () => {
         colors={['#27272A', '#09090B']}
         isFixed
         onItemClick={handleItemClick}
-        logoUrl={null}
+        logoUrl="/assets/newlogo.jpeg"
       />
     </div>
   );

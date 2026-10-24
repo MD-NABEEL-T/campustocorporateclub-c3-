@@ -28,7 +28,26 @@ import {
   ChevronDown,
   ChevronUp,
   Lock,
+  Calendar,
+  Edit3,
+  RotateCcw,
 } from 'lucide-react';
+
+const formatDate = (val) => {
+  if (!val) return '—';
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-IN', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
+const getTodayDateStr = () => {
+  const d = new Date();
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+};
 
 export const Members = () => {
   const { user, updateUser } = useAuth();
@@ -54,11 +73,126 @@ export const Members = () => {
   const [modalError, setModalError] = useState('');
   const [modalSubmitting, setModalSubmitting] = useState(false);
 
+  // Attendance start date individual modal state
+  const [startDateModalTarget, setStartDateModalTarget] = useState(null);
+  const [startDateValue, setStartDateValue] = useState('');
+  const [startDateSubmitting, setStartDateSubmitting] = useState(false);
+  const [startDateError, setStartDateError] = useState('');
+
+  // Bulk attendance start date modal state (admin only)
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [bulkDate, setBulkDate] = useState('');
+  const [bulkCount, setBulkCount] = useState(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+  const [bulkError, setBulkError] = useState('');
+
   // Admin audit log state (owner only)
   const [isAuditLogOpen, setIsAuditLogOpen] = useState(false);
   const [auditLogs, setAuditLogs] = useState([]);
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError] = useState('');
+
+  // Bulk dry-run effect
+  useEffect(() => {
+    if (!bulkModalOpen || !bulkDate) return;
+    let cancelled = false;
+
+    const runDryRun = async () => {
+      setBulkLoading(true);
+      setBulkError('');
+      try {
+        const res = await api.post('/users/attendance-start/bulk', {
+          date: bulkDate,
+          dryRun: true,
+        });
+        if (!cancelled) {
+          setBulkCount(res.data.count);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setBulkError(err.response?.data?.message || 'Failed to calculate affected members');
+          setBulkCount(null);
+        }
+      } finally {
+        if (!cancelled) setBulkLoading(false);
+      }
+    };
+
+    const timer = setTimeout(runDryRun, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [bulkModalOpen, bulkDate]);
+
+  const openStartDateModal = (member) => {
+    setStartDateModalTarget(member);
+    setStartDateError('');
+    const d = new Date(member.attendanceStartDate || member.createdAt);
+    const dateStr = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+    setStartDateValue(dateStr);
+  };
+
+  const handleSaveStartDate = async (e) => {
+    e?.preventDefault?.();
+    if (!startDateModalTarget || !startDateValue || startDateSubmitting) return;
+
+    setStartDateSubmitting(true);
+    setStartDateError('');
+    try {
+      await api.put(`/users/${startDateModalTarget._id}/attendance-start`, {
+        date: startDateValue,
+      });
+      setSuccessMsg(`Attendance counting date updated for ${startDateModalTarget.name}.`);
+      setStartDateModalTarget(null);
+      await fetchData();
+    } catch (err) {
+      setStartDateError(err.response?.data?.message || 'Failed to update attendance start date');
+    } finally {
+      setStartDateSubmitting(false);
+    }
+  };
+
+  const handleResetStartDate = async () => {
+    if (!startDateModalTarget || startDateSubmitting) return;
+
+    setStartDateSubmitting(true);
+    setStartDateError('');
+    try {
+      await api.put(`/users/${startDateModalTarget._id}/attendance-start`, {
+        date: null,
+      });
+      setSuccessMsg(`Attendance counting date reset to signup date for ${startDateModalTarget.name}.`);
+      setStartDateModalTarget(null);
+      await fetchData();
+    } catch (err) {
+      setStartDateError(err.response?.data?.message || 'Failed to reset attendance start date');
+    } finally {
+      setStartDateSubmitting(false);
+    }
+  };
+
+  const handleConfirmBulk = async (e) => {
+    e?.preventDefault?.();
+    if (!bulkDate || bulkSubmitting || bulkLoading) return;
+
+    setBulkSubmitting(true);
+    setBulkError('');
+    try {
+      const res = await api.post('/users/attendance-start/bulk', {
+        date: bulkDate,
+        dryRun: false,
+      });
+      setSuccessMsg(res.data?.message || `Updated attendance start date for ${res.data?.count || 0} members.`);
+      setBulkModalOpen(false);
+      await fetchData();
+    } catch (err) {
+      setBulkError(err.response?.data?.message || 'Failed to apply bulk start date');
+    } finally {
+      setBulkSubmitting(false);
+    }
+  };
 
   const filteredPending = pendingUsers.filter((u) => {
     if (!searchQuery.trim()) return true;
@@ -588,6 +722,23 @@ export const Members = () => {
                     Members ({membersOnlyCount})
                   </button>
                 </div>
+
+                {user?.role === 'admin' && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setBulkDate(getTodayDateStr());
+                      setBulkModalOpen(true);
+                      setBulkCount(null);
+                      setBulkError('');
+                    }}
+                    className="text-xs text-white border border-white/15 hover:bg-white/10 shrink-0"
+                    leftIcon={<Calendar className="w-3.5 h-3.5 text-amber-400" />}
+                  >
+                    Set start date for everyone
+                  </Button>
+                )}
               </div>
 
               <div className="relative w-full md:w-64">
@@ -663,6 +814,29 @@ export const Members = () => {
                       <span className="text-[11px] font-mono text-zinc-400">
                         {m.presentCount ?? 0} present &bull; {m.absentCount ?? 0} absent
                       </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-zinc-300 pt-2 border-t border-white/5">
+                      <div className="flex flex-col min-w-0 flex-1 pr-2">
+                        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Counting From</span>
+                        <span className={`font-mono text-xs font-semibold ${m.attendanceStartDate ? 'text-amber-300' : 'text-white'}`}>
+                          {formatDate(m.attendanceStartDate || m.createdAt)} {m.attendanceStartDate ? '(custom)' : '(signup date)'}
+                        </span>
+                        {m.attendanceStartDate && m.attendanceStartSetBy && (
+                          <span className="text-[10px] text-zinc-400 truncate">
+                            Set by {m.attendanceStartSetBy.name || m.attendanceStartSetBy.email} on {formatDate(m.attendanceStartSetAt)}
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openStartDateModal(m)}
+                        className="h-8 px-2.5 text-xs text-zinc-300 hover:text-white border-white/10 shrink-0"
+                        leftIcon={<Calendar className="w-3.5 h-3.5 text-amber-400" />}
+                      >
+                        Edit date
+                      </Button>
                     </div>
 
                     <div className="pt-2 border-t border-white/5 flex flex-wrap items-center justify-end gap-2">
@@ -745,6 +919,7 @@ export const Members = () => {
                       <th className="py-3.5 px-4 sm:px-6">Role</th>
                       <th className="py-3.5 px-4 sm:px-6">Email</th>
                       <th className="py-3.5 px-4 sm:px-6">Section / Year</th>
+                      <th className="py-3.5 px-4 sm:px-6">Counting From</th>
                       <th className="py-3.5 px-4 sm:px-6">Present</th>
                       <th className="py-3.5 px-4 sm:px-6">Absent</th>
                       <th className="py-3.5 px-4 sm:px-6">Attendance %</th>
@@ -762,6 +937,35 @@ export const Members = () => {
                             {m.section || 'CSE'}
                           </span>
                           {m.year ? `Year ${m.year}` : ''}
+                        </td>
+                        <td className="py-3.5 px-4 sm:px-6">
+                          <div className="flex items-center gap-1.5">
+                            <div className="flex flex-col min-w-0">
+                              <span className={`font-mono text-xs font-semibold flex items-center gap-1 ${m.attendanceStartDate ? 'text-amber-300' : 'text-zinc-300'}`}>
+                                <Calendar className="w-3 h-3 text-zinc-400 shrink-0" />
+                                {formatDate(m.attendanceStartDate || m.createdAt)}
+                              </span>
+                              {m.attendanceStartDate ? (
+                                <span
+                                  className="text-[10px] text-zinc-400 truncate max-w-[140px]"
+                                  title={m.attendanceStartSetBy ? `Set by ${m.attendanceStartSetBy.name || m.attendanceStartSetBy.email} on ${formatDate(m.attendanceStartSetAt)}` : 'Custom start date'}
+                                >
+                                  {m.attendanceStartSetBy ? `by ${m.attendanceStartSetBy.name || m.attendanceStartSetBy.email}` : 'custom'}
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-zinc-500 font-mono">(signup date)</span>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openStartDateModal(m)}
+                              className="h-8 w-8 p-0 flex items-center justify-center text-zinc-400 hover:text-white shrink-0"
+                              title="Edit attendance start date"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
                         </td>
                         <td className="py-3.5 px-4 sm:px-6 font-mono text-emerald-400">{m.presentCount}</td>
                         <td className="py-3.5 px-4 sm:px-6 font-mono text-red-400">{m.absentCount}</td>
@@ -1247,6 +1451,210 @@ export const Members = () => {
               {coordinatorModalTarget?.newRole === 'coordinator'
                 ? 'Confirm & Appoint'
                 : 'Confirm & Remove'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Individual Attendance Start Date Modal */}
+      <Modal
+        isOpen={Boolean(startDateModalTarget)}
+        onClose={() => {
+          if (!startDateSubmitting) {
+            setStartDateModalTarget(null);
+            setStartDateError('');
+          }
+        }}
+        title="Edit Attendance Counting Date"
+        description={`Configure when attendance records begin for ${startDateModalTarget?.name}.`}
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleSaveStartDate} className="space-y-4">
+          <div className="p-3 rounded-xl bg-zinc-900 border border-white/10 text-xs space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-zinc-400">Member:</span>
+              <span className="font-semibold text-white">{startDateModalTarget?.name}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-zinc-400">Signup Date:</span>
+              <span className="font-mono text-zinc-300">{formatDate(startDateModalTarget?.createdAt)}</span>
+            </div>
+            {startDateModalTarget?.attendanceStartDate && (
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400">Current Start Date:</span>
+                <span className="font-mono text-amber-300 font-semibold">{formatDate(startDateModalTarget?.attendanceStartDate)}</span>
+              </div>
+            )}
+            {startDateModalTarget?.attendanceStartSetBy && (
+              <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-white/5">
+                <span>Last Updated By:</span>
+                <span className="text-zinc-300">
+                  {startDateModalTarget?.attendanceStartSetBy?.name || startDateModalTarget?.attendanceStartSetBy?.email} on {formatDate(startDateModalTarget?.attendanceStartSetAt)}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-zinc-300 flex items-center justify-between">
+              <span>Count Attendance From</span>
+              <span className="text-[10px] text-zinc-500 font-mono">YYYY-MM-DD</span>
+            </label>
+            <input
+              type="date"
+              value={startDateValue}
+              onChange={(e) => setStartDateValue(e.target.value)}
+              max={getTodayDateStr()}
+              min="2020-01-01"
+              required
+              className="w-full px-3 py-2 text-xs bg-zinc-900 border border-white/15 rounded-xl text-white focus:outline-none focus:border-white/40"
+            />
+            <p className="text-[11px] text-zinc-500">
+              Sessions conducted on or after this date will be counted toward this member&apos;s attendance score.
+            </p>
+          </div>
+
+          {startDateError && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{startDateError}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-2.5 pt-3 border-t border-white/10">
+            {startDateModalTarget?.attendanceStartDate ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="md"
+                disabled={startDateSubmitting}
+                onClick={handleResetStartDate}
+                className="text-xs text-amber-400 hover:bg-amber-500/10 hover:text-amber-300"
+                leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+              >
+                Reset to Signup Date
+              </Button>
+            ) : <div />}
+
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="md"
+                disabled={startDateSubmitting}
+                onClick={() => {
+                  setStartDateModalTarget(null);
+                  setStartDateError('');
+                }}
+                className="text-xs text-zinc-400 hover:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                disabled={startDateSubmitting || !startDateValue}
+                isLoading={startDateSubmitting}
+                className="text-xs font-semibold bg-white text-black hover:bg-zinc-200"
+              >
+                Save Start Date
+              </Button>
+            </div>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Admin Bulk Attendance Start Date Modal */}
+      <Modal
+        isOpen={bulkModalOpen}
+        onClose={() => {
+          if (!bulkSubmitting) {
+            setBulkModalOpen(false);
+            setBulkError('');
+          }
+        }}
+        title="Set Start Date for Everyone"
+        description="Update the attendance cutoff for all approved members whose current cutoff is after this date."
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleConfirmBulk} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-zinc-300 flex items-center justify-between">
+              <span>Target Attendance Start Date</span>
+              <span className="text-[10px] text-zinc-500 font-mono">YYYY-MM-DD</span>
+            </label>
+            <input
+              type="date"
+              value={bulkDate}
+              onChange={(e) => setBulkDate(e.target.value)}
+              max={getTodayDateStr()}
+              min="2020-01-01"
+              required
+              className="w-full px-3 py-2 text-xs bg-zinc-900 border border-white/15 rounded-xl text-white focus:outline-none focus:border-white/40"
+            />
+            <p className="text-[11px] text-zinc-500">
+              Only members whose current cutoff is later than this date will be updated. Members whose cutoff is already earlier or equal will be kept as-is.
+            </p>
+          </div>
+
+          {/* Dry Run Preview Box */}
+          <div className="p-3.5 rounded-xl bg-zinc-900 border border-white/10 text-xs">
+            {bulkLoading ? (
+              <div className="flex items-center gap-2 text-zinc-400">
+                <Loader size="sm" />
+                <span>Checking affected members...</span>
+              </div>
+            ) : bulkCount !== null ? (
+              bulkCount > 0 ? (
+                <div className="space-y-1 text-emerald-300">
+                  <div className="font-semibold flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{bulkCount} member{bulkCount === 1 ? '' : 's'} will change</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400">
+                    Their attendance counting date will be moved to {formatDate(bulkDate)}.
+                  </p>
+                </div>
+              ) : (
+                <div className="text-zinc-400 text-xs flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-zinc-500 shrink-0" />
+                  <span>0 members will change (all current cutoffs are already on or before {formatDate(bulkDate)}).</span>
+                </div>
+              )
+            ) : null}
+          </div>
+
+          {bulkError && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{bulkError}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
+            <Button
+              type="button"
+              variant="ghost"
+              size="md"
+              disabled={bulkSubmitting}
+              onClick={() => {
+                setBulkModalOpen(false);
+                setBulkError('');
+              }}
+              className="text-xs text-zinc-400 hover:text-white"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              disabled={bulkSubmitting || bulkLoading || !bulkDate || bulkCount === 0 || bulkCount === null}
+              isLoading={bulkSubmitting}
+              className="text-xs font-semibold bg-white text-black hover:bg-zinc-200 disabled:opacity-40"
+            >
+              Apply to {bulkCount ?? ''} Member{bulkCount === 1 ? '' : 's'}
             </Button>
           </div>
         </form>

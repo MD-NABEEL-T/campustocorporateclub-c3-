@@ -2,6 +2,7 @@ import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { PWAProvider } from './context/PWAContext';
 import ProtectedRoute from './routes/ProtectedRoute';
 import NotificationPrompt from './components/notifications/NotificationPrompt';
 
@@ -84,8 +85,9 @@ function App() {
   return (
     <AuthProvider>
       <ToastProvider>
-        <BrowserRouter>
-          <NotificationPrompt />
+        <PWAProvider>
+          <BrowserRouter>
+            <NotificationPrompt />
           <ScrollToHash />
           <Suspense fallback={<RouteLoading />}>
             <Routes>
@@ -162,6 +164,7 @@ function App() {
             </Routes>
           </Suspense>
         </BrowserRouter>
+        </PWAProvider>
       </ToastProvider>
     </AuthProvider>
   );

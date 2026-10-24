@@ -9,6 +9,8 @@ import {
   updateUserAdminStatus,
   updateUserRole,
   getAdminAuditLogs,
+  updateAttendanceStartDate,
+  bulkUpdateAttendanceStartDate,
 } from '../controllers/userController.js';
 
 const router = express.Router();
@@ -17,6 +19,8 @@ router.get('/pending', protect, adminOnly, getPendingUsers);
 router.get('/approved', protect, adminOnly, getApprovedUsers);
 router.get('/attendees', protect, staffOnly, getAttendees);
 router.get('/admin-audit', protect, ownerOnly, getAdminAuditLogs);
+router.post('/attendance-start/bulk', protect, adminOnly, bulkUpdateAttendanceStartDate);
+router.put('/:id/attendance-start', protect, staffOnly, updateAttendanceStartDate);
 router.put('/:id/admin', protect, ownerOnly, updateUserAdminStatus);
 router.put('/:id/role', protect, adminOnly, updateUserRole);
 router.put('/:id/approve', protect, adminOnly, approveUser);

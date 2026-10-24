@@ -1,19 +1,25 @@
 import React, { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { User, LogOut, Shield, ChevronDown, Bell, Menu } from 'lucide-react';
+import { User, LogOut, Shield, ChevronDown, Bell, Menu, Download } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { usePWA } from '../../context/PWAContext';
 import { getPageTitle } from '../../constants/navigation';
 
 export const Header = ({ collapsed, setMobileOpen, mobileOpen }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { canInstall, promptInstall } = usePWA();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   return (
     <header
-      className={`fixed top-0 right-0 z-20 h-20 bg-black/85 backdrop-blur-md border-b border-white/10 transition-all duration-300 flex items-center justify-between px-4 sm:px-6 left-0 ${
+      className={`fixed top-0 right-0 z-20 bg-black/85 backdrop-blur-md border-b border-white/10 transition-all duration-300 flex items-center justify-between px-4 sm:px-6 left-0 ${
         collapsed ? 'lg:left-20' : 'lg:left-64'
       }`}
+      style={{
+        height: 'calc(5rem + env(safe-area-inset-top, 0px))',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+      }}
     >
       {/* Left: Mobile Toggle & Page Title */}
       <div className="flex items-center gap-3">
@@ -64,6 +70,19 @@ export const Header = ({ collapsed, setMobileOpen, mobileOpen }) => {
                 <p className="text-xs font-bold text-white">{user?.name}</p>
                 <p className="text-[10px] text-zinc-400 truncate">{user?.email}</p>
               </div>
+
+              {canInstall && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setProfileDropdownOpen(false);
+                    promptInstall();
+                  }}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-xs font-medium text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-colors text-left"
+                >
+                  <Download className="w-4 h-4 text-emerald-400 shrink-0" /> Install App
+                </button>
+              )}
 
               {user?.role === 'admin' && (
                 <Link
