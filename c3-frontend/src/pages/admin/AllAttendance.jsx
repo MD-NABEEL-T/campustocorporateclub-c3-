@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Loader } from '../../components/ui/Loader';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { FileSpreadsheet, Search, X, ChevronDown } from 'lucide-react';
+import { Button } from '../../components/ui/Button';
+import { FileSpreadsheet, Search, X, ChevronDown, ArrowLeft } from 'lucide-react';
 
 const ATTENDANCE_THRESHOLD = 75;
 
@@ -115,6 +117,14 @@ const AllAttendance = () => {
 
   return (
     <div className="space-y-6 sm:space-y-8 max-w-full">
+      <div className="flex items-center gap-3">
+        <Link to="/admin">
+          <Button variant="ghost" size="sm" className="min-h-[44px] h-10 px-3 text-xs" leftIcon={<ArrowLeft className="w-4 h-4" />}>
+            Back to Admin Overview
+          </Button>
+        </Link>
+      </div>
+
       <div>
         <h2 className="text-xl sm:text-2xl font-bold font-heading text-[#F8FAFC]">Global Attendance Matrix</h2>
         <p className="text-xs sm:text-sm text-[#94A3B8] mt-1">Attendance breakdown for all approved active members</p>

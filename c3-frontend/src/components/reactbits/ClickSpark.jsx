@@ -1,18 +1,3 @@
-// Click spark 
-// npx shadcn@latest add @react-bits/ClickSpark-JS-CSS
-
-// import ClickSpark from './ClickSpark';
-
-// <ClickSpark
-//   sparkColor="#ffffff"
-//   sparkSize={10}
-//   sparkRadius={15}
-//   sparkCount={8}
-//   duration={400}
-// >
-//   {/* Your content here */}
-// </ClickSpark>
-
 import { useRef, useEffect, useCallback } from 'react';
 
 const ClickSpark = ({
@@ -20,13 +5,15 @@ const ClickSpark = ({
   sparkSize = 10,
   sparkRadius = 15,
   sparkCount = 8,
-  duration = 400,
+  duration = 350,
   easing = 'ease-out',
   extraScale = 1.0,
   children
 }) => {
   const canvasRef = useRef(null);
   const sparksRef = useRef([]);
+  const animIdRef = useRef(null);
+  const isRunningRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -41,7 +28,7 @@ const ClickSpark = ({
       }
     };
 
-    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('resize', resizeCanvas, { passive: true });
     resizeCanvas();
 
     return () => {
@@ -50,7 +37,7 @@ const ClickSpark = ({
   }, []);
 
   const easeFunc = useCallback(
-    t => {
+    (t) => {
       switch (easing) {
         case 'linear':
           return t;
@@ -64,9 +51,6 @@ const ClickSpark = ({
     },
     [easing]
   );
-
-  const animIdRef = useRef(null);
-  const isRunningRef = useRef(false);
 
   const startAnimation = useCallback(() => {
     if (isRunningRef.current) return;
@@ -129,10 +113,30 @@ const ClickSpark = ({
   }, []);
 
   const handleClick = (e) => {
+    // 1. Skip on touch-only / coarse pointer devices to avoid touch-scroll lag
+    if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+      return;
+    }
+
+    // 2. Ignore clicks on form controls, links, buttons or interactive elements
+    const target = e.target;
+    if (
+      target &&
+      (target.closest('input, textarea, select, button, a, [role="button"], [data-no-spark]') ||
+        target.isContentEditable)
+    ) {
+      return;
+    }
+
+    // 3. Prevent excessive spark buildup
+    if (sparksRef.current.length >= 24) {
+      return;
+    }
+
     const x = e.clientX;
     const y = e.clientY;
-
     const now = performance.now();
+
     const newSparks = Array.from({ length: sparkCount }, (_, i) => ({
       x,
       y,
@@ -173,4 +177,3 @@ const ClickSpark = ({
 };
 
 export default ClickSpark;
-

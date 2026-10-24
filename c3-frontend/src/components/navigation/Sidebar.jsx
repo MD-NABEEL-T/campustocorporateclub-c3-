@@ -47,6 +47,11 @@ export const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) 
           /* Mobile toggle transform */
           mobileOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'
         }`}
+        style={{
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          paddingLeft: 'env(safe-area-inset-left, 0px)',
+        }}
       >
         {/* Top Header & Logo */}
         <div>
@@ -56,8 +61,8 @@ export const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) 
               className="flex items-center gap-3 overflow-hidden"
               onClick={() => setMobileOpen && setMobileOpen(false)}
             >
-              <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
-                <Terminal className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+                <img src="/assets/newlogo.jpeg" alt="C3 Logo" className="w-full h-full object-cover" />
               </div>
               {(!collapsed || mobileOpen) && (
                 <div className="flex flex-col">

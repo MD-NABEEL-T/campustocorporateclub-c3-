@@ -11,6 +11,22 @@ export const urlBase64ToUint8Array = (base64String) => {
   return outputArray;
 };
 
+export const isIOSDevice = () => {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
+};
+
+export const isStandaloneMode = () => {
+  if (typeof window === 'undefined') return false;
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true
+  );
+};
+
 export const isPushSupported = () => {
   return (
     typeof window !== 'undefined' &&
@@ -23,6 +39,29 @@ export const isPushSupported = () => {
 export const getNotificationPermission = () => {
   if (!isPushSupported()) return 'unsupported';
   return Notification.permission; // 'granted' | 'denied' | 'default'
+};
+
+export const getDevicePushStatus = async () => {
+  if (isIOSDevice() && !isStandaloneMode()) {
+    return 'not_installed';
+  }
+  if (!isPushSupported()) {
+    return 'unsupported';
+  }
+  const perm = Notification.permission;
+  if (perm === 'denied') {
+    return 'blocked';
+  }
+  if (perm === 'granted') {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      return sub ? 'on' : 'off';
+    } catch {
+      return localStorage.getItem('c3_notifications_enabled') === 'true' ? 'on' : 'off';
+    }
+  }
+  return 'off';
 };
 
 export const subscribeToPush = async (api) => {

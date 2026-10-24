@@ -3,7 +3,6 @@ import StaggeredMenu from '../reactbits/StaggeredMenu';
 import { PUBLIC_NAV_LINKS } from '../../constants/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { scrollToTarget } from '../../utils/smoothScroll';
-import { EVENT_ENABLED } from '../../event-module/config';
 
 export const MobileNav = () => {
   const navigate = useNavigate();
@@ -20,9 +19,7 @@ export const MobileNav = () => {
     ? { label: 'Portal Dashboard', ariaLabel: 'Go to portal dashboard', link: '/dashboard' }
     : { label: 'Member Login', ariaLabel: 'Go to member login', link: '/login' };
 
-  const items = EVENT_ENABLED
-    ? [...navItems, { label: 'Register for Event', ariaLabel: 'Event Registration', link: '/event/register' }, ctaItem]
-    : [...navItems, ctaItem];
+  const items = [...navItems, ctaItem];
 
 
   const handleItemClick = (item) => {
@@ -54,7 +51,7 @@ export const MobileNav = () => {
         colors={['#27272A', '#09090B']}
         isFixed
         onItemClick={handleItemClick}
-        logoUrl={null}
+        logoUrl="/assets/newlogo.jpeg"
       />
     </div>
   );

@@ -32,6 +32,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Force user to change temporary password before accessing portal routes
+  if (user.mustChangePassword && location.pathname !== '/set-new-password') {
+    return <Navigate to="/set-new-password" replace />;
+  }
+
   if (isRoleForbidden) {
     return <Navigate to="/dashboard" replace />;
   }

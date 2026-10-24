@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import CountUp from '../reactbits/CountUp';
 import Carousel from '../reactbits/Carousel';
 import Masonry from '../reactbits/Masonry';
@@ -132,7 +132,7 @@ export const EventsSection = () => {
   const [carouselRef, carouselWidth] = useMeasuredWidth();
   const { events, loading, error } = useEvents();
 
-  const carouselItems = events.map(event => ({
+  const carouselItems = useMemo(() => events.map(event => ({
     id: event.slug,
     title: event.title,
     description: event.description,
@@ -141,7 +141,7 @@ export const EventsSection = () => {
     year: event.date,
     participants: event.attendeeCount,
     href: `/events/${event.slug}`
-  }));
+  })), [events]);
 
   const [galleryImages, setGalleryImages] = useState([]);
 
@@ -151,12 +151,12 @@ export const EventsSection = () => {
       .catch(() => setGalleryImages([]));
   }, []);
 
-  const galleryItems = galleryImages.map((img, i) => ({
+  const galleryItems = useMemo(() => galleryImages.map((img, i) => ({
     id: `gallery-${i}`,
     img,
     url: '#',
     height: 300 + ((i * 73) % 220)
-  }));
+  })), [galleryImages]);
 
   useEffect(() => {
     const node = introRef.current;

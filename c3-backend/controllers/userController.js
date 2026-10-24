@@ -1,8 +1,11 @@
 import User from '../models/User.js';
 import AdminAudit from '../models/AdminAudit.js';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { sendEmail } from '../utils/sendEmail.js';
 import { isOwnerUser } from '../middleware/authMiddleware.js';
+import { getAttendanceCutoff, getStartOfDayUTC } from '../utils/attendanceStats.js';
+import { notifyUsers } from '../utils/notify.js';
 
 // Get all pending (unapproved) users - admin only
 export const getPendingUsers = async (req, res) => {
@@ -17,22 +20,32 @@ export const getPendingUsers = async (req, res) => {
 // Get all approved members - admin only
 export const getApprovedUsers = async (req, res) => {
   try {
-    const users = await User.find({ isApproved: true }).select('-password').sort({ createdAt: -1 });
+    const users = await User.find({ isApproved: true })
+      .select('-password')
+      .populate('attendanceStartSetBy', 'name email')
+      .sort({ createdAt: -1 });
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// Get all attendees for session attendance (approved accounts regardless of role) - admin only
+// Get all attendees for session attendance (approved accounts regardless of role) - staff / admin
 export const getAttendees = async (req, res) => {
   try {
     const attendees = await User.find({
       $or: [{ isApproved: true }, { role: 'admin' }],
     })
-      .select('_id name email registerNumber year section role')
-      .sort({ name: 1 });
-    res.json(attendees);
+      .select('_id name email registerNumber year section role createdAt attendanceStartDate')
+      .sort({ name: 1 })
+      .lean();
+
+    const results = attendees.map((attendee) => ({
+      ...attendee,
+      attendanceCutoff: getAttendanceCutoff(attendee).toISOString(),
+    }));
+
+    res.json(results);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -189,6 +202,19 @@ export const updateUserAdminStatus = async (req, res) => {
       console.error('[AdminAudit] Failed to create audit log entry:', auditErr.message);
     }
 
+    // In-app & Web push notification to target user
+    const adminRoleLabel = makeAdmin ? 'Admin' : 'Member';
+    notifyUsers(
+      [targetUser._id],
+      {
+        type: 'role_change',
+        title: 'Role Updated',
+        body: `Your role is now ${adminRoleLabel}`,
+        link: makeAdmin ? '/admin' : '/dashboard',
+        refId: String(targetUser._id),
+      }
+    ).catch((err) => console.error('[Notify] Admin role change notification error:', err.message));
+
     // Send email notification to the target user (role change still succeeds if email fails)
     try {
       const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, '') : '';
@@ -306,6 +332,19 @@ export const updateUserRole = async (req, res) => {
       console.error('[AdminAudit] Failed to create audit log entry:', auditErr.message);
     }
 
+    // In-app & Web push notification to target user
+    const memberRoleLabel = role === 'coordinator' ? 'Coordinator' : 'Member';
+    notifyUsers(
+      [targetUser._id],
+      {
+        type: 'role_change',
+        title: 'Role Updated',
+        body: `Your role is now ${memberRoleLabel}`,
+        link: '/dashboard',
+        refId: String(targetUser._id),
+      }
+    ).catch((err) => console.error('[Notify] Coordinator/member role change notification error:', err.message));
+
     const updated = await User.findById(targetUser._id).select('-password');
     res.json({
       message: `User role successfully updated to ${role}`,
@@ -314,4 +353,212 @@ export const updateUserRole = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-};
+};
+
+// PUT /api/users/:id/attendance-start (staffOnly)
+// Body: { date: 'YYYY-MM-DD' | null }
+export const updateAttendanceStartDate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { date } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!user.isApproved && user.role !== 'admin') {
+      return res.status(400).json({ message: 'Target user account is not approved' });
+    }
+
+    if (date !== null && date !== undefined) {
+      if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return res.status(400).json({ message: 'Date must be in YYYY-MM-DD format or null' });
+      }
+
+      const d = new Date(date + 'T00:00:00.000Z');
+      if (isNaN(d.getTime())) {
+        return res.status(400).json({ message: 'Invalid date provided' });
+      }
+
+      const todayUTC = getStartOfDayUTC(new Date());
+      const minDate = new Date('2020-01-01T00:00:00.000Z');
+
+      if (d > todayUTC) {
+        return res.status(400).json({ message: 'Attendance start date cannot be in the future' });
+      }
+      if (d < minDate) {
+        return res.status(400).json({ message: 'Attendance start date cannot be before 2020-01-01' });
+      }
+
+      user.attendanceStartDate = d;
+      user.attendanceStartSetBy = req.user._id;
+      user.attendanceStartSetAt = new Date();
+    } else {
+      user.attendanceStartDate = null;
+      user.attendanceStartSetBy = null;
+      user.attendanceStartSetAt = null;
+    }
+
+    await user.save();
+    await user.populate('attendanceStartSetBy', 'name email');
+
+    res.json({
+      message: date ? 'Attendance start date updated successfully' : 'Attendance start date reset to default',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+        attendanceStartDate: user.attendanceStartDate,
+        attendanceStartSetBy: user.attendanceStartSetBy,
+        attendanceStartSetAt: user.attendanceStartSetAt,
+        attendanceCutoff: getAttendanceCutoff(user).toISOString(),
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// POST /api/users/attendance-start/bulk (adminOnly)
+// Body: { date: 'YYYY-MM-DD', dryRun?: boolean }
+export const bulkUpdateAttendanceStartDate = async (req, res) => {
+  try {
+    const { date, dryRun } = req.body;
+
+    if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ message: 'Date must be in YYYY-MM-DD format' });
+    }
+
+    const targetDate = new Date(date + 'T00:00:00.000Z');
+    if (isNaN(targetDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid date provided' });
+    }
+
+    const todayUTC = getStartOfDayUTC(new Date());
+    const minDate = new Date('2020-01-01T00:00:00.000Z');
+
+    if (targetDate > todayUTC) {
+      return res.status(400).json({ message: 'Attendance start date cannot be in the future' });
+    }
+    if (targetDate < minDate) {
+      return res.status(400).json({ message: 'Attendance start date cannot be before 2020-01-01' });
+    }
+
+    // Every approved account (and admins) whose effective cutoff is later than targetDate
+    const approvedUsers = await User.find({
+      $or: [{ isApproved: true }, { role: 'admin' }],
+    }).select('_id createdAt attendanceStartDate');
+
+    const usersToUpdate = approvedUsers.filter((u) => {
+      const currentCutoff = getAttendanceCutoff(u);
+      return currentCutoff > targetDate;
+    });
+
+    const count = usersToUpdate.length;
+
+    if (dryRun) {
+      return res.json({ count, dryRun: true });
+    }
+
+    if (count > 0) {
+      const userIds = usersToUpdate.map((u) => u._id);
+      await User.updateMany(
+        { _id: { $in: userIds } },
+        {
+          $set: {
+            attendanceStartDate: targetDate,
+            attendanceStartSetBy: req.user._id,
+            attendanceStartSetAt: new Date(),
+          },
+        }
+      );
+    }
+
+    res.json({
+      count,
+      dryRun: false,
+      message: `Successfully updated attendance start date for ${count} members`,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/**
+ * Generates a random temporary password (10 chars, no look-alike characters like 0/O/1/l)
+ */
+const generateTemporaryPassword = (length = 10) => {
+  // Exclude look-alikes 0, O, o, 1, l, I
+  const CHARSET = '23456789abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
+  let pwd = '';
+  for (let i = 0; i < length; i++) {
+    const idx = crypto.randomInt(0, CHARSET.length);
+    pwd += CHARSET[idx];
+  }
+  return pwd;
+};
+
+// POST /api/users/:id/reset-password (adminOnly)
+export const resetUserPassword = async (req, res) => {
+  try {
+    const targetUser = await User.findById(req.params.id);
+    if (!targetUser) {
+      return res.status(404).json({ message: 'Target user not found' });
+    }
+
+    if (!targetUser.isApproved) {
+      return res.status(400).json({ message: 'Target user must be approved before resetting password' });
+    }
+
+    // Actor cannot reset themselves
+    if (targetUser._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ message: 'Cannot reset your own password' });
+    }
+
+    const isActorOwner = isOwnerUser(req.user);
+    const isTargetAdmin = targetUser.role === 'admin';
+    const isTargetOwner = isOwnerUser(targetUser);
+
+    if (isTargetOwner) {
+      return res.status(403).json({ message: 'Cannot reset the club owner account password' });
+    }
+
+    // Non-owner admins can reset members and coordinators only, never other admins
+    if (!isActorOwner && isTargetAdmin) {
+      return res.status(403).json({
+        message: 'Only the club owner can reset an administrator account password',
+      });
+    }
+
+    const tempPassword = generateTemporaryPassword(10);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(tempPassword, salt);
+
+    targetUser.password = hashedPassword;
+    targetUser.mustChangePassword = true;
+    targetUser.passwordChangedAt = new Date();
+    await targetUser.save();
+
+    // Log to AdminAudit (NEVER log or store the password)
+    try {
+      await AdminAudit.create({
+        action: 'reset_password',
+        actor: req.user._id,
+        target: targetUser._id,
+        targetName: targetUser.name,
+        targetEmail: targetUser.email,
+      });
+    } catch (auditErr) {
+      console.error('[AdminAudit] Failed to log reset_password:', auditErr.message);
+    }
+
+    // Return the plain temporary password ONCE in response (never logged)
+    res.status(200).json({
+      message: 'Temporary password generated successfully',
+      temporaryPassword: tempPassword,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+

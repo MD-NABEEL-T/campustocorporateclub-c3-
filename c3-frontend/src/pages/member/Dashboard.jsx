@@ -25,6 +25,7 @@ import { BroadcastsCard } from '../../components/dashboard/BroadcastsCard';
 import { ClubPulse } from '../../components/dashboard/ClubPulse';
 import { CoordinatorsCard } from '../../components/dashboard/CoordinatorsCard';
 import { DashboardSkeleton } from '../../components/dashboard/DashboardSkeleton';
+import { InstallAppCard } from '../../components/pwa/InstallAppCard';
 
 export const Dashboard = () => {
   const { user } = useAuth();
@@ -107,6 +108,9 @@ export const Dashboard = () => {
 
   return (
     <div className="space-y-6 sm:space-y-8">
+      {/* Install PWA Prompt Banner */}
+      <InstallAppCard />
+
       {/* Welcome Banner */}
       <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-white/[0.06] via-white/[0.03] to-transparent border border-white/10 relative overflow-hidden shadow-xl">
         <div className="relative z-10">

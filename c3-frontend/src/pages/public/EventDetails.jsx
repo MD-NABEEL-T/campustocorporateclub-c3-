@@ -86,13 +86,20 @@ export const EventDetails = () => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20" />
 
-        <div className="absolute top-6 left-4 sm:left-6 lg:left-8">
-          <Link
-            to="/#events"
-            className="inline-flex items-center gap-2 text-xs sm:text-sm text-white/80 hover:text-white transition-colors border border-white/10 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 bg-black/40 backdrop-blur-sm"
+        <div className="absolute top-6 left-4 sm:left-6 lg:left-8 z-20">
+          <button
+            type="button"
+            onClick={() => {
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.location.assign('/#events');
+              }
+            }}
+            className="inline-flex items-center gap-2 text-xs sm:text-sm text-white/80 hover:text-white transition-colors border border-white/10 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 bg-black/40 backdrop-blur-sm cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Events
-          </Link>
+          </button>
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 max-w-5xl mx-auto w-full">

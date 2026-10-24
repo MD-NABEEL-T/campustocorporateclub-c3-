@@ -2,8 +2,8 @@ import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { PWAProvider } from './context/PWAContext';
 import ProtectedRoute from './routes/ProtectedRoute';
-import ClickSpark from './components/reactbits/ClickSpark';
 import NotificationPrompt from './components/notifications/NotificationPrompt';
 
 // Layouts (kept eager - needed on every route, small)
@@ -22,10 +22,8 @@ const ApplyForm = lazy(() => import('./pages/public/ApplyForm'));
 const Login = lazy(() => import('./pages/public/Login'));
 const Register = lazy(() => import('./pages/public/Register'));
 const EventDetails = lazy(() => import('./pages/public/EventDetails'));
+const SetNewPassword = lazy(() => import('./pages/public/SetNewPassword'));
 
-// Event Module
-import { EVENT_ENABLED } from './event-module/config';
-const EventApp = lazy(() => import('./event-module/EventApp'));
 
 // Admin Portal Pages - lazy loaded, only fetched for admins
 const Members = lazy(() => import('./pages/admin/Members'));
@@ -88,87 +86,87 @@ function App() {
   return (
     <AuthProvider>
       <ToastProvider>
-        <BrowserRouter>
-          <NotificationPrompt />
+        <PWAProvider>
+          <BrowserRouter>
+            <NotificationPrompt />
           <ScrollToHash />
-          <ClickSpark sparkColor="#ffffff" sparkSize={10} sparkRadius={15} sparkCount={8} duration={400}>
-            <Suspense fallback={<RouteLoading />}>
-              <Routes>
-                {/* Public Layout Routes */}
-                <Route element={<PublicLayout />}>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/events/:slug" element={<EventDetails />} />
-                  <Route path="/sessions-archive" element={<PublicSessions />} />
-                  <Route path="/gallery" element={<Gallery />} />
-                  <Route path="/apply" element={<Apply />} />
-                  <Route path="/apply/form" element={<ApplyForm />} />
-                  <Route path="/apply-form" element={<ApplyForm />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
+          <Suspense fallback={<RouteLoading />}>
+            <Routes>
+              {/* Public Layout Routes */}
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/events/:slug" element={<EventDetails />} />
+                <Route path="/sessions-archive" element={<PublicSessions />} />
+                <Route path="/gallery" element={<Gallery />} />
+                <Route path="/apply" element={<Apply />} />
+                <Route path="/apply/form" element={<ApplyForm />} />
+                <Route path="/apply-form" element={<ApplyForm />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/set-new-password" element={<SetNewPassword />} />
 
-                  {EVENT_ENABLED && <Route path="/event/*" element={<EventApp />} />}
-                </Route>
+              </Route>
 
-                {/* Member Portal Protected Routes */}
-                <Route
-                  element={
-                    <ProtectedRoute>
-                      <DashboardLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/attendance" element={<MyAttendance />} />
-                  <Route path="/sessions" element={<Sessions />} />
-                  <Route path="/sessions/:id" element={<SessionDetail />} />
-                  <Route path="/applications" element={<Applications />} />
-                </Route>
+              {/* Member Portal Protected Routes */}
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/attendance" element={<MyAttendance />} />
+                <Route path="/sessions" element={<Sessions />} />
+                <Route path="/sessions/:id" element={<SessionDetail />} />
+                <Route path="/applications" element={<Applications />} />
+              </Route>
 
-                {/* Admin Portal Protected Routes */}
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute allowedRoles={['admin']}>
-                      <DashboardLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route index element={<Dashboard />} />
-                  <Route path="announcements" element={<Announcements />} />
-                  <Route path="members" element={<Members />} />
-                  <Route path="applications" element={<Applications />} />
-                  <Route path="sessions" element={<Sessions />} />
-                  <Route path="sessions/new" element={<SessionForm />} />
-                  <Route path="sessions/:id/edit" element={<SessionForm />} />
-                  <Route path="sessions/:id/attendance" element={<SessionAttendance />} />
-                  <Route path="events" element={<AdminEvents />} />
-                  <Route path="resources" element={<GalleryManager />} />
-                  <Route path="attendance" element={<AllAttendance />} />
-                </Route>
+              {/* Admin Portal Protected Routes */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="announcements" element={<Announcements />} />
+                <Route path="members" element={<Members />} />
+                <Route path="applications" element={<Applications />} />
+                <Route path="sessions" element={<Sessions />} />
+                <Route path="sessions/new" element={<SessionForm />} />
+                <Route path="sessions/:id/edit" element={<SessionForm />} />
+                <Route path="sessions/:id/attendance" element={<SessionAttendance />} />
+                <Route path="events" element={<AdminEvents />} />
+                <Route path="resources" element={<GalleryManager />} />
+                <Route path="attendance" element={<AllAttendance />} />
+              </Route>
 
-                {/* Staff Portal Protected Routes (Admin or Coordinator) */}
-                <Route
-                  path="/staff"
-                  element={
-                    <ProtectedRoute allowedRoles={['admin', 'coordinator']}>
-                      <DashboardLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route path="announcements" element={<Announcements />} />
-                  <Route path="sessions" element={<Sessions />} />
-                  <Route path="sessions/new" element={<SessionForm />} />
-                  <Route path="sessions/:id/edit" element={<SessionForm />} />
-                  <Route path="sessions/:id/attendance" element={<SessionAttendance />} />
-                  <Route path="attendance" element={<AllAttendance />} />
-                </Route>
+              {/* Staff Portal Protected Routes (Admin or Coordinator) */}
+              <Route
+                path="/staff"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'coordinator']}>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="announcements" element={<Announcements />} />
+                <Route path="sessions" element={<Sessions />} />
+                <Route path="sessions/new" element={<SessionForm />} />
+                <Route path="sessions/:id/edit" element={<SessionForm />} />
+                <Route path="sessions/:id/attendance" element={<SessionAttendance />} />
+                <Route path="attendance" element={<AllAttendance />} />
+              </Route>
 
-                {/* Catch-all Fallback */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
-          </ClickSpark>
+              {/* Catch-all Fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
+        </PWAProvider>
       </ToastProvider>
     </AuthProvider>
   );

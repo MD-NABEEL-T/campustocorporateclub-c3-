@@ -22,9 +22,7 @@ const isPublicRoute = (pathname) => {
     (pathname === '/sessions-archive') ||
     (pathname.startsWith('/apply')) ||
     (pathname.startsWith('/events/')) ||
-    (pathname === '/events') ||
-    (pathname.startsWith('/event/')) ||
-    (pathname === '/event')
+    (pathname === '/events')
   );
 };
 

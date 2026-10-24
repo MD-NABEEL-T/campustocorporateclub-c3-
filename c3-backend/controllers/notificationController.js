@@ -1,5 +1,8 @@
 import PushSubscription from '../models/PushSubscription.js';
+import Notification from '../models/Notification.js';
 import { broadcastPushNotification } from '../utils/pushNotificationService.js';
+import { notifyUsers } from '../utils/notify.js';
+import { checkAndSendSessionReminders } from '../services/reminderScheduler.js';
 
 // Returns the public VAPID key so frontend clients can subscribe
 export const getVapidPublicKey = (req, res) => {
@@ -49,7 +52,7 @@ export const unsubscribeUser = async (req, res) => {
       // Remove all subscriptions for this user
       await PushSubscription.deleteMany({ user: req.user._id });
     }
-    res.json({ message: 'Unsubscribed from notifications' });
+    res.json({ message: 'Unsubscribed from notifications successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Failed to unsubscribe' });
   }
@@ -58,13 +61,15 @@ export const unsubscribeUser = async (req, res) => {
 // Sends a test notification to verify delivery (Admin/Staff only)
 export const sendTestNotification = async (req, res) => {
   try {
-    const result = await broadcastPushNotification(
+    const result = await notifyUsers(
+      [req.user._id],
       {
+        type: 'system',
         title: '🔔 C3 Club Test Notification',
-        body: 'If you see this, push notifications are working perfectly on your device!',
-        data: { url: '/dashboard' },
-      },
-      [req.user._id.toString()]
+        body: 'If you see this, notifications are working perfectly on your device!',
+        link: '/dashboard',
+        tag: 'test-notification',
+      }
     );
 
     res.json({ message: 'Test notification triggered', result });
@@ -73,13 +78,88 @@ export const sendTestNotification = async (req, res) => {
   }
 };
 
-// Endpoint to trigger or check the 12:55 PM reminder check (can be pinged by uptime monitors / cron services)
+// Endpoint to trigger or check session reminder check (cron webhook or admin token)
 export const triggerReminders = async (req, res) => {
   try {
-    const { checkAndSendSessionReminders } = await import('../services/reminderScheduler.js');
+    const cronSecretHeader = req.headers['x-cron-secret'];
+    const configuredSecret = process.env.CRON_SECRET;
+
+    const isAdmin = Boolean(req.user && req.user.role === 'admin');
+    const secretMatches = Boolean(
+      configuredSecret && cronSecretHeader && cronSecretHeader === configuredSecret
+    );
+
+    if (!configuredSecret) {
+      console.warn('[WARNING] CRON_SECRET is unset. Rejecting external reminder trigger attempt.');
+      if (!isAdmin) {
+        return res.status(401).json({ message: 'CRON_SECRET is unset on server' });
+      }
+    } else if (!secretMatches && !isAdmin) {
+      return res.status(401).json({ message: 'Unauthorized cron secret' });
+    }
+
     const result = await checkAndSendSessionReminders();
-    res.json({ message: 'Reminder check completed', result });
+    res.json({
+      due: Boolean(result.due),
+      sent: Boolean(result.sent),
+      reason: result.reason || undefined,
+    });
   } catch (err) {
     res.status(500).json({ message: 'Failed to trigger reminder check', error: err.message });
+  }
+};
+
+// GET /api/notifications?limit=30 (protect)
+export const getUserNotifications = async (req, res) => {
+  try {
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 30));
+
+    const [items, unreadCount] = await Promise.all([
+      Notification.find({ user: req.user._id })
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .lean(),
+      Notification.countDocuments({ user: req.user._id, readAt: null }),
+    ]);
+
+    res.json({ items, unreadCount });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to retrieve notifications', error: err.message });
+  }
+};
+
+// PATCH /api/notifications/:id/read (protect)
+export const markNotificationRead = async (req, res) => {
+  try {
+    const notification = await Notification.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
+      { $set: { readAt: new Date() } },
+      { new: true }
+    );
+
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+
+    res.json({ message: 'Notification marked as read', notification });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to mark notification read', error: err.message });
+  }
+};
+
+// PATCH /api/notifications/read-all (protect)
+export const markAllNotificationsRead = async (req, res) => {
+  try {
+    const result = await Notification.updateMany(
+      { user: req.user._id, readAt: null },
+      { $set: { readAt: new Date() } }
+    );
+
+    res.json({
+      message: 'All notifications marked as read',
+      count: result.modifiedCount || 0,
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to mark all notifications read', error: err.message });
   }
 };

@@ -158,7 +158,8 @@ const DOMAINS = [
       'Develop confidence in public speaking, technical presentations, leadership, teamwork, and articulate communication.',
     skills: ['Public Speaking', 'Technical Presentations', 'Leadership', 'Group Discussions'],
     members: [
-      { name: 'Harini Radhakrishnan', role: 'Domain Lead' }
+      { name: 'Harini Radhakrishnan', role: 'Domain Lead' },
+      { name: 'Jayasuriyan K', role: 'Core Member' }
     ]
   }
 ];

@@ -20,6 +20,35 @@ export const protect = async (req, res, next) => {
         });
       }
 
+      // Reject tokens issued before user.passwordChangedAt
+      if (req.user.passwordChangedAt) {
+        const passwordChangedSec = Math.floor(new Date(req.user.passwordChangedAt).getTime() / 1000);
+        if (decoded.iat && decoded.iat < passwordChangedSec) {
+          return res.status(401).json({
+            message: 'Password was recently changed. Please log in again with your new credentials.',
+            tokenExpired: true,
+          });
+        }
+      }
+
+      // If user must change password, restrict access strictly to change-password, /auth/me and logout
+      if (req.user.mustChangePassword) {
+        const url = req.originalUrl || req.url || '';
+        const isWhitelisted =
+          url.includes('change-password') ||
+          url.endsWith('/auth/me') ||
+          url.endsWith('/me') ||
+          url.includes('logout');
+
+        if (!isWhitelisted) {
+          return res.status(403).json({
+            message: 'You must set a new password before accessing the portal.',
+            code: 'PASSWORD_CHANGE_REQUIRED',
+            mustChangePassword: true,
+          });
+        }
+      }
+
       next();
     } catch (err) {
       res.status(401).json({ message: 'Not authorized, token failed' });

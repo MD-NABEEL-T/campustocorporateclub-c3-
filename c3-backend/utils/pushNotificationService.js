@@ -60,6 +60,7 @@ export const broadcastPushNotification = async (payload, targetUserIds = null) =
       icon: payload.icon || '/favicon.ico',
       badge: payload.badge || '/favicon.ico',
       data: payload.data || { url: '/' },
+      tag: payload.tag || undefined,
     });
 
     let sent = 0;

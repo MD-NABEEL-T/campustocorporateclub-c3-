@@ -27,6 +27,7 @@ import { Loader } from '../ui/Loader';
 import CountUp from '../reactbits/CountUp';
 import { DOMAIN_OPTIONS } from '../../constants/domains';
 import { CoordinatorsCard } from './CoordinatorsCard';
+import { InstallAppCard } from '../pwa/InstallAppCard';
 
 const domainLabel = (value) => DOMAIN_OPTIONS.find((d) => d.value === value)?.label || value || 'General';
 
@@ -104,6 +105,9 @@ export const AdminOverview = ({ data, loading, error, onRetry }) => {
 
   return (
     <div className="space-y-6 sm:space-y-8">
+      {/* Install PWA Prompt Banner */}
+      <InstallAppCard />
+
       {/* Header Banner */}
       <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-white/[0.08] via-white/[0.03] to-transparent border border-white/10 relative overflow-hidden shadow-2xl">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">

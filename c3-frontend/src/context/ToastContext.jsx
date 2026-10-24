@@ -79,9 +79,9 @@ export const ToastProvider = ({ children }) => {
                   >
                     {config.icon}
                   </div>
-                  <p className="text-xs sm:text-sm font-medium text-zinc-100 leading-snug break-words">
+                  <div className="text-xs sm:text-sm font-medium text-zinc-100 leading-snug break-words">
                     {toast.message}
-                  </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => removeToast(toast.id)}

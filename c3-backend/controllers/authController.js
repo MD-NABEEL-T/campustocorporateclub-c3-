@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { sendEmail } from '../utils/sendEmail.js';
 import { isOwnerUser } from '../middleware/authMiddleware.js';
+import { notifyAdmins } from '../utils/notify.js';
 
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, {
@@ -34,6 +35,16 @@ export const registerUser = async (req, res) => {
       isApproved: false,
     });
 
+    // Notify admins via central notification engine
+    notifyAdmins({
+      type: 'registration',
+      title: 'New Member Registration',
+      body: `${name} (${email}) has registered and awaits verification.`,
+      link: '/admin/members',
+      refId: String(user._id),
+      tag: `registration-${user._id}`,
+    }).catch((err) => console.error('[Notify] Admin registration notification error:', err.message));
+
     // Notify member via email
     await sendEmail({
       to: email,
@@ -59,28 +70,8 @@ export const registerUser = async (req, res) => {
       `,
     });
 
-    // Notify Admin
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_EMAIL;
-    if (adminEmail) {
-      await sendEmail({
-        to: adminEmail,
-        subject: `New C3 Member Registration: ${name}`,
-        text: `A new member (${name}, ${email}, ${section || 'N/A'}) has registered on the C3 portal and requires approval.\nPlease review in the Admin Dashboard.`,
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; background: #000; color: #fff;">
-            <h3>New Member Registration Awaiting Approval</h3>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Section:</strong> ${section || 'N/A'}</p>
-            <p><strong>Register No:</strong> ${registerNumber || 'N/A'}</p>
-            <p>Please log in to the C3 Admin Dashboard to approve or decline this request.</p>
-          </div>
-        `,
-      });
-    }
-
     res.status(201).json({
-      message: 'Registration submitted successfully! Your account is pending admin approval. You will receive an email once approved.',
+      message: 'Registration submitted successfully! Your account is pending admin approval.',
       isPendingApproval: true,
     });
   } catch (err) {
@@ -119,6 +110,7 @@ export const loginUser = async (req, res) => {
       isOwner: isOwnerUser(user),
       year: user.year,
       section: user.section,
+      mustChangePassword: Boolean(user.mustChangePassword),
       token: generateToken(user._id, user.role),
     });
   } catch (err) {
@@ -143,6 +135,63 @@ export const getMe = async (req, res) => {
       isOwner: isOwnerUser(user),
       year: user.year,
       section: user.section,
+      mustChangePassword: Boolean(user.mustChangePassword),
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// PUT /api/auth/change-password (protect)
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Current password and new password are required' });
+    }
+
+    if (typeof newPassword !== 'string' || newPassword.length < 8) {
+      return res.status(400).json({ message: 'New password must be at least 8 characters long' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const isCurrentValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentValid) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({ message: 'New password must be different from your current password' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    user.mustChangePassword = false;
+    user.passwordChangedAt = new Date();
+    await user.save();
+
+    const freshToken = generateToken(user._id, user.role);
+
+    res.status(200).json({
+      message: 'Password changed successfully',
+      token: freshToken,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isApproved: user.isApproved,
+        isOwner: isOwnerUser(user),
+        year: user.year,
+        section: user.section,
+        mustChangePassword: false,
+      },
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

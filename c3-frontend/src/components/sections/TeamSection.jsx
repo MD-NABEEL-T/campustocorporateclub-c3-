@@ -26,7 +26,7 @@ const LEADERSHIP = [
     accent: '#38BDF8',
     quote: null,
     photo: '/assets/team/ashfaq-ahmed-m.png',
-    photoPosition: 'center top',
+    photoPosition: 'center 15%',
     socials: { email: 'mailto:ashfaqashu689@gmail.com', github: null, linkedin: 'https://www.linkedin.com/in/ashfaq-ahmed-m-b3a49a2a5/' }
   },
   {
@@ -50,7 +50,7 @@ const LEADERSHIP = [
     domain: 'Soft Skills',
     accent: '#38BDF8',
     photo: '/assets/team/Harini-Radhakrishnan.jpg',
-    photoPosition: 'center top',
+    photoPosition: 'center 15%',
     quote: 'Good sessions come from good questions, not just good slides.',
     socials: { email: 'mailto:hariniradha2727@gmail.com', github: 'https://github.com/hariniradha2727-hue.git', linkedin: 'https://www.linkedin.com/in/r-harini-274fa06h' }
   },
@@ -61,7 +61,7 @@ const LEADERSHIP = [
     accent: '#E4E4E7',
     quote: 'Bringing vision into reality through high-energy department events and student workshops.',
     photo: '/assets/team/aamir.jpg',
-    photoPosition: 'center top',
+    photoPosition: 'center 28%',
     socials: {
       email: 'mailto:aamirfahad789@gmail.com',
       github: null,
@@ -175,10 +175,25 @@ const CORE_MEMBERS = [
       github: 'https://github.com/Akramullah7',
       linkedin: 'https://www.linkedin.com/in/akramullah-'
     }
+  },
+  {
+    name: 'Jayasuriyan K',
+    tier: 'Core Member',
+    domain: 'Public Speaking & Corporate Communication',
+    accent: '#FB7185',
+    quote: null,
+    photo: '/assets/team/JAYASURIYAN.jpg',
+    photoPosition: 'center 20%',
+    socials: {
+      email: 'mailto:jayasuriyan2209@gmail.com',
+      github: 'https://github.com/jayasuriyan2209',
+      linkedin: 'https://www.linkedin.com/in/jayasuriyan-k-596265779'
+    }
   }
 ];
-const CORE_ROW_1 = CORE_MEMBERS.slice(0, 5);
-const CORE_ROW_2 = CORE_MEMBERS.slice(5);
+const half = Math.ceil(CORE_MEMBERS.length / 2);
+const CORE_ROW_1 = CORE_MEMBERS.slice(0, half);
+const CORE_ROW_2 = CORE_MEMBERS.slice(half);
 
 // Shows the real photo when `photo` is set and loads successfully;
 // otherwise falls back to the original icon placeholder unchanged.
@@ -233,8 +248,8 @@ const DeveloperBadge = ({ accent }) => (
 );
 
 const SocialRow = ({ socials, accent, size = 'sm' }) => {
-  const iconClass = size === 'sm' ? 'w-3 h-3' : 'w-3.5 h-3.5';
-  const btnClass = size === 'sm' ? 'w-6 h-6' : 'w-7 h-7';
+  const iconClass = size === 'sm' ? 'w-3.5 h-3.5 sm:w-4 sm:h-4' : 'w-4 h-4';
+  const btnClass = size === 'sm' ? 'w-7 h-7 sm:w-8 sm:h-8' : 'w-8 h-8';
 
   const links = [
     { key: 'email', href: socials.email, Icon: Mail },
@@ -243,7 +258,7 @@ const SocialRow = ({ socials, accent, size = 'sm' }) => {
   ].filter(link => link.href);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1.5 sm:gap-2">
       {links.map(({ key, href, Icon }) => (
         <a
           key={key}
@@ -267,36 +282,38 @@ const LeadershipCard = ({ leader, index }) => (
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, amount: 0.3 }}
     transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-    className="h-[280px] sm:h-[350px] md:h-[370px] w-full"
+    className="h-[275px] sm:h-[350px] lg:h-[380px] w-full"
   >
     <FlipCard
       className="w-full h-full"
       front={
-        <div className="relative w-full h-full rounded-2xl border border-white/10 bg-zinc-950/90 p-2.5 sm:p-4 md:p-5 flex flex-col justify-between overflow-hidden hover:border-white/20 transition-colors">
-          <div className="relative">
-            {leader.isDeveloper && (
+        <div className="relative w-full h-full rounded-2xl border border-white/10 bg-zinc-950/90 p-2.5 sm:p-4 lg:p-5 flex flex-col justify-between overflow-hidden hover:border-white/20 transition-colors">
+          <div>
+            <div className="relative">
+              {leader.isDeveloper && (
+                <span
+                  className="absolute top-1.5 left-1.5 z-10 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[7px] sm:text-[9px] font-mono font-semibold uppercase tracking-wider bg-black/60 backdrop-blur-sm border"
+                  style={{ borderColor: `${leader.accent}55`, color: leader.accent }}
+                >
+                  <Code2 className="w-2 sm:w-2.5 h-2 sm:h-2.5" />
+                  Dev
+                </span>
+              )}
               <span
-                className="absolute top-1.5 left-1.5 z-10 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[7px] sm:text-[9px] font-mono font-semibold uppercase tracking-wider bg-black/60 backdrop-blur-sm border"
-                style={{ borderColor: `${leader.accent}55`, color: leader.accent }}
+                className="absolute top-1.5 right-1.5 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center bg-black/60 backdrop-blur-sm border z-10"
+                style={{ borderColor: `${leader.accent}44` }}
               >
-                <Code2 className="w-2 sm:w-2.5 h-2 sm:h-2.5" />
-                Dev
+                <RotateCw className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white/70" />
               </span>
-            )}
-            <span
-              className="absolute top-1.5 right-1.5 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center bg-black/60 backdrop-blur-sm border z-10"
-              style={{ borderColor: `${leader.accent}44` }}
-            >
-              <RotateCw className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white/70" />
-            </span>
-            <Photo
-              photo={leader.photo}
-              accent={leader.accent}
-              position={leader.photoPosition}
-              className="h-36 sm:h-48 md:h-52 w-full mb-2 sm:mb-3 rounded-xl object-cover"
-            />
+              <Photo
+                photo={leader.photo}
+                accent={leader.accent}
+                position={leader.photoPosition}
+                className="h-32 sm:h-44 lg:h-52 w-full mb-2 sm:mb-3 rounded-xl object-cover"
+              />
+            </div>
             <p
-              className="text-[9px] sm:text-xs font-semibold uppercase tracking-wider truncate"
+              className="text-[9px] sm:text-xs font-semibold uppercase tracking-wider truncate mb-0.5"
               style={{ color: leader.accent }}
             >
               {leader.role}
@@ -305,31 +322,31 @@ const LeadershipCard = ({ leader, index }) => (
               <PointerHighlight
                 containerClassName="inline-block max-w-full"
                 rectangleClassName="border-[#38BDF8]/50"
-                pointerClassName="text-[#38BDF8]"
+                pointerClassName="text-[#38BDF8] h-3.5 w-3.5 sm:h-4 sm:w-4"
               >
-                <h4 className="relative z-10 font-display text-xs sm:text-base md:text-lg font-bold text-white truncate px-0.5">
+                <h4 className="relative z-10 font-display text-xs sm:text-base lg:text-lg font-bold text-white truncate px-0.5">
                   {leader.name}
                 </h4>
               </PointerHighlight>
             ) : (
-              <h4 className="font-display text-xs sm:text-base md:text-lg font-bold text-white truncate">{leader.name}</h4>
+              <h4 className="font-display text-xs sm:text-base lg:text-lg font-bold text-white truncate">{leader.name}</h4>
             )}
           </div>
-          <p className="text-[10px] sm:text-xs text-zinc-400 truncate">{leader.domain}</p>
+          <p className="text-[10px] sm:text-xs text-zinc-400 truncate pt-1">{leader.domain}</p>
         </div>
       }
       back={
-        <div className="relative w-full h-full rounded-2xl border border-white/10 bg-zinc-950 p-3.5 sm:p-5 md:p-6 flex flex-col justify-between overflow-hidden">
+        <div className="relative w-full h-full rounded-2xl border border-white/10 bg-zinc-950 p-3 sm:p-5 lg:p-6 flex flex-col justify-between overflow-hidden">
           <div>
             <p
-              className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-1"
+              className="text-[9px] sm:text-xs font-semibold uppercase tracking-wide mb-0.5"
               style={{ color: leader.accent }}
             >
               {leader.role}
             </p>
-            <p className="text-[10px] sm:text-xs text-zinc-400 mb-2 sm:mb-3">{leader.domain}</p>
+            <p className="text-[10px] sm:text-xs text-zinc-400 mb-2 sm:mb-3 truncate">{leader.domain}</p>
             {leader.quote && (
-              <p className="text-[10px] sm:text-xs md:text-sm text-zinc-300 italic leading-snug sm:leading-relaxed line-clamp-4 sm:line-clamp-5">
+              <p className="text-[10px] sm:text-xs lg:text-sm text-zinc-300 italic leading-snug sm:leading-relaxed line-clamp-4 sm:line-clamp-5">
                 "{leader.quote}"
               </p>
             )}
@@ -409,7 +426,7 @@ export const TeamSection = () => {
   }, [introInView]);
 
   return (
-    <section id="team" className="relative w-full bg-black overflow-hidden pt-10 pb-14 sm:pt-16 sm:pb-20">
+    <section id="team" className="relative w-full bg-black overflow-hidden pt-16 pb-14 sm:pt-24 sm:pb-20 scroll-mt-24 sm:scroll-mt-28">
       {/* Section introduction */}
       <div ref={introRef} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-14">
         {introInView && (
@@ -423,19 +440,20 @@ export const TeamSection = () => {
         )}
 
         {showIntroParagraph && (
-          <BlurText
-            text="Behind every session, event, workshop and achievement is a passionate team working together to build the C3 community."
-            direction="top"
-            delay={6}
-            stepDuration={0.28}
+          <motion.p
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="text-base sm:text-lg text-[#A1A1AA] leading-relaxed max-w-xl"
-          />
+          >
+            Behind every session, event, workshop and achievement is a passionate team working together to build the C3 community.
+          </motion.p>
         )}
       </div>
 
-      {/* Leadership - balanced 2x2 grid layout on both mobile and desktop */}
-      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 sm:mb-16">
-        <div className="grid grid-cols-2 gap-3 sm:gap-6 md:gap-8">
+      {/* Leadership - 4 members: balanced 2x2 grid on mobile, 4 columns on laptop/desktop */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 sm:mb-16">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
           {LEADERSHIP.map((leader, i) => (
             <LeadershipCard key={leader.role} leader={leader} index={i} />
           ))}

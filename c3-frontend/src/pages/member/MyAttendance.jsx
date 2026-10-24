@@ -58,6 +58,9 @@ const MyAttendance = () => {
         <p className="text-xs sm:text-sm text-[#94A3B8] mt-1">
           Personal attendance metrics for daily C3 peer sessions since joining
         </p>
+        <p className="text-xs text-zinc-400 mt-1.5 font-mono">
+          Your attendance counts from {formatDate(data.attendanceCutoff || data.createdAt)}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">

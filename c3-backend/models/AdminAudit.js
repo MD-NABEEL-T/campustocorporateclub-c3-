@@ -4,7 +4,7 @@ const adminAuditSchema = new mongoose.Schema(
   {
     action: {
       type: String,
-      enum: ['grant_admin', 'revoke_admin', 'grant_coordinator', 'revoke_coordinator'],
+      enum: ['grant_admin', 'revoke_admin', 'grant_coordinator', 'revoke_coordinator', 'reset_password'],
       required: true,
     },
     actor: {
